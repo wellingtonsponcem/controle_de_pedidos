@@ -209,25 +209,130 @@ main {
 /* 5. Painel/Dashboard de Pedidos (Calendário & Produção) */
 .dashboard-grid {
   display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 2rem;
+  grid-template-columns: 1fr;
+  gap: 24px;
 }
 
-@media (max-width: 1024px) {
+@media (min-width: 1024px) {
   .dashboard-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: 2fr 1fr;
+    gap: 32px;
+    align-items: start;
   }
 }
 
-.card-panel {
-  background: var(--glass-bg);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--border-subtle);
-  border-radius: 16px;
-  padding: 1.75rem;
-  box-shadow: var(--glass-shadow);
+.dashboard-right-col {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
+
+.card-panel {
+  background: #1A1A1A;
+  border: 1px solid #2A2A2A;
+  border-radius: 12px;
+  padding: 1.75rem;
+  width: 100%;
+}
+
+/* Tabela Administrativa do Catálogo */
+.responsive-table-container {
+  width: 100%;
+  overflow-x: auto;
+  margin-top: 1rem;
+  border-radius: 8px;
+  border: 1px solid #2A2A2A;
+  background: #151515;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.9rem;
+}
+
+.admin-table th, 
+.admin-table td {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #2A2A2A;
+}
+
+.admin-table th {
+  background: #1C1C1C;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+}
+
+.admin-table tr:last-child td {
+  border-bottom: none;
+}
+
+.admin-table tr:hover td {
+  background: rgba(255, 255, 255, 0.01);
+}
+
+/* Badges de Status do Produto */
+.badge-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.badge-status.ativo {
+  background: rgba(16, 185, 129, 0.1);
+  color: hsl(145, 65%, 45%);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.badge-status.inativo {
+  background: rgba(239, 68, 68, 0.1);
+  color: hsl(0, 75%, 65%);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+/* Botões de Ação na Tabela */
+.btn-table-action {
+  background: transparent;
+  border: 1px solid #2A2A2A;
+  color: var(--text-muted);
+  padding: 0.35rem 0.65rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  transition: var(--transition-smooth);
+}
+
+.btn-table-action:hover {
+  border-color: var(--primary);
+  color: var(--text-main);
+  background: rgba(245, 158, 11, 0.05);
+}
+
+.btn-table-action.btn-toggle-status:hover {
+  border-color: hsl(145, 65%, 45%);
+  color: #fff;
+  background: rgba(16, 185, 129, 0.05);
+}
+
+.btn-table-action.btn-toggle-status.deactivate:hover {
+  border-color: hsl(0, 75%, 55%);
+  color: #fff;
+  background: rgba(239, 68, 68, 0.05);
+}
+
 
 .panel-header {
   display: flex;

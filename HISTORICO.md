@@ -47,3 +47,11 @@ Este arquivo mantém o histórico consolidado de decisões e progresso do projet
 - **Backend Serverless & API**: Criada API `/api/taxas.ts` que permite a persistência e atualização atômica das taxas no Neon Postgres de forma resiliente a falhas de conexão (HTTP 503).
 - **Lógica Frontend & PWA**: Lógica desenvolvida em `app.js` integrada ao `localStorage` para funcionamento 100% offline (resiliência PWA), com sincronização inteligente de frete no restabelecimento da conexão (`syncOfflineData`).
 - **Validação**: Testes Jest baseados em propriedades fast-check e compilação do TypeScript mantidos em 100% de sucesso.
+
+### [2026-05-22] - Catálogo SPA & CRUD Administrativo de Produtos (v2.8.0) (Concluído)
+- **Layout Desktop Grid**: Reorganizado dashboard com CSS Grid assimétrico (`2fr 1fr`), colocando a Fila na esquerda e os Ajustes de Frete/Expedição empilhados na direita.
+- **Roteamento SPA**: Injetada a aba "Catálogo" e sua estrutura responsiva para o gerenciamento de produtos com cadastro, edição e ativação/desativação.
+- **CRUD e Cache Offline**: Implementadas as funções administrativas no `app.js` integrando modais de produtos e o backend Neon Postgres, com sincronização offline no IndexedDB.
+- **Filtro de Inativos**: Atualizadas as buscas no catálogo público e no seletor de pedidos para exibir estritamente produtos com `ativo !== false`.
+- **Qualidade**: Executados `npx tsc --noEmit` e `npm test` baseados em propriedades com sucesso absoluto.
+

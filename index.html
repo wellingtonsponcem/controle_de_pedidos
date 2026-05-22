@@ -48,6 +48,14 @@
           </svg>
           Dashboard
         </button>
+        <button id="tabBtnCatalogo" class="tab-btn" data-tab="catalogo" aria-controls="catalogo" aria-selected="false">
+          <svg class="tab-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;">
+            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+            <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+            <line x1="12" y1="22.08" x2="12" y2="12"></line>
+          </svg>
+          Catálogo
+        </button>
         <button id="tabBtnPedidos" class="tab-btn" data-tab="pedidos" aria-controls="pedidos" aria-selected="false">
           <svg class="tab-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;">
             <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
@@ -79,125 +87,172 @@
       <section id="dashboard" class="tab-content active" role="tabpanel" aria-labelledby="tabBtnDashboard">
         <div class="dashboard-grid">
           
-          <!-- Lista de Pedidos Ativos -->
-          <div class="card-panel" style="position: relative;">
-            <button id="btnRefreshDashboard" class="btn-sync" onclick="refreshDashboard()" aria-label="Atualizar Fila de Produção">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
-              </svg>
-            </button>
-            <div class="panel-header">
-              <h2 class="panel-title">
-                <svg class="title-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                  <line x1="16" y1="2" x2="16" y2="6"></line>
-                  <line x1="8" y1="2" x2="8" y2="6"></line>
-                  <line x1="3" y1="10" x2="21" y2="10"></line>
+          <!-- Coluna Esquerda: Fila de Produção -->
+          <div class="dashboard-left-col">
+            <!-- Lista de Pedidos Ativos -->
+            <div class="card-panel" style="position: relative;">
+              <button id="btnRefreshDashboard" class="btn-sync" onclick="refreshDashboard()" aria-label="Atualizar Fila de Produção">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
                 </svg>
-                Fila de Produção & Entregas
-                <span id="pedidosTotalCount" class="badge-count">0</span>
-              </h2>
+              </button>
+              <div class="panel-header">
+                <h2 class="panel-title">
+                  <svg class="title-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                  </svg>
+                  Fila de Produção & Entregas
+                  <span id="pedidosTotalCount" class="badge-count">0</span>
+                </h2>
+              </div>
+              
+              <div id="ordersList" class="orders-list">
+                <div class="carrinho-empty">Carregando pedidos do Neon Postgres...</div>
+              </div>
             </div>
+          </div>
+
+          <!-- Coluna Direita: Ajustes de Frete e Dicas de Expedição -->
+          <div class="dashboard-right-col">
             
-            <div id="ordersList" class="orders-list">
-              <div class="carrinho-empty">Carregando pedidos do Neon Postgres...</div>
-            </div>
-          </div>
-
-          <!-- Dicas / Painel Auxiliar de Produção -->
-          <div class="card-panel" style="display:flex; flex-direction:column; gap:1.25rem;">
-            <h3 class="panel-title">
-              <svg class="title-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
-                <path d="M9.663 17h4.673M12 3v1m6.364.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 1 1 7.072 0l-.548.547A3.374 3.374 0 0 0 14 18.5V19a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.5c0-.98-.4-1.92-1.109-2.618l-.548-.547z"/>
-              </svg>
-              Dicas de Expedição
-            </h3>
-            <div class="tips-accordion">
-              <details class="tips-item" open>
-                <summary class="tips-summary">
-                  <span class="tips-title">🌱 Processo Artesanal</span>
-                  <svg class="chevron-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                  </svg>
-                </summary>
-                <div class="tips-content">
-                  O tempo médio de fermentação natural dos pães caseiros Bemavi é de 24 horas. Certifique-se de agendar com antecedência.
+            <!-- Painel Administrativo de Configuração de Frete -->
+            <div class="card-panel" style="display:flex; flex-direction:column; gap:1rem;">
+              <h3 class="panel-title" style="display: flex; align-items: center; font-size: 1.1rem;">
+                <svg class="title-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+                  <circle cx="12" cy="12" r="3"></circle>
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+                Ajustes de Frete
+              </h3>
+              <div class="frete-config-box">
+                <div class="frete-config-row">
+                  <span class="frete-config-label">Vitória:</span>
+                  <div class="frete-input-wrapper">
+                    <span class="frete-currency">R$</span>
+                    <input type="number" id="cfg_frete_vitoria" step="0.50" min="0" placeholder="0.00" oninput="updateConfigFrete()">
+                  </div>
                 </div>
-              </details>
-              
-              <details class="tips-item">
-                <summary class="tips-summary">
-                  <span class="tips-title">🛵 Logística de Entrega</span>
-                  <svg class="chevron-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                  </svg>
-                </summary>
-                <div class="tips-content">
-                  As taxas de entrega estão configuradas por município da Grande Vitória:
-                  <ul style="padding-left:1.2rem; display:flex; flex-direction:column; gap:0.25rem; margin-top: 0.5rem; color: var(--text-muted);">
-                    <li>Vitória: <strong id="tips_frete_vitoria" style="color: var(--primary);">R$ 0,00</strong></li>
-                    <li>Vila Velha: <strong id="tips_frete_vilavelha" style="color: var(--primary);">R$ 0,00</strong></li>
-                    <li>Serra: <strong id="tips_frete_serra" style="color: var(--primary);">R$ 0,00</strong></li>
-                  </ul>
+                <div class="frete-config-row">
+                  <span class="frete-config-label">Vila Velha:</span>
+                  <div class="frete-input-wrapper">
+                    <span class="frete-currency">R$</span>
+                    <input type="number" id="cfg_frete_vilavelha" step="0.50" min="0" placeholder="0.00" oninput="updateConfigFrete()">
+                  </div>
                 </div>
-              </details>
-              
-              <details class="tips-item">
-                <summary class="tips-summary">
-                  <span class="tips-title">🔄 Recorrência de Clientes</span>
-                  <svg class="chevron-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                  </svg>
-                </summary>
-                <div class="tips-content">
-                  Pedidos recorrentes geram rascunhos de forma antecipada para garantir a prioridade na produção semanal ou mensal.
+                <div class="frete-config-row">
+                  <span class="frete-config-label">Serra:</span>
+                  <div class="frete-input-wrapper">
+                    <span class="frete-currency">R$</span>
+                    <input type="number" id="cfg_frete_serra" step="0.50" min="0" placeholder="0.00" oninput="updateConfigFrete()">
+                  </div>
                 </div>
-              </details>
-            </div>
-          </div>
-
-          <!-- Painel Administrativo de Configuração de Frete -->
-          <div class="card-panel" style="display:flex; flex-direction:column; gap:1rem;">
-            <h3 class="panel-title" style="display: flex; align-items: center; font-size: 1.1rem;">
-              <svg class="title-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
-                <circle cx="12" cy="12" r="3"></circle>
-                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-              </svg>
-              Ajustes de Frete
-            </h3>
-            <div class="frete-config-box">
-              <div class="frete-config-row">
-                <span class="frete-config-label">Vitória:</span>
-                <div class="frete-input-wrapper">
-                  <span class="frete-currency">R$</span>
-                  <input type="number" id="cfg_frete_vitoria" step="0.50" min="0" placeholder="0.00" oninput="updateConfigFrete()">
+                <div class="frete-config-checkbox-row">
+                  <input type="checkbox" id="cfg_frete_gratis" onchange="toggleFreteGratis()">
+                  <label for="cfg_frete_gratis">✨ Ativar Frete Grátis Global</label>
                 </div>
-              </div>
-              <div class="frete-config-row">
-                <span class="frete-config-label">Vila Velha:</span>
-                <div class="frete-input-wrapper">
-                  <span class="frete-currency">R$</span>
-                  <input type="number" id="cfg_frete_vilavelha" step="0.50" min="0" placeholder="0.00" oninput="updateConfigFrete()">
-                </div>
-              </div>
-              <div class="frete-config-row">
-                <span class="frete-config-label">Serra:</span>
-                <div class="frete-input-wrapper">
-                  <span class="frete-currency">R$</span>
-                  <input type="number" id="cfg_frete_serra" step="0.50" min="0" placeholder="0.00" oninput="updateConfigFrete()">
-                </div>
-              </div>
-              <div class="frete-config-checkbox-row">
-                <input type="checkbox" id="cfg_frete_gratis" onchange="toggleFreteGratis()">
-                <label for="cfg_frete_gratis">✨ Ativar Frete Grátis Global</label>
               </div>
             </div>
-          </div>
 
+            <!-- Dicas / Painel Auxiliar de Produção -->
+            <div class="card-panel" style="display:flex; flex-direction:column; gap:1.25rem;">
+              <h3 class="panel-title">
+                <svg class="title-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+                  <path d="M9.663 17h4.673M12 3v1m6.364.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 1 1 7.072 0l-.548.547A3.374 3.374 0 0 0 14 18.5V19a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.5c0-.98-.4-1.92-1.109-2.618l-.548-.547z"/>
+                </svg>
+                Dicas de Expedição
+              </h3>
+              <div class="tips-accordion">
+                <details class="tips-item" open>
+                  <summary class="tips-summary">
+                    <span class="tips-title">🌱 Processo Artesanal</span>
+                    <svg class="chevron-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </summary>
+                  <div class="tips-content">
+                    O tempo médio de fermentação natural dos pães caseiros Bemavi é de 24 horas. Certifique-se de agendar com antecedência.
+                  </div>
+                </details>
+                
+                <details class="tips-item">
+                  <summary class="tips-summary">
+                    <span class="tips-title">🛵 Logística de Entrega</span>
+                    <svg class="chevron-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </summary>
+                  <div class="tips-content">
+                    As taxas de entrega estão configuradas por município da Grande Vitória:
+                    <ul style="padding-left:1.2rem; display:flex; flex-direction:column; gap:0.25rem; margin-top: 0.5rem; color: var(--text-muted);">
+                      <li>Vitória: <strong id="tips_frete_vitoria" style="color: var(--primary);">R$ 0,00</strong></li>
+                      <li>Vila Velha: <strong id="tips_frete_vilavelha" style="color: var(--primary);">R$ 0,00</strong></li>
+                      <li>Serra: <strong id="tips_frete_serra" style="color: var(--primary);">R$ 0,00</strong></li>
+                    </ul>
+                  </div>
+                </details>
+                
+                <details class="tips-item">
+                  <summary class="tips-summary">
+                    <span class="tips-title">🔄 Recorrência de Clientes</span>
+                    <svg class="chevron-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </summary>
+                  <div class="tips-content">
+                    Pedidos recorrentes geram rascunhos de forma antecipada para garantir a prioridade na produção semanal ou mensal.
+                  </div>
+                </details>
+              </div>
+            </div>
+
+          </div>
         </div>
       </section>
 
-      <!-- 2. ABA DE NOVO PEDIDO (CATÁLOGO & AGENDAMENTO) -->
+      <!-- 2. ABA DE GERENCIAMENTO DE CATÁLOGO (CRUD DE PRODUTOS) -->
+      <section id="catalogo" class="tab-content" role="tabpanel" aria-labelledby="tabBtnCatalogo">
+        <div class="card-panel">
+          <div class="panel-header" style="justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem;">
+            <h2 class="panel-title">
+              <svg class="title-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                <line x1="12" y1="22.08" x2="12" y2="12"></line>
+              </svg>
+              Gerenciamento do Catálogo de Pães
+            </h2>
+            <button id="btnOpenProductModal" class="btn btn-primary" onclick="openProductModal()" style="font-size: 0.85rem; padding: 0.5rem 1.2rem; border: none; font-weight: 600;">
+              ➕ Novo Pão
+            </button>
+          </div>
+
+          <div class="responsive-table-container">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Nome do Pão</th>
+                  <th>Tipo / Versão</th>
+                  <th>Modelo / Peso</th>
+                  <th>Sabor / Ingredientes</th>
+                  <th>Preço Base</th>
+                  <th>Status</th>
+                  <th style="text-align: center;">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="catalogAdminListBody">
+                <tr>
+                  <td colspan="7" class="carrinho-empty">Carregando catálogo de produtos...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. ABA DE NOVO PEDIDO (CATÁLOGO & AGENDAMENTO) -->
       <section id="pedidos" class="tab-content" role="tabpanel" aria-labelledby="tabBtnPedidos">
         <div class="catalog-section">
           
@@ -503,8 +558,78 @@
         </div>
       </div>
 
+      <!-- MODAL / BOTTOM SHEET DE CADASTRO/EDIÇÃO DE PRODUTO -->
+      <div id="productModal" class="finance-modal" role="dialog" aria-modal="true" aria-labelledby="productModalTitle">
+        <div class="finance-modal-overlay" onclick="closeProductModal()"></div>
+        <div class="finance-modal-content">
+          <div class="finance-modal-header">
+            <h2 id="productModalTitle" class="panel-title" style="font-size: 1.2rem;">
+              <svg class="title-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+              </svg>
+              <span id="productModalTitleText">Novo Pão Caseiro</span>
+            </h2>
+            <button class="btn-close-modal" onclick="closeProductModal()" aria-label="Fechar formulário">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+          <div class="finance-modal-body">
+            <form id="productCreationForm" class="order-form">
+              <input type="hidden" id="prod_id">
+              
+              <div class="form-group">
+                <label for="prod_nome">Nome do Pão *</label>
+                <input type="text" id="prod_nome" required placeholder="Ex: Pão de Campanha, Baguette Francesa">
+              </div>
+
+              <div class="form-group-row">
+                <div class="form-group">
+                  <label for="prod_versao">Tipo / Versão *</label>
+                  <select id="prod_versao" required>
+                    <option value="Tradicional">Tradicional</option>
+                    <option value="Integral">Integral</option>
+                    <option value="Especial">Especial</option>
+                    <option value="Recheado">Recheado</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="prod_modelo">Modelo / Peso *</label>
+                  <select id="prod_modelo" required>
+                    <option value="Forma (Grande - 650g)">Forma (Grande - 650g)</option>
+                    <option value="Forma (Médio - 450g)">Forma (Médio - 450g)</option>
+                    <option value="Bola (Grande - 600g)">Bola (Grande - 600g)</option>
+                    <option value="Baguete (350g)">Baguete (350g)</option>
+                    <option value="Individual (Unidade)">Individual (Unidade)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="prod_sabor">Sabor / Ingredientes Adicionais *</label>
+                <input type="text" id="prod_sabor" required placeholder="Ex: Fermentação Natural de 24h, Linhaça e Gergelim">
+              </div>
+
+              <div class="form-group-row">
+                <div class="form-group">
+                  <label for="prod_preco">Preço Base (R$) *</label>
+                  <input type="number" id="prod_preco" step="0.01" required min="0" placeholder="R$ 0,00">
+                </div>
+                <div class="form-group" style="flex-direction: row; align-items: center; gap: 0.5rem; margin-top: 1.8rem;">
+                  <input type="checkbox" id="prod_ativo" checked style="width: 18px; height: 18px; cursor: pointer;">
+                  <label for="prod_ativo" style="cursor: pointer; user-select: none; margin-bottom: 0;">Disponível no catálogo</label>
+                </div>
+              </div>
+
+              <button type="submit" id="btnSubmitProduct" class="btn btn-primary" style="width: 100%; justify-content: center; margin-top: 1rem; border: none; font-weight: 600; padding: 0.75rem;">
+                💾 Salvar Pão no Catálogo
+              </button>
+            </form>
+          </div>
         </div>
-      </section>
+      </div>
 
     </main>
 

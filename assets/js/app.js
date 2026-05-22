@@ -237,6 +237,7 @@ async function initApp() {
   // Setup formulários
   setupOrderForm();
   setupFinanceForm();
+  setupProductForm();
   
   // Tentar sincronização inicial se estiver online
   if (state.isOnline) {
@@ -271,6 +272,7 @@ function switchTab(tabId) {
   // Atualizar dados sob demanda ao trocar de aba
   if (tabId === 'dashboard') refreshDashboard();
   if (tabId === 'financeiro') refreshFinanceiro();
+  if (tabId === 'catalogo') refreshCatalogManagement();
 }
 
 // 5. Monitoramento de Rede e Badge Visual
@@ -393,12 +395,13 @@ async function renderCatalogo() {
 
   // Renderizar o catálogo HTML
   const catalogGrid = document.getElementById('catalogGrid');
-  if (state.produtos.length === 0) {
+  const ativos = state.produtos.filter(p => p.ativo !== false);
+  if (ativos.length === 0) {
     catalogGrid.innerHTML = '<div class="carrinho-empty">Nenhum produto cadastrado no catálogo offline.</div>';
     return;
   }
 
-  catalogGrid.innerHTML = state.produtos.map(prod => `
+  catalogGrid.innerHTML = ativos.map(prod => `
     <div class="bread-card">
       <div class="bread-header">
         <span class="bread-type">${prod.versao}</span>
@@ -423,7 +426,7 @@ function updateOrderFormSelectors() {
   const select = document.getElementById('addProdutoSelect');
   if (!select) return;
   select.innerHTML = '<option value="">-- Selecione um pão Bemavi --</option>' + 
-    state.produtos.map(prod => `
+    state.produtos.filter(p => p.ativo !== false).map(prod => `
       <option value="${prod.id}">${prod.nome} (${prod.modelo}) - R$ ${Number(prod.preco_base).toFixed(2)}</option>
     `).join('');
 }
@@ -952,3 +955,203 @@ window.closeFinanceModal = function() {
     document.body.style.overflow = '';
   }
 };
+
+// 15. Catálogo Administrativo (CRUD, Ativação & Modais de Produto)
+async function refreshCatalogManagement() {
+  try {
+    if (state.isOnline) {
+      const response = await fetch('/api/produtos?all=true');
+      if (response.ok) {
+        const prods = await response.json();
+        await clearIndexedDBStore('produtos');
+        for (const prod of prods) {
+          await writeIndexedDB('produtos', prod);
+        }
+        state.produtos = prods;
+      }
+    } else {
+      state.produtos = await readAllIndexedDB('produtos');
+    }
+  } catch (error) {
+    console.error('Falha ao carregar catálogo administrativo de produtos:', error);
+    state.produtos = await readAllIndexedDB('produtos');
+  }
+
+  renderCatalogAdmin();
+}
+
+function renderCatalogAdmin() {
+  const listBody = document.getElementById('catalogAdminListBody');
+  if (!listBody) return;
+
+  if (state.produtos.length === 0) {
+    listBody.innerHTML = '<tr><td colspan="7" class="carrinho-empty">Nenhum produto cadastrado no catálogo.</td></tr>';
+    return;
+  }
+
+  listBody.innerHTML = state.produtos.map(prod => {
+    const statusAtivo = prod.ativo !== false;
+    const statusText = statusAtivo ? 'Ativo' : 'Inativo';
+    const statusClass = statusAtivo ? 'ativo' : 'inativo';
+    const toggleText = statusAtivo ? 'Desativar' : 'Ativar';
+    const toggleClass = statusAtivo ? 'btn-danger' : 'btn-success';
+
+    return `
+      <tr>
+        <td data-label="Nome do Pão" style="font-weight: 600; color: var(--text-main);">${prod.nome}</td>
+        <td data-label="Tipo / Versão">${prod.versao}</td>
+        <td data-label="Modelo / Peso">${prod.modelo}</td>
+        <td data-label="Sabor / Ingredientes" style="font-size: 0.85rem; color: var(--text-muted);">${prod.sabor}</td>
+        <td data-label="Preço Base" style="font-weight: 600; color: var(--primary);">R$ ${Number(prod.preco_base).toFixed(2)}</td>
+        <td data-label="Status">
+          <span class="badge-status ${statusClass}">${statusText}</span>
+        </td>
+        <td data-label="Ações" style="text-align: center;">
+          <div style="display: flex; gap: 0.5rem; justify-content: center;">
+            <button class="btn btn-secondary btn-table-action" onclick="openProductModal('${prod.id}')" style="padding: 4px 8px; font-size: 0.8rem;">Editar</button>
+            <button class="btn ${toggleClass} btn-table-action" onclick="toggleProductActive('${prod.id}', ${statusAtivo})" style="padding: 4px 8px; font-size: 0.8rem;">${toggleText}</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+window.openProductModal = function(prodId) {
+  const modal = document.getElementById('productModal');
+  const titleText = document.getElementById('productModalTitleText');
+  const form = document.getElementById('productCreationForm');
+
+  if (!modal) return;
+
+  form.reset();
+  document.getElementById('prod_id').value = '';
+
+  if (prodId) {
+    titleText.textContent = 'Editar Pão Caseiro';
+    const prod = state.produtos.find(p => p.id === prodId);
+    if (prod) {
+      document.getElementById('prod_id').value = prod.id;
+      document.getElementById('prod_nome').value = prod.nome;
+      document.getElementById('prod_versao').value = prod.versao;
+      document.getElementById('prod_modelo').value = prod.modelo;
+      document.getElementById('prod_sabor').value = prod.sabor;
+      document.getElementById('prod_preco').value = Number(prod.preco_base).toFixed(2);
+      document.getElementById('prod_ativo').checked = prod.ativo !== false;
+    }
+  } else {
+    titleText.textContent = 'Novo Pão Caseiro';
+    document.getElementById('prod_ativo').checked = true;
+  }
+
+  modal.classList.add('active');
+  document.body.style.overflow = 'hidden';
+};
+
+window.closeProductModal = function() {
+  const modal = document.getElementById('productModal');
+  if (modal) {
+    modal.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+};
+
+window.toggleProductActive = async function(prodId, currentStatus) {
+  if (!state.isOnline) {
+    showToast('Apenas online é permitido alterar a ativação do produto no banco de dados.', 'error');
+    return;
+  }
+
+  const prod = state.produtos.find(p => p.id === prodId);
+  if (!prod) return;
+
+  const payload = {
+    id: prod.id,
+    nome: prod.nome,
+    versao: prod.versao,
+    sabor: prod.sabor,
+    modelo: prod.modelo,
+    preco_base: Number(prod.preco_base),
+    ativo: !currentStatus
+  };
+
+  try {
+    const response = await fetch('/api/produtos', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      showToast(`Produto '${prod.nome}' ${!currentStatus ? 'ativado' : 'desativado'} com sucesso!`, 'success');
+      
+      const updatedProd = data.produto;
+      await writeIndexedDB('produtos', updatedProd);
+      
+      await refreshCatalogManagement();
+      await renderCatalogo();
+    } else {
+      const err = await response.json();
+      showToast(err.error || 'Erro ao alterar status do produto.', 'error');
+    }
+  } catch (error) {
+    console.error('Falha ao alterar ativação do produto:', error);
+    showToast('Falha de rede ao alterar ativação do produto.', 'error');
+  }
+};
+
+function setupProductForm() {
+  const form = document.getElementById('productCreationForm');
+  if (!form) return;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const id = document.getElementById('prod_id').value;
+    const payload = {
+      nome: document.getElementById('prod_nome').value,
+      versao: document.getElementById('prod_versao').value,
+      modelo: document.getElementById('prod_modelo').value,
+      sabor: document.getElementById('prod_sabor').value,
+      preco_base: parseFloat(document.getElementById('prod_preco').value),
+      ativo: document.getElementById('prod_ativo').checked
+    };
+
+    if (id) {
+      payload.id = id;
+    }
+
+    if (!state.isOnline) {
+      showToast('Apenas online é permitido cadastrar ou editar produtos no catálogo Bemavi.', 'error');
+      return;
+    }
+
+    try {
+      const method = id ? 'PUT' : 'POST';
+      const response = await fetch('/api/produtos', {
+        method: method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        showToast(id ? 'Produto atualizado com sucesso!' : 'Novo pão cadastrado com sucesso!', 'success');
+        
+        const savedProd = data.produto;
+        await writeIndexedDB('produtos', savedProd);
+
+        closeProductModal();
+        await refreshCatalogManagement();
+        await renderCatalogo();
+      } else {
+        const err = await response.json();
+        showToast(err.error || 'Erro ao salvar produto.', 'error');
+      }
+    } catch (error) {
+      console.error('Falha ao salvar produto:', error);
+      showToast('Falha de rede ao salvar produto. O banco de dados pode estar indisponível.', 'error');
+    }
+  });
+}
