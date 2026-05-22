@@ -45,4 +45,10 @@ Este arquivo mantém o histórico consolidado e contínuo de decisões e progres
   - `api/pedidos.ts`: Agendamento atômico, validação de preços e gatilho de receita no status "Entregue".
   - `api/financeiro.ts`: Fluxo consolidado (Lucro = Receitas - Despesas) e lançamentos de despesas/insumos.
   - `api/cron-recorrencia.ts`: Varredura periódica e pré-geração autônoma de pedidos recorrentes como "Rascunho" sem duplicidade.
-- **Status**: Fase 2 concluída 100%. Iniciando desenvolvimento do Frontend PWA Premium.
+- **Status**: Fase 2 concluída. Iniciando desenvolvimento do Frontend PWA Premium.
+
+### [2026-05-22] - Diagnóstico do Erro Vercel DEPLOYMENT_NOT_FOUND & Ajuste TypeScript (v2.1.0)
+- **Diagnóstico**: O erro "DEPLOYMENT_NOT_FOUND" em bemavi.vercel.app indica que o domínio está registrado na Vercel, mas não há nenhuma build/implantação de produção ativa e com sucesso associada a ele.
+- **Ajuste TypeScript**: Corrigido erro de deprecation no `tsconfig.json` adicionando `"ignoreDeprecations": "6.0"` para garantir compilação limpa do `tsc` e das serverless functions da Vercel.
+- **Testes**: Rodados testes baseados em propriedades com sucesso absoluto no módulo financeiro (100% passados).
+
