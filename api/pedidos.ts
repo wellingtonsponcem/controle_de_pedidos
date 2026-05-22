@@ -6,6 +6,7 @@ import pool, { withTransaction } from './_db';
  * - GET: Listar todos os pedidos ordenados por data com detalhes do cliente e itens.
  * - POST: Criar um novo pedido (com agendamento ou recorrência) de forma atômica (transação com rollback).
  * - PUT/PATCH: Atualizar status do pedido (Rascunho -> Pendente -> Agendado -> Entregue -> Cancelado).
+ *   Suporta atualização de lote (batch) de horários de rota planejados.
  *   Na entrega ("Entregue"), cria-se automaticamente o registro financeiro de Receita.
  */
 export default async function handler(req: any, res: any) {
@@ -16,12 +17,13 @@ export default async function handler(req: any, res: any) {
   // ============================================================================
   if (method === 'GET') {
     try {
-      // Obter pedidos com os dados do cliente
+      // Obter pedidos com os dados do cliente e suas coordenadas geográficas
       const pedidosQuery = `
         SELECT p.*, 
                c.nome as cliente_nome, c.telefone as cliente_telefone, c.email as cliente_email,
                c.logradouro as cliente_logradouro, c.numero as cliente_numero, 
-               c.complemento as cliente_complemento, c.bairro as cliente_bairro, c.municipio as cliente_municipio
+               c.complemento as cliente_complemento, c.bairro as cliente_bairro, c.municipio as cliente_municipio,
+               c.latitude as cliente_latitude, c.longitude as cliente_longitude
         FROM pedidos p
         JOIN clientes c ON p.cliente_id = c.id
         ORDER BY p.data_agendada ASC, p.created_at DESC
@@ -56,7 +58,9 @@ export default async function handler(req: any, res: any) {
             numero: pedido.cliente_numero,
             complemento: pedido.cliente_complemento,
             bairro: pedido.cliente_bairro,
-            municipio: pedido.cliente_municipio
+            municipio: pedido.cliente_municipio,
+            latitude: pedido.cliente_latitude ? Number(pedido.cliente_latitude) : null,
+            longitude: pedido.cliente_longitude ? Number(pedido.cliente_longitude) : null
           },
           itens: itens.map(i => ({
             id: i.id,
@@ -128,19 +132,19 @@ export default async function handler(req: any, res: any) {
 
         if (clienteCheck.rows.length > 0) {
           clienteId = clienteCheck.rows[0].id;
-          // Atualizar endereço caso tenha mudado
+          // Atualizar endereço e coordenadas geográficas caso tenha mudado
           await client.query(`
             UPDATE clientes 
-            SET logradouro = $1, numero = $2, complemento = $3, bairro = $4, municipio = $5, email = $6, updated_at = NOW()
-            WHERE id = $7
-          `, [cliente.logradouro, cliente.numero, cliente.complemento, cliente.bairro, cliente.municipio, cliente.email, clienteId]);
+            SET logradouro = $1, numero = $2, complemento = $3, bairro = $4, municipio = $5, email = $6, latitude = $7, longitude = $8, updated_at = NOW()
+            WHERE id = $9
+          `, [cliente.logradouro, cliente.numero, cliente.complemento, cliente.bairro, cliente.municipio, cliente.email, cliente.latitude || null, cliente.longitude || null, clienteId]);
         } else {
           const insertClienteQuery = `
-            INSERT INTO clientes (nome, telefone, email, logradouro, numero, complemento, bairro, municipio)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id
+            INSERT INTO clientes (nome, telefone, email, logradouro, numero, complemento, bairro, municipio, latitude, longitude)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id
           `;
           const insertClienteRes = await client.query(insertClienteQuery, [
-            cliente.nome, cliente.telefone, cliente.email, cliente.logradouro, cliente.numero, cliente.complemento, cliente.bairro, cliente.municipio
+            cliente.nome, cliente.telefone, cliente.email, cliente.logradouro, cliente.numero, cliente.complemento, cliente.bairro, cliente.municipio, cliente.latitude || null, cliente.longitude || null
           ]);
           clienteId = insertClienteRes.rows[0].id;
         }
@@ -177,9 +181,38 @@ export default async function handler(req: any, res: any) {
   }
 
   // ============================================================================
-  // MÉTODO PUT/PATCH: Atualização de Status de Pedido (Gera Receita se "Entregue")
+  // MÉTODO PUT/PATCH: Atualização de Status/Edição de Pedido (Gera Receita se "Entregue")
   // ============================================================================
   else if (method === 'PUT' || method === 'PATCH') {
+    // 1. SUPORTE A ATUALIZAÇÃO EM LOTE DE HORÁRIOS (ROTA PLANEJADA)
+    if (req.body.batch && Array.isArray(req.body.batch)) {
+      try {
+        const batchResult = await withTransaction(async (client) => {
+          const updated = [];
+          for (const item of req.body.batch) {
+            const { id, data_agendada } = item;
+            if (!id || !data_agendada) {
+              throw new Error('Cada item do lote deve conter id e data_agendada.');
+            }
+            const resUpdate = await client.query(`
+              UPDATE pedidos
+              SET data_agendada = $1, status = 'Agendado', updated_at = NOW()
+              WHERE id = $2 RETURNING *
+            `, [data_agendada, id]);
+            if (resUpdate.rows.length === 0) {
+              throw new Error(`Pedido com ID ${id} não encontrado para atualização em lote.`);
+            }
+            updated.push(resUpdate.rows[0]);
+          }
+          return updated;
+        });
+        return res.status(200).json(batchResult);
+      } catch (error: any) {
+        console.error('Falha na transação de atualização em lote de horários:', error);
+        return res.status(500).json({ error: 'Erro ao atualizar horários em lote.', details: error.message });
+      }
+    }
+
     const { id, status, cliente, produtos, data_agendada, municipio_entrega, recorrente_flag, recorrente_intervalo, observacao } = req.body;
 
     if (!id || !status) {
@@ -218,12 +251,12 @@ export default async function handler(req: any, res: any) {
 
         // DETECTAR SE É EDIÇÃO COMPLETA
         if (cliente && produtos && Array.isArray(produtos) && produtos.length > 0 && data_agendada && municipio_entrega) {
-          // 1. Atualizar dados do cliente correspondente
+          // 1. Atualizar dados e coordenadas do cliente correspondente
           await client.query(`
             UPDATE clientes 
-            SET nome = $1, telefone = $2, email = $3, logradouro = $4, numero = $5, complemento = $6, bairro = $7, municipio = $8, updated_at = NOW()
-            WHERE id = $9
-          `, [cliente.nome, cliente.telefone, cliente.email, cliente.logradouro, cliente.numero, cliente.complemento, cliente.bairro, cliente.municipio, clienteId]);
+            SET nome = $1, telefone = $2, email = $3, logradouro = $4, numero = $5, complemento = $6, bairro = $7, municipio = $8, latitude = $9, longitude = $10, updated_at = NOW()
+            WHERE id = $11
+          `, [cliente.nome, cliente.telefone, cliente.email, cliente.logradouro, cliente.numero, cliente.complemento, cliente.bairro, cliente.municipio, cliente.latitude || null, cliente.longitude || null, clienteId]);
 
           // 2. Obter taxa de entrega
           const taxaQuery = await client.query('SELECT valor_taxa FROM taxas_entrega WHERE municipio = $1', [municipio_entrega]);
@@ -266,11 +299,6 @@ export default async function handler(req: any, res: any) {
           // 5. Atualizar Itens do Pedido (Exclui antigos e reinseri novos)
           await client.query('DELETE FROM itens_pedido WHERE pedido_id = $1', [id]);
           
-          const insertItemQuery = `
-            INSERT INTO itens_pedido (pedido_id, produto_id, quantity = quantidade, preco_unitario)
-            VALUES ($1, $2, $3, $4)
-          `;
-          // Ajustado query para usar a coluna correta 'quantidade'
           const insertItemCorrectQuery = `
             INSERT INTO itens_pedido (pedido_id, produto_id, quantidade, preco_unitario)
             VALUES ($1, $2, $3, $4)

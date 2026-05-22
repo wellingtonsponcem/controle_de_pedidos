@@ -13,7 +13,11 @@ const state = {
     transacoes: []
   },
   carrinho: [], // [{ produto_id, quantidade }]
-  isOnline: navigator.onLine
+  isOnline: navigator.onLine,
+  novoClienteCoords: null,
+  editClienteCoords: null,
+  rotaPartidaCoords: { latitude: -20.3168, longitude: -40.3117 },
+  loteRotaCalculada: []
 };
 
 // Configurações de Frete da Grande Vitória (valores iniciais reduzidos e controle síncrono local)
@@ -706,7 +710,9 @@ function setupOrderForm() {
         numero: document.getElementById('cli_numero').value,
         complemento: document.getElementById('cli_complemento').value || null,
         bairro: document.getElementById('cli_bairro').value,
-        municipio: document.getElementById('municipio_entrega').value
+        municipio: document.getElementById('municipio_entrega').value,
+        latitude: state.novoClienteCoords ? state.novoClienteCoords.latitude : null,
+        longitude: state.novoClienteCoords ? state.novoClienteCoords.longitude : null
       },
       produtos: state.carrinho.map(item => ({
         produto_id: item.produto_id,
@@ -757,6 +763,7 @@ function setupOrderForm() {
 function limparFormularioPedido() {
   document.getElementById('orderCreationForm').reset();
   state.carrinho = [];
+  state.novoClienteCoords = null;
   renderCarrinho();
 }
 
@@ -1217,82 +1224,186 @@ function obterPesoEndereco(pedido) {
   return pesoBase + pesoBairro;
 }
 
+// Função para calcular a distância física direta entre dois pontos em km (Haversine)
+function calcularDistanciaHaversine(lat1, lon1, lat2, lon2) {
+  if (lat1 === null || lon1 === null || lat2 === null || lon2 === null) return 0;
+  const R = 6371; // Raio da Terra em km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c; // Distância em km
+}
+
+function obterCoordenadasFallback(pedido) {
+  if (pedido.cliente.latitude !== null && pedido.cliente.longitude !== null &&
+      !isNaN(pedido.cliente.latitude) && !isNaN(pedido.cliente.longitude)) {
+    return { lat: Number(pedido.cliente.latitude), lon: Number(pedido.cliente.longitude) };
+  }
+  // Coordenadas aproximadas padrão para a Grande Vitória
+  const mun = (pedido.cliente.municipio || '').toLowerCase().trim();
+  if (mun === 'vila velha') {
+    return { lat: -20.3292, lon: -40.2882 }; // Praia da Costa
+  } else if (mun === 'serra') {
+    return { lat: -20.1947, lon: -40.2588 }; // Laranjeiras
+  } else {
+    return { lat: -20.3155, lon: -40.3128 }; // Vitória Centro
+  }
+}
+
 window.planejarMelhorRota = function() {
   const partidaInput = document.getElementById('rota_partida');
   const horarioInput = document.getElementById('rota_horario');
+  const dataInput = document.getElementById('rota_data');
   const resultDiv = document.getElementById('routePlanningResult');
   const timelineEl = document.getElementById('routeTimeline');
   const btnMaps = document.getElementById('btnOpenGoogleMapsRoute');
+  const btnSaveBatch = document.getElementById('btnSaveCalculatedRoutes');
   
-  if (!partidaInput || !horarioInput || !resultDiv || !timelineEl || !btnMaps) return;
+  if (!partidaInput || !horarioInput || !dataInput || !resultDiv || !timelineEl || !btnMaps || !btnSaveBatch) return;
   
-  // Filtrar pedidos que estão Ativos (Pendente ou Agendado)
-  const pedidosAtivos = state.pedidos.filter(p => p.status === 'Pendente' || p.status === 'Agendado');
+  const dataSelecionada = dataInput.value;
+  if (!dataSelecionada) {
+    showToast('Por favor, selecione uma data para roteirização.', 'error');
+    return;
+  }
+
+  // Filtrar pedidos que estão Ativos (Pendente ou Agendado) na data selecionada
+  // Comparamos apenas o dia simples YYYY-MM-DD
+  const pedidosDoDia = state.pedidos.filter(p => {
+    if (p.status !== 'Pendente' && p.status !== 'Agendado') return false;
+    const diaPedido = p.data_agendada.substring(0, 10);
+    return diaPedido === dataSelecionada;
+  });
   
-  if (pedidosAtivos.length === 0) {
-    showToast('Nenhum pedido pendente ou agendado para planejar rota.', 'info');
+  if (pedidosDoDia.length === 0) {
+    showToast('Nenhum pedido pendente ou agendado para a data selecionada.', 'info');
     resultDiv.style.display = 'none';
     return;
   }
   
-  // Ordenar usando heurística geográfica
-  const pedidosOrdenados = [...pedidosAtivos].sort((a, b) => obterPesoEndereco(a) - obterPesoEndereco(b));
+  // ALGORITMO DO VIZINHO MAIS PRÓXIMO para ordenação de rota
+  const pedidosNaoVisitados = [...pedidosDoDia];
+  const pedidosOrdenados = [];
   
-  // Calcular timeline com tempos de entrega incrementais
-  let [horaStr, minStr] = horarioInput.value.split(':');
-  let dataHora = new Date();
-  dataHora.setHours(parseInt(horaStr) || 8);
-  dataHora.setMinutes(parseInt(minStr) || 0);
-  dataHora.setSeconds(0);
+  // Posição inicial: Bento Ferreira (ou de onde o usuário digitar e resolver pelo Nominatim)
+  let latAtual = state.rotaPartidaCoords.latitude || -20.3168;
+  let lonAtual = state.rotaPartidaCoords.longitude || -40.3117;
+  
+  while (pedidosNaoVisitados.length > 0) {
+    let indiceProximo = -1;
+    let menorDistancia = Infinity;
+    
+    for (let i = 0; i < pedidosNaoVisitados.length; i++) {
+      const coords = obterCoordenadasFallback(pedidosNaoVisitados[i]);
+      const dist = calcularDistanciaHaversine(latAtual, lonAtual, coords.lat, coords.lon);
+      if (dist < menorDistancia) {
+        menorDistancia = dist;
+        indiceProximo = i;
+      }
+    }
+    
+    if (indiceProximo !== -1) {
+      const pedidoEscolhido = pedidosNaoVisitados.splice(indiceProximo, 1)[0];
+      pedidosOrdenados.push(pedidoEscolhido);
+      const coordsEscolhida = obterCoordenadasFallback(pedidoEscolhido);
+      latAtual = coordsEscolhida.lat;
+      lonAtual = coordsEscolhida.lon;
+    }
+  }
+
+  // Reiniciar para Bento Ferreira para calcular os tempos a partir da partida
+  latAtual = state.rotaPartidaCoords.latitude || -20.3168;
+  lonAtual = state.rotaPartidaCoords.longitude || -40.3117;
+  
+  // Configurar hora atual a partir do horário de saída
+  const [saidaHora, saidaMin] = horarioInput.value.split(':');
+  let dataHora = new Date(`${dataSelecionada}T${saidaHora || '08'}:${saidaMin || '00'}:00`);
   
   let timelineHtml = `
     <div class="timeline-node partida">
       <span class="timeline-time">${horarioInput.value}</span>
-      <span class="timeline-info">📍 Ponto de Partida</span>
+      <span class="timeline-info">📍 Ponto de Partida (Saída e-Bike)</span>
       <span class="timeline-address">${partidaInput.value}</span>
     </div>
   `;
   
   let stops = [];
-  let ultimoMunicipio = 'Vitória';
+  let loteBatch = [];
+  let distanciaAcumulada = 0;
   
-  pedidosOrdenados.forEach((pedido) => {
+  pedidosOrdenados.forEach((pedido, idx) => {
     const cli = pedido.cliente;
-    const mun = cli.municipio;
+    const coords = obterCoordenadasFallback(pedido);
     
-    // Tempo estimado de deslocamento (em minutos)
-    let tempoDeslocamento = 15;
-    if (mun !== ultimoMunicipio) {
-      tempoDeslocamento = 25;
-      ultimoMunicipio = mun;
-    }
+    // Distância Haversine direta em km
+    const distFisica = calcularDistanciaHaversine(latAtual, lonAtual, coords.lat, coords.lon);
     
-    dataHora.setMinutes(dataHora.getMinutes() + tempoDeslocamento);
-    const horaSaidaFormatada = dataHora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    // Distância urbana corrigida pelo fator de rua de 1.35
+    const distCorrigida = distFisica * 1.35;
+    distanciaAcumulada += distCorrigida;
     
-    const enderecoCompleto = `${cli.logradouro}, ${cli.numero}, ${cli.bairro}, ${mun} - ES`;
+    // Tempo de trânsito em minutos a 18 km/h de e-bike
+    const tempoDeslocamentoMinutos = Math.max(1, Math.round((distCorrigida / 18) * 60));
+    
+    // Somar o tempo de deslocamento
+    dataHora.setMinutes(dataHora.getMinutes() + tempoDeslocamentoMinutos);
+    
+    // Criar o timestamp formatado para o banco de dados (no formato de data simples e horário correto)
+    const ano = dataHora.getFullYear();
+    const mes = String(dataHora.getMonth() + 1).padStart(2, '0');
+    const dia = String(dataHora.getDate()).padStart(2, '0');
+    const horas = String(dataHora.getHours()).padStart(2, '0');
+    const minutos = String(dataHora.getMinutes()).padStart(2, '0');
+    const dataAgendadaCalculada = `${ano}-${mes}-${dia}T${horas}:${minutos}:00`;
+    
+    loteBatch.push({
+      id: pedido.id,
+      data_agendada: dataAgendadaCalculada
+    });
+    
+    const horaFormatada = `${horas}:${minutos}`;
+    const enderecoCompleto = `${cli.logradouro}, ${cli.numero}, ${cli.bairro}, ${cli.municipio} - ES`;
     stops.push(enderecoCompleto);
     
     timelineHtml += `
-      <div class="timeline-node">
-        <span class="timeline-time">${horaSaidaFormatada}</span>
-        <span class="timeline-info">📦 Entrega #${pedido.id.substring(0, 5)} - ${cli.nome}</span>
+      <div class="timeline-node" style="animation: fadeInUp 0.4s ease forwards; animation-delay: ${idx * 0.1}s;">
+        <span class="timeline-time">${horaFormatada}</span>
+        <span class="timeline-info">📦 #${pedido.id.substring(0, 5)} - ${cli.nome}</span>
+        <div style="font-size: 0.75rem; color: var(--primary); margin: 0.2rem 0;">
+          🚴 e-Bike: +${distCorrigida.toFixed(1)} km (${tempoDeslocamentoMinutos} min de pedalada)
+        </div>
         <span class="timeline-address">${enderecoCompleto}</span>
       </div>
     `;
     
+    // Somar 5 minutos de parada para a entrega antes de ir ao próximo
     dataHora.setMinutes(dataHora.getMinutes() + 5);
+    
+    // Atualizar referências
+    latAtual = coords.lat;
+    lonAtual = coords.lon;
   });
   
   timelineEl.innerHTML = timelineHtml;
   resultDiv.style.display = 'flex';
   
+  // Guardar lote temporário no state para salvar no Neon
+  state.loteRotaCalculada = loteBatch;
+  
+  // Habilitar botão de salvar em lote
+  btnSaveBatch.style.display = 'block';
+  
+  // Link para Google Maps
   const partidaEscaped = encodeURIComponent(partidaInput.value);
   const destinosEscaped = stops.map(s => encodeURIComponent(s)).join('/');
   const mapsUrl = `https://www.google.com/maps/dir/${partidaEscaped}/${destinosEscaped}`;
-  
   btnMaps.href = mapsUrl;
-  showToast('Melhor rota de entrega calculada com sucesso!', 'success');
+  
+  showToast(`Melhor rota calculada! Total: ${distanciaAcumulada.toFixed(1)} km de e-bike.`, 'success');
 };
 
 // ============================================================================
@@ -1323,11 +1434,14 @@ window.openOrderEditModal = function(pedidoId) {
   document.getElementById('edit_cli_bairro').value = pedido.cliente.bairro;
   document.getElementById('edit_municipio_entrega').value = pedido.cliente.municipio;
 
-  // Ajustar formato do datetime-local
-  const dt = new Date(pedido.data_agendada);
-  const tzOffset = dt.getTimezoneOffset() * 60000;
-  const localISOTime = (new Date(dt.getTime() - tzOffset)).toISOString().slice(0, 16);
-  document.getElementById('edit_data_agendada').value = localISOTime;
+  // Ajustar formato de data simples
+  const diaSimples = pedido.data_agendada.substring(0, 10);
+  document.getElementById('edit_data_agendada').value = diaSimples;
+
+  state.editClienteCoords = {
+    latitude: pedido.cliente.latitude,
+    longitude: pedido.cliente.longitude
+  };
 
   document.getElementById('edit_status').value = pedido.status;
   document.getElementById('edit_recorrente_flag').checked = pedido.recorrente_flag;
@@ -1478,7 +1592,9 @@ function setupOrderEditForm() {
         numero: document.getElementById('edit_cli_numero').value,
         complemento: document.getElementById('edit_cli_complemento').value || null,
         bairro: document.getElementById('edit_cli_bairro').value,
-        municipio: document.getElementById('edit_municipio_entrega').value
+        municipio: document.getElementById('edit_municipio_entrega').value,
+        latitude: state.editClienteCoords ? state.editClienteCoords.latitude : null,
+        longitude: state.editClienteCoords ? state.editClienteCoords.longitude : null
       },
       produtos: state.editCarrinho.map(item => ({
         produto_id: item.produto_id,
@@ -1547,5 +1663,160 @@ function setupOrderEditForm() {
 // Configurar o formulário após carregar
 document.addEventListener('DOMContentLoaded', () => {
   setupOrderEditForm();
+
+  // Inicializar o Autocomplete Nominatim
+  setupAddressAutocomplete('cli_logradouro', 'cli_logradouro_suggestions', (data) => {
+    state.novoClienteCoords = { latitude: data.latitude, longitude: data.longitude };
+    if (data.bairro) document.getElementById('cli_bairro').value = data.bairro;
+    const munSelect = document.getElementById('municipio_entrega');
+    if (munSelect && data.municipio) {
+      munSelect.value = data.municipio;
+      renderCarrinho();
+    }
+  });
+
+  setupAddressAutocomplete('edit_cli_logradouro', 'edit_cli_logradouro_suggestions', (data) => {
+    state.editClienteCoords = { latitude: data.latitude, longitude: data.longitude };
+    if (data.bairro) document.getElementById('edit_cli_bairro').value = data.bairro;
+    const munSelect = document.getElementById('edit_municipio_entrega');
+    if (munSelect && data.municipio) {
+      munSelect.value = data.municipio;
+      renderCarrinhoEdicao();
+    }
+  });
+
+  setupAddressAutocomplete('rota_partida', 'rota_partida_suggestions', (data) => {
+    state.rotaPartidaCoords = { latitude: data.latitude, longitude: data.longitude };
+  });
 });
+
+// ============================================================================
+// 18. SALVAMENTO ATÔMICO DA ROTA SEQUENCIAL DE E-BIKE NO NEON POSTGRES
+// ============================================================================
+window.salvarRotasNoBanco = async function() {
+  if (!state.isOnline) {
+    showToast('Apenas online é permitido salvar o planejamento de rotas no banco.', 'error');
+    return;
+  }
+
+  if (!state.loteRotaCalculada || state.loteRotaCalculada.length === 0) {
+    showToast('Nenhuma rota calculada para salvar.', 'error');
+    return;
+  }
+
+  try {
+    const response = await fetch('/api/pedidos', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ batch: state.loteRotaCalculada })
+    });
+
+    if (response.ok) {
+      showToast('Horários e rotas otimizados gravados com sucesso no Neon Postgres!', 'success');
+      state.loteRotaCalculada = [];
+      const btnSaveBatch = document.getElementById('btnSaveCalculatedRoutes');
+      if (btnSaveBatch) btnSaveBatch.style.display = 'none';
+      await refreshDashboard();
+    } else {
+      const err = await response.json();
+      showToast(err.error || 'Erro ao persistir planejamento de rotas.', 'error');
+    }
+  } catch (error) {
+    console.error('Erro de rede ao salvar rotas:', error);
+    showToast('Erro de rede ao salvar rotas no banco de dados.', 'error');
+  }
+};
+
+// ============================================================================
+// 19. AUTOCOMPLETE DE ENDEREÇOS COM A API NOMINATIM (OPENSTREETMAP)
+// ============================================================================
+function setupAddressAutocomplete(inputId, suggestionsId, onSelect) {
+  const input = document.getElementById(inputId);
+  const suggestionsContainer = document.getElementById(suggestionsId);
+  if (!input || !suggestionsContainer) return;
+
+  let debounceTimer;
+
+  input.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    const query = input.value.trim();
+
+    if (query.length < 3) {
+      suggestionsContainer.innerHTML = '';
+      suggestionsContainer.style.display = 'none';
+      return;
+    }
+
+    debounceTimer = setTimeout(async () => {
+      try {
+        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query + ', Espírito Santo, Brasil')}&addressdetails=1&limit=5`;
+        const response = await fetch(url, {
+          headers: { 'User-Agent': 'BemaviPanificacao/1.0' }
+        });
+
+        if (!response.ok) return;
+        const results = await response.json();
+
+        if (results.length === 0) {
+          suggestionsContainer.innerHTML = '<div class="autocomplete-suggestion-item">Nenhum endereço encontrado</div>';
+          suggestionsContainer.style.display = 'block';
+          return;
+        }
+
+        suggestionsContainer.innerHTML = results.map(item => {
+          const name = item.display_name;
+          return `
+            <div class="autocomplete-suggestion-item" data-lat="${item.lat}" data-lon="${item.lon}" data-address="${encodeURIComponent(JSON.stringify(item))}">
+              ${name}
+            </div>
+          `;
+        }).join('');
+        suggestionsContainer.style.display = 'block';
+
+        suggestionsContainer.querySelectorAll('.autocomplete-suggestion-item').forEach(el => {
+          el.addEventListener('click', () => {
+            const rawData = JSON.parse(decodeURIComponent(el.dataset.address));
+            const lat = Number(el.dataset.lat);
+            const lon = Number(el.dataset.lon);
+            
+            const addr = rawData.address || {};
+            const logradouro = addr.road || addr.pedestrian || addr.suburb || rawData.name || '';
+            const bairro = addr.suburb || addr.neighbourhood || addr.city_district || '';
+            let municipio = addr.city || addr.town || addr.municipality || '';
+            
+            if (municipio.toLowerCase().includes('vitoria') || municipio.toLowerCase().includes('vitória')) {
+              municipio = 'Vitória';
+            } else if (municipio.toLowerCase().includes('vila velha')) {
+              municipio = 'Vila Velha';
+            } else if (municipio.toLowerCase().includes('serra')) {
+              municipio = 'Serra';
+            }
+
+            input.value = logradouro;
+            suggestionsContainer.innerHTML = '';
+            suggestionsContainer.style.display = 'none';
+
+            onSelect({
+              logradouro,
+              bairro,
+              municipio,
+              latitude: lat,
+              longitude: lon
+            });
+          });
+        });
+
+      } catch (error) {
+        console.error('Erro no Nominatim autocomplete:', error);
+      }
+    }, 400);
+  });
+
+  document.addEventListener('click', (e) => {
+    if (e.target !== input && e.target !== suggestionsContainer && !suggestionsContainer.contains(e.target)) {
+      suggestionsContainer.innerHTML = '';
+      suggestionsContainer.style.display = 'none';
+    }
+  });
+}
 

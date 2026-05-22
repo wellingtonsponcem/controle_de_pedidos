@@ -169,8 +169,14 @@
               
               <div class="route-config-box" style="display: flex; flex-direction: column; gap: 0.75rem;">
                 <div class="form-group">
-                  <label for="rota_partida" style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);">Endereço de Partida:</label>
-                  <input type="text" id="rota_partida" value="Rua das Palmeiras, 100, Bento Ferreira, Vitória - ES" style="padding: 0.6rem; font-size: 0.85rem;">
+                  <label for="rota_data" style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);">Data para Roteirização:</label>
+                  <input type="date" id="rota_data" style="padding: 0.6rem; font-size: 0.85rem;">
+                </div>
+
+                <div class="form-group" style="position: relative;">
+                  <label for="rota_partida" style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);">Endereço de Partida (Vitória): *</label>
+                  <input type="text" id="rota_partida" value="Rua das Palmeiras, 100, Bento Ferreira, Vitória - ES" autocomplete="off" style="padding: 0.6rem; font-size: 0.85rem;">
+                  <div id="rota_partida_suggestions" class="autocomplete-suggestions"></div>
                 </div>
                 
                 <div class="form-group">
@@ -189,6 +195,9 @@
                 <div id="routeTimeline" class="route-timeline">
                   <!-- Inserção dinâmica via JS -->
                 </div>
+                <button type="button" id="btnSaveCalculatedRoutes" class="btn btn-primary" onclick="salvarRotasNoBanco()" style="width: 100%; justify-content: center; font-size: 0.85rem; padding: 0.6rem; border: none; font-weight: 600; display: none;">
+                  💾 Salvar Horários Calculados no Banco
+                </button>
                 <a id="btnOpenGoogleMapsRoute" href="#" target="_blank" class="btn btn-secondary" style="width: 100%; justify-content: center; font-size: 0.85rem; padding: 0.6rem; text-decoration: none;">
                   🗺️ Abrir Rota no Google Maps
                 </a>
@@ -373,9 +382,10 @@
               </h3>
 
               <div class="form-group-row">
-                <div class="form-group">
+                <div class="form-group" style="position: relative;">
                   <label for="cli_logradouro">Logradouro / Rua *</label>
-                  <input type="text" id="cli_logradouro" required placeholder="Rua, Avenida...">
+                  <input type="text" id="cli_logradouro" autocomplete="off" required placeholder="Digite a rua para autocompletar...">
+                  <div id="cli_logradouro_suggestions" class="autocomplete-suggestions"></div>
                 </div>
                 <div class="form-group">
                   <label for="cli_numero">Número *</label>
@@ -404,8 +414,8 @@
                   </select>
                 </div>
                 <div class="form-group">
-                  <label for="data_agendada">Data & Hora de Entrega *</label>
-                  <input type="datetime-local" id="data_agendada" required>
+                  <label for="data_agendada">Dia da Entrega *</label>
+                  <input type="date" id="data_agendada" required>
                 </div>
               </div>
 
@@ -728,9 +738,10 @@
               </h3>
 
               <div class="form-group-row">
-                <div class="form-group">
+                <div class="form-group" style="position: relative;">
                   <label for="edit_cli_logradouro">Logradouro / Rua *</label>
-                  <input type="text" id="edit_cli_logradouro" required placeholder="Rua, Avenida...">
+                  <input type="text" id="edit_cli_logradouro" autocomplete="off" required placeholder="Digite a rua para autocompletar...">
+                  <div id="edit_cli_logradouro_suggestions" class="autocomplete-suggestions"></div>
                 </div>
                 <div class="form-group">
                   <label for="edit_cli_numero">Número *</label>
@@ -759,8 +770,8 @@
                   </select>
                 </div>
                 <div class="form-group">
-                  <label for="edit_data_agendada">Data & Hora de Entrega *</label>
-                  <input type="datetime-local" id="edit_data_agendada" required>
+                  <label for="edit_data_agendada">Dia da Entrega *</label>
+                  <input type="date" id="edit_data_agendada" required>
                 </div>
               </div>
 
