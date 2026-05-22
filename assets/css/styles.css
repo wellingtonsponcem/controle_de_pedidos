@@ -1433,3 +1433,108 @@ main {
   cursor: pointer;
   user-select: none;
 }
+
+/* ============================================================================
+   9. TIMELINE DE ROTEIRIZAÇÃO & MODAL DE EDIÇÃO DE PEDIDOS
+   ============================================================================ */
+.route-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  position: relative;
+  padding-left: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.route-timeline::before {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 4px,
+    var(--primary) 4px,
+    var(--primary) 8px
+  );
+  opacity: 0.4;
+}
+
+.timeline-node {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.timeline-node::before {
+  content: '';
+  position: absolute;
+  left: -21px;
+  top: 4px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: 0 0 6px var(--primary-glow);
+  border: 2px solid var(--bg-card);
+  z-index: 2;
+}
+
+.timeline-node.partida::before {
+  background: #3B82F6;
+  box-shadow: 0 0 6px rgba(59, 130, 246, 0.5);
+}
+
+.timeline-node.entregue::before {
+  background: #10B981;
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.5);
+}
+
+.timeline-time {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.timeline-node.partida .timeline-time {
+  color: #60A5FA;
+}
+
+.timeline-info {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.timeline-address {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* Melhorias de Scroll no modal de edição */
+.finance-modal-body::-webkit-scrollbar {
+  width: 6px;
+}
+.finance-modal-body::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+}
+.finance-modal-body::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+.finance-modal-body::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}
+
+.btn-sync.spinning svg {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

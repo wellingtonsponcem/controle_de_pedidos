@@ -580,17 +580,29 @@ function renderPedidos() {
     const dataFormatada = dataObj.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
     // Roteador de botões de ações baseado no status
+    const mapsIndividualUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(pedido.cliente.logradouro + ', ' + pedido.cliente.numero + ', ' + pedido.cliente.bairro + ', ' + pedido.cliente.municipio + ' - ES')}`;
+    
     let acoesHtml = '';
+    if (pedido.status !== 'Entregue') {
+      acoesHtml += `
+        <button class="btn btn-secondary" onclick="openOrderEditModal('${pedido.id}')" style="background: rgba(245, 158, 11, 0.08); border-color: rgba(245, 158, 11, 0.2); color: var(--primary);">📝 Editar</button>
+      `;
+    }
+    
+    acoesHtml += `
+      <a href="${mapsIndividualUrl}" target="_blank" class="btn btn-secondary" style="text-decoration: none; display: inline-flex; align-items: center; gap: 0.25rem;">📍 Rota</a>
+    `;
+
     if (pedido.status === 'Rascunho') {
-      acoesHtml = `
+      acoesHtml += `
         <button class="btn btn-secondary" onclick="alterarStatusPedido('${pedido.id}', 'Pendente')">Aprovar Pedido</button>
       `;
     } else if (pedido.status === 'Pendente') {
-      acoesHtml = `
+      acoesHtml += `
         <button class="btn btn-primary" onclick="alterarStatusPedido('${pedido.id}', 'Agendado')">Agendar Produção</button>
       `;
     } else if (pedido.status === 'Agendado') {
-      acoesHtml = `
+      acoesHtml += `
         <button class="btn btn-success" onclick="alterarStatusPedido('${pedido.id}', 'Entregue')">Marcar como Entregue</button>
       `;
     }
@@ -1155,3 +1167,385 @@ function setupProductForm() {
     }
   });
 }
+
+// ============================================================================
+// 16. ROTEIRIZAÇÃO E HEURÍSTICA DE VIZINHANÇA GEOGRÁFICA (GRANDE VITÓRIA)
+// ============================================================================
+const bairroPesos = {
+  // Vitória
+  'bento ferreira': 1,
+  'monte belo': 2,
+  'jucutuquara': 3,
+  'gurigica': 4,
+  'horto': 5,
+  'santa lúcia': 6,
+  'praia do canto': 7,
+  'barro vermelho': 8,
+  'enseada do suá': 9,
+  'santa helena': 10,
+  'jardim da penha': 11,
+  'mata da praia': 12,
+  'jardim camburi': 13,
+  
+  // Vila Velha (Próximo à Terceira Ponte)
+  'praia da costa': 20,
+  'itapoã': 21,
+  'itaparica': 22,
+  'coqueiral de itaparica': 23,
+  'centro': 24,
+  'glória': 25,
+  
+  // Serra (Próximo a Jardim Camburi)
+  'bairro de fátima': 30,
+  'carapina': 31,
+  'laranjeiras': 32,
+  'parque residencial laranjeiras': 33,
+  'jacaraípe': 34
+};
+
+function obterPesoEndereco(pedido) {
+  const mun = (pedido.cliente.municipio || '').toLowerCase().trim();
+  const bai = (pedido.cliente.bairro || '').toLowerCase().trim();
+  
+  let pesoBase = 0;
+  if (mun === 'vitória' || mun === 'vitoria') pesoBase = 100;
+  else if (mun === 'vila velha') pesoBase = 200;
+  else if (mun === 'serra') pesoBase = 300;
+  else pesoBase = 400;
+  
+  const pesoBairro = bairroPesos[bai] || 99;
+  return pesoBase + pesoBairro;
+}
+
+window.planejarMelhorRota = function() {
+  const partidaInput = document.getElementById('rota_partida');
+  const horarioInput = document.getElementById('rota_horario');
+  const resultDiv = document.getElementById('routePlanningResult');
+  const timelineEl = document.getElementById('routeTimeline');
+  const btnMaps = document.getElementById('btnOpenGoogleMapsRoute');
+  
+  if (!partidaInput || !horarioInput || !resultDiv || !timelineEl || !btnMaps) return;
+  
+  // Filtrar pedidos que estão Ativos (Pendente ou Agendado)
+  const pedidosAtivos = state.pedidos.filter(p => p.status === 'Pendente' || p.status === 'Agendado');
+  
+  if (pedidosAtivos.length === 0) {
+    showToast('Nenhum pedido pendente ou agendado para planejar rota.', 'info');
+    resultDiv.style.display = 'none';
+    return;
+  }
+  
+  // Ordenar usando heurística geográfica
+  const pedidosOrdenados = [...pedidosAtivos].sort((a, b) => obterPesoEndereco(a) - obterPesoEndereco(b));
+  
+  // Calcular timeline com tempos de entrega incrementais
+  let [horaStr, minStr] = horarioInput.value.split(':');
+  let dataHora = new Date();
+  dataHora.setHours(parseInt(horaStr) || 8);
+  dataHora.setMinutes(parseInt(minStr) || 0);
+  dataHora.setSeconds(0);
+  
+  let timelineHtml = `
+    <div class="timeline-node partida">
+      <span class="timeline-time">${horarioInput.value}</span>
+      <span class="timeline-info">📍 Ponto de Partida</span>
+      <span class="timeline-address">${partidaInput.value}</span>
+    </div>
+  `;
+  
+  let stops = [];
+  let ultimoMunicipio = 'Vitória';
+  
+  pedidosOrdenados.forEach((pedido) => {
+    const cli = pedido.cliente;
+    const mun = cli.municipio;
+    
+    // Tempo estimado de deslocamento (em minutos)
+    let tempoDeslocamento = 15;
+    if (mun !== ultimoMunicipio) {
+      tempoDeslocamento = 25;
+      ultimoMunicipio = mun;
+    }
+    
+    dataHora.setMinutes(dataHora.getMinutes() + tempoDeslocamento);
+    const horaSaidaFormatada = dataHora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    
+    const enderecoCompleto = `${cli.logradouro}, ${cli.numero}, ${cli.bairro}, ${mun} - ES`;
+    stops.push(enderecoCompleto);
+    
+    timelineHtml += `
+      <div class="timeline-node">
+        <span class="timeline-time">${horaSaidaFormatada}</span>
+        <span class="timeline-info">📦 Entrega #${pedido.id.substring(0, 5)} - ${cli.nome}</span>
+        <span class="timeline-address">${enderecoCompleto}</span>
+      </div>
+    `;
+    
+    dataHora.setMinutes(dataHora.getMinutes() + 5);
+  });
+  
+  timelineEl.innerHTML = timelineHtml;
+  resultDiv.style.display = 'flex';
+  
+  const partidaEscaped = encodeURIComponent(partidaInput.value);
+  const destinosEscaped = stops.map(s => encodeURIComponent(s)).join('/');
+  const mapsUrl = `https://www.google.com/maps/dir/${partidaEscaped}/${destinosEscaped}`;
+  
+  btnMaps.href = mapsUrl;
+  showToast('Melhor rota de entrega calculada com sucesso!', 'success');
+};
+
+// ============================================================================
+// 17. MODAL DE EDIÇÃO COMPLETA DE PEDIDOS
+// ============================================================================
+state.editCarrinho = []; // Carrinho temporário para o modal de edição
+
+window.openOrderEditModal = function(pedidoId) {
+  const pedido = state.pedidos.find(p => p.id === pedidoId);
+  if (!pedido) {
+    showToast('Pedido não encontrado.', 'error');
+    return;
+  }
+
+  if (pedido.status === 'Entregue') {
+    showToast('Não é permitido editar pedidos que já foram entregues.', 'error');
+    return;
+  }
+
+  // Preencher campos do modal
+  document.getElementById('edit_order_id').value = pedido.id;
+  document.getElementById('edit_cli_nome').value = pedido.cliente.nome;
+  document.getElementById('edit_cli_telefone').value = pedido.cliente.telefone;
+  document.getElementById('edit_cli_email').value = pedido.cliente.email || '';
+  document.getElementById('edit_cli_logradouro').value = pedido.cliente.logradouro;
+  document.getElementById('edit_cli_numero').value = pedido.cliente.numero;
+  document.getElementById('edit_cli_complemento').value = pedido.cliente.complemento || '';
+  document.getElementById('edit_cli_bairro').value = pedido.cliente.bairro;
+  document.getElementById('edit_municipio_entrega').value = pedido.cliente.municipio;
+
+  // Ajustar formato do datetime-local
+  const dt = new Date(pedido.data_agendada);
+  const tzOffset = dt.getTimezoneOffset() * 60000;
+  const localISOTime = (new Date(dt.getTime() - tzOffset)).toISOString().slice(0, 16);
+  document.getElementById('edit_data_agendada').value = localISOTime;
+
+  document.getElementById('edit_status').value = pedido.status;
+  document.getElementById('edit_recorrente_flag').checked = pedido.recorrente_flag;
+  
+  const editIntervalBox = document.getElementById('edit_intervaloRecorrenciaBox');
+  if (pedido.recorrente_flag) {
+    editIntervalBox.style.display = 'block';
+    document.getElementById('edit_recorrente_intervalo').value = pedido.recorrente_intervalo || 'Semanal';
+  } else {
+    editIntervalBox.style.display = 'none';
+  }
+
+  document.getElementById('edit_observacao').value = pedido.observacao || '';
+
+  // Carregar produtos no carrinho de edição
+  state.editCarrinho = pedido.itens.map(item => ({
+    produto_id: item.produto_id,
+    nome: item.nome,
+    modelo: item.modelo,
+    preco: Number(item.preco_unitario),
+    quantidade: item.quantidade
+  }));
+
+  // Atualizar dropdown de produtos na edição
+  const select = document.getElementById('edit_addProdutoSelect');
+  if (select) {
+    select.innerHTML = '<option value="">-- Selecione para adicionar --</option>' + 
+      state.produtos.filter(p => p.ativo !== false).map(prod => `
+        <option value="${prod.id}">${prod.nome} (${prod.modelo}) - R$ ${Number(prod.preco_base).toFixed(2)}</option>
+      `).join('');
+  }
+
+  renderCarrinhoEdicao();
+
+  const modal = document.getElementById('orderEditModal');
+  if (modal) {
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+};
+
+window.closeOrderEditModal = function() {
+  const modal = document.getElementById('orderEditModal');
+  if (modal) {
+    modal.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+};
+
+function renderCarrinhoEdicao() {
+  const carrinhoBox = document.getElementById('edit_carrinhoItens');
+  const totalProdutosEl = document.getElementById('edit_carrinhoTotalProdutos');
+  const totalGeralEl = document.getElementById('edit_carrinhoTotalGeral');
+  const taxaEntregaEl = document.getElementById('edit_carrinhoTaxaEntrega');
+  const municipioSelect = document.getElementById('edit_municipio_entrega');
+
+  if (state.editCarrinho.length === 0) {
+    carrinhoBox.innerHTML = '<div class="carrinho-empty">Nenhum item selecionado.</div>';
+    totalProdutosEl.textContent = 'R$ 0,00';
+    totalGeralEl.textContent = 'R$ 0,00';
+    return;
+  }
+
+  carrinhoBox.innerHTML = state.editCarrinho.map(item => `
+    <div class="carrinho-item">
+      <div>
+        <strong>${item.nome}</strong> <br>
+        <span style="font-size: 0.8rem; color: var(--text-muted);">${item.modelo}</span>
+      </div>
+      <div class="quantity-controls">
+        <button type="button" class="quantity-btn" onclick="alterarQtdCarrinhoEdicao('${item.produto_id}', -1)">-</button>
+        <span>${item.quantidade}</span>
+        <button type="button" class="quantity-btn" onclick="alterarQtdCarrinhoEdicao('${item.produto_id}', 1)">+</button>
+        <span style="margin-left: 1rem; font-weight: 600;">R$ ${(item.preco * item.quantidade).toFixed(2)}</span>
+      </div>
+    </div>
+  `).join('');
+
+  const subtotal = state.editCarrinho.reduce((acc, curr) => acc + (curr.preco * curr.quantidade), 0);
+  
+  let taxa = 0;
+  if (!freteConfig.gratis) {
+    if (municipioSelect.value === 'Vitória') taxa = freteConfig.vitoria;
+    else if (municipioSelect.value === 'Vila Velha') taxa = freteConfig.vilaVelha;
+    else if (municipioSelect.value === 'Serra') taxa = freteConfig.serra;
+  }
+
+  totalProdutosEl.textContent = `R$ ${subtotal.toFixed(2)}`;
+  taxaEntregaEl.textContent = `R$ ${taxa.toFixed(2)}`;
+  totalGeralEl.textContent = `R$ ${(subtotal + taxa).toFixed(2)}`;
+}
+
+window.alterarQtdCarrinhoEdicao = function(productId, delta) {
+  const item = state.editCarrinho.find(i => i.produto_id === productId);
+  if (!item) return;
+
+  item.quantidade += delta;
+  if (item.quantidade <= 0) {
+    state.editCarrinho = state.editCarrinho.filter(i => i.produto_id !== productId);
+  }
+  
+  renderCarrinhoEdicao();
+};
+
+window.adicionarAoCarrinhoEdicao = function(productId) {
+  const produto = state.produtos.find(p => p.id === productId);
+  if (!produto) return;
+
+  const itemExistente = state.editCarrinho.find(item => item.produto_id === productId);
+  if (itemExistente) {
+    itemExistente.quantidade += 1;
+  } else {
+    state.editCarrinho.push({
+      produto_id: productId,
+      nome: produto.nome,
+      modelo: produto.modelo,
+      preco: Number(produto.preco_base),
+      quantidade: 1
+    });
+  }
+
+  renderCarrinhoEdicao();
+  showToast(`${produto.nome} adicionado à edição!`, 'success');
+};
+
+// Inicializador de listeners do formulário de edição
+function setupOrderEditForm() {
+  const form = document.getElementById('orderEditForm');
+  if (!form) return;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    if (state.editCarrinho.length === 0) {
+      showToast('O pedido precisa de pelo menos um pão.', 'error');
+      return;
+    }
+
+    const orderId = document.getElementById('edit_order_id').value;
+    const payload = {
+      id: orderId,
+      status: document.getElementById('edit_status').value,
+      cliente: {
+        nome: document.getElementById('edit_cli_nome').value,
+        telefone: document.getElementById('edit_cli_telefone').value,
+        email: document.getElementById('edit_cli_email').value || null,
+        logradouro: document.getElementById('edit_cli_logradouro').value,
+        numero: document.getElementById('edit_cli_numero').value,
+        complemento: document.getElementById('edit_cli_complemento').value || null,
+        bairro: document.getElementById('edit_cli_bairro').value,
+        municipio: document.getElementById('edit_municipio_entrega').value
+      },
+      produtos: state.editCarrinho.map(item => ({
+        produto_id: item.produto_id,
+        quantidade: item.quantidade
+      })),
+      data_agendada: document.getElementById('edit_data_agendada').value,
+      municipio_entrega: document.getElementById('edit_municipio_entrega').value,
+      recorrente_flag: document.getElementById('edit_recorrente_flag').checked,
+      recorrente_intervalo: document.getElementById('edit_recorrente_flag').checked ? document.getElementById('edit_recorrente_intervalo').value : null,
+      observacao: document.getElementById('edit_observacao').value || null
+    };
+
+    if (!state.isOnline) {
+      showToast('Para edições completas e recálculo financeiro, é necessário conexão online com o Neon.', 'error');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/pedidos', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (response.ok) {
+        showToast('Pedido alterado com sucesso no Neon Postgres!', 'success');
+        closeOrderEditModal();
+        await refreshDashboard();
+        await refreshFinanceiro();
+      } else {
+        const err = await response.json();
+        showToast(err.error || 'Erro ao salvar alterações do pedido.', 'error');
+      }
+    } catch (error) {
+      console.error('Falha de rede ao editar pedido:', error);
+      showToast('Falha de rede ao salvar alterações. O banco de dados pode estar indisponível.', 'error');
+    }
+  });
+
+  // Configurar listeners complementares
+  const editRecFlag = document.getElementById('edit_recorrente_flag');
+  if (editRecFlag) {
+    editRecFlag.addEventListener('change', (e) => {
+      const editIntervalBox = document.getElementById('edit_intervaloRecorrenciaBox');
+      editIntervalBox.style.display = e.target.checked ? 'block' : 'none';
+    });
+  }
+
+  const editAddBtn = document.getElementById('edit_addProdutoBtn');
+  if (editAddBtn) {
+    editAddBtn.addEventListener('click', () => {
+      const select = document.getElementById('edit_addProdutoSelect');
+      if (select && select.value) {
+        adicionarAoCarrinhoEdicao(select.value);
+        select.value = '';
+      }
+    });
+  }
+
+  const editMunicipioSelect = document.getElementById('edit_municipio_entrega');
+  if (editMunicipioSelect) {
+    editMunicipioSelect.addEventListener('change', renderCarrinhoEdicao);
+  }
+}
+
+// Configurar o formulário após carregar
+document.addEventListener('DOMContentLoaded', () => {
+  setupOrderEditForm();
+});
+

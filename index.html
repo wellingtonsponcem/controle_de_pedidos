@@ -156,6 +156,45 @@
               </div>
             </div>
 
+            <!-- Painel Administrativo de Roteirização de Entregas -->
+            <div class="card-panel" style="display:flex; flex-direction:column; gap:1rem;">
+              <h3 class="panel-title" style="display: flex; align-items: center; font-size: 1.1rem;">
+                <svg class="title-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+                  <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"></polygon>
+                  <line x1="9" y1="3" x2="9" y2="18"></line>
+                  <line x1="15" y1="6" x2="15" y2="21"></line>
+                </svg>
+                Roteirização de Entregas
+              </h3>
+              
+              <div class="route-config-box" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                <div class="form-group">
+                  <label for="rota_partida" style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);">Endereço de Partida:</label>
+                  <input type="text" id="rota_partida" value="Rua das Palmeiras, 100, Bento Ferreira, Vitória - ES" style="padding: 0.6rem; font-size: 0.85rem;">
+                </div>
+                
+                <div class="form-group">
+                  <label for="rota_horario" style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);">Horário Estimado de Saída:</label>
+                  <input type="time" id="rota_horario" value="08:00" style="padding: 0.6rem; font-size: 0.85rem;">
+                </div>
+                
+                <button type="button" class="btn btn-primary" onclick="planejarMelhorRota()" style="width: 100%; justify-content: center; font-size: 0.9rem; padding: 0.7rem; border: none; font-weight: 600;">
+                  🗺️ Planejar Melhor Rota de Entrega
+                </button>
+              </div>
+              
+              <!-- Resultado do Roteamento -->
+              <div id="routePlanningResult" style="display: none; border-top: 1px dashed var(--border-subtle); padding-top: 1rem; margin-top: 0.5rem; flex-direction: column; gap: 1rem;">
+                <h4 style="font-size: 0.9rem; color: var(--primary); font-weight: 600;">Timeline Otimizada de Entrega</h4>
+                <div id="routeTimeline" class="route-timeline">
+                  <!-- Inserção dinâmica via JS -->
+                </div>
+                <a id="btnOpenGoogleMapsRoute" href="#" target="_blank" class="btn btn-secondary" style="width: 100%; justify-content: center; font-size: 0.85rem; padding: 0.6rem; text-decoration: none;">
+                  🗺️ Abrir Rota no Google Maps
+                </a>
+              </div>
+            </div>
+
             <!-- Dicas / Painel Auxiliar de Produção -->
             <div class="card-panel" style="display:flex; flex-direction:column; gap:1.25rem;">
               <h3 class="panel-title">
@@ -626,6 +665,178 @@
               <button type="submit" id="btnSubmitProduct" class="btn btn-primary" style="width: 100%; justify-content: center; margin-top: 1rem; border: none; font-weight: 600; padding: 0.75rem;">
                 💾 Salvar Pão no Catálogo
               </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODAL / BOTTOM SHEET DE EDIÇÃO DE PEDIDO -->
+      <div id="orderEditModal" class="finance-modal" role="dialog" aria-modal="true" aria-labelledby="orderEditModalTitle">
+        <div class="finance-modal-overlay" onclick="closeOrderEditModal()"></div>
+        <div class="finance-modal-content" style="max-width: 700px;">
+          <div class="finance-modal-header">
+            <h2 id="orderEditModalTitle" class="panel-title" style="font-size: 1.2rem;">
+              <svg class="title-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+              </svg>
+              Editar Pedido
+            </h2>
+            <button class="btn-close-modal" onclick="closeOrderEditModal()" aria-label="Fechar formulário">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+          <div class="finance-modal-body" style="max-height: 70vh; overflow-y: auto;">
+            <form id="orderEditForm" class="order-form">
+              <input type="hidden" id="edit_order_id">
+              
+              <h3 class="form-section-header" style="margin-top: 0;">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+                Dados do Cliente
+              </h3>
+              
+              <div class="form-group-row">
+                <div class="form-group">
+                  <label for="edit_cli_nome">Nome Completo *</label>
+                  <input type="text" id="edit_cli_nome" required placeholder="Nome do cliente">
+                </div>
+                <div class="form-group">
+                  <label for="edit_cli_telefone">Telefone / WhatsApp *</label>
+                  <input type="tel" id="edit_cli_telefone" required placeholder="(27) 99999-9999">
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label for="edit_cli_email">Email (Opcional)</label>
+                <input type="email" id="edit_cli_email" placeholder="cliente@email.com">
+              </div>
+
+              <h3 class="form-section-header">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="1" y="3" width="15" height="13"></rect>
+                  <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+                  <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                  <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                </svg>
+                Endereço & Agendamento
+              </h3>
+
+              <div class="form-group-row">
+                <div class="form-group">
+                  <label for="edit_cli_logradouro">Logradouro / Rua *</label>
+                  <input type="text" id="edit_cli_logradouro" required placeholder="Rua, Avenida...">
+                </div>
+                <div class="form-group">
+                  <label for="edit_cli_numero">Número *</label>
+                  <input type="text" id="edit_cli_numero" required placeholder="123">
+                </div>
+              </div>
+
+              <div class="form-group-row">
+                <div class="form-group">
+                  <label for="edit_cli_complemento">Complemento</label>
+                  <input type="text" id="edit_cli_complemento" placeholder="Apto, Casa...">
+                </div>
+                <div class="form-group">
+                  <label for="edit_cli_bairro">Bairro *</label>
+                  <input type="text" id="edit_cli_bairro" required placeholder="Bairro do cliente">
+                </div>
+              </div>
+
+              <div class="form-group-row">
+                <div class="form-group">
+                  <label for="edit_municipio_entrega">Município (Grande Vitória) *</label>
+                  <select id="edit_municipio_entrega" required>
+                    <option value="Vitória">Vitória</option>
+                    <option value="Vila Velha">Vila Velha</option>
+                    <option value="Serra">Serra</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="edit_data_agendada">Data & Hora de Entrega *</label>
+                  <input type="datetime-local" id="edit_data_agendada" required>
+                </div>
+              </div>
+
+              <div class="form-group-row">
+                <div class="form-group">
+                  <label for="edit_status">Status do Pedido *</label>
+                  <select id="edit_status" required>
+                    <option value="Rascunho">Rascunho</option>
+                    <option value="Pendente">Pendente</option>
+                    <option value="Agendado">Agendado</option>
+                    <option value="Cancelado">Cancelado</option>
+                  </select>
+                </div>
+                <div class="form-group" style="flex-direction: row; align-items: center; gap: 0.5rem; margin-top: 1.8rem;">
+                  <input type="checkbox" id="edit_recorrente_flag" style="width: 18px; height: 18px; cursor: pointer;">
+                  <label for="edit_recorrente_flag" style="cursor: pointer; user-select: none; margin-bottom: 0;">Pedido Recorrente</label>
+                </div>
+              </div>
+
+              <div id="edit_intervaloRecorrenciaBox" class="form-group" style="display: none;">
+                <label for="edit_recorrente_intervalo">Intervalo de Recorrência *</label>
+                <select id="edit_recorrente_intervalo">
+                  <option value="Semanal">Semanal</option>
+                  <option value="Quinzenal">Quinzenal</option>
+                  <option value="Mensal">Mensal</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="edit_observacao">Observações Adicionais</label>
+                <textarea id="edit_observacao" rows="2" placeholder="Ex: Deixar na portaria, fatiado..."></textarea>
+              </div>
+
+              <h3 class="form-section-header">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="9" cy="21" r="1"></circle>
+                  <circle cx="20" cy="21" r="1"></circle>
+                  <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                </svg>
+                Itens do Pedido (Editar Carrinho)
+              </h3>
+
+              <div class="carrinho-container">
+                <div id="edit_carrinhoItens">
+                  <!-- Itens de edição carregados por JS -->
+                </div>
+                
+                <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
+                  <select id="edit_addProdutoSelect" style="flex:1; padding: 0.5rem; background:rgba(0,0,0,0.2); border:1px solid var(--border-subtle); color:var(--text-main); border-radius:6px; font-size:0.85rem;">
+                    <!-- Carregados via JS -->
+                  </select>
+                  <button type="button" id="edit_addProdutoBtn" class="btn btn-secondary" style="padding:0 1rem; font-size:0.8rem;">+ Adicionar</button>
+                </div>
+              </div>
+
+              <!-- Resumo dos Totais na Edição -->
+              <div class="receipt-card">
+                <div style="display: flex; justify-content: space-between;">
+                  <span>Subtotal Pães:</span>
+                  <span id="edit_carrinhoTotalProdutos">R$ 0,00</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                  <span>Taxa de Entrega:</span>
+                  <span id="edit_carrinhoTaxaEntrega">R$ 0,00</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-weight: 700; border-top: 1px dashed var(--border-subtle); padding-top: 0.75rem; margin-top: 0.5rem; align-items: center;">
+                  <span style="font-size: 1.1rem; color: var(--text-main);">Total Geral:</span>
+                  <span id="edit_carrinhoTotalGeral" class="receipt-total-value">R$ 0,00</span>
+                </div>
+              </div>
+
+              <div class="form-actions-sticky" style="position: static; margin-top: 1rem;">
+                <button type="submit" id="btnSubmitEditOrder" class="btn btn-primary" style="width: 100%; justify-content: center; font-size: 1.05rem; padding: 0.85rem; border: none; font-weight: 600;">
+                  💾 Salvar Alterações
+                </button>
+              </div>
             </form>
           </div>
         </div>

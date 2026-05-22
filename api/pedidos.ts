@@ -180,10 +180,10 @@ export default async function handler(req: any, res: any) {
   // MÉTODO PUT/PATCH: Atualização de Status de Pedido (Gera Receita se "Entregue")
   // ============================================================================
   else if (method === 'PUT' || method === 'PATCH') {
-    const { id, status } = req.body;
+    const { id, status, cliente, produtos, data_agendada, municipio_entrega, recorrente_flag, recorrente_intervalo, observacao } = req.body;
 
     if (!id || !status) {
-      return res.status(400).json({ error: 'Pedido ID e novo Status são obrigatórios.' });
+      return res.status(400).json({ error: 'Pedido ID e Status são obrigatórios.' });
     }
 
     const statusValidos = ['Rascunho', 'Pendente', 'Agendado', 'Entregue', 'Cancelado'];
@@ -193,7 +193,7 @@ export default async function handler(req: any, res: any) {
 
     try {
       const pedidoAtualizado = await withTransaction(async (client) => {
-        // Buscar informações atuais do pedido e do cliente
+        // Buscar informações atuais do pedido
         const pedQuery = await client.query(`
           SELECT p.*, c.nome as cliente_nome 
           FROM pedidos p
@@ -207,32 +207,101 @@ export default async function handler(req: any, res: any) {
 
         const pedido = pedQuery.rows[0];
         const statusAnterior = pedido.status;
+        const clienteId = pedido.cliente_id;
 
-        // Se já está entregue, não permite alterar status para evitar re-faturamento ou alteração histórica
-        if (statusAnterior === 'Entregue' && status !== 'Entregue') {
-          throw new Error('Não é permitido alterar o status de um pedido já entregue.');
+        // Se já está entregue, não permite nenhuma alteração física ou de status
+        if (statusAnterior === 'Entregue') {
+          throw new Error('Não é permitido alterar ou editar um pedido já entregue.');
         }
 
-        // Atualizar o status do pedido
-        const updatePedidoQuery = `
-          UPDATE pedidos 
-          SET status = $1, updated_at = NOW() 
-          WHERE id = $2 RETURNING *
-        `;
-        const updatePedidoRes = await client.query(updatePedidoQuery, [status, id]);
-        const pedidoSalvo = updatePedidoRes.rows[0];
+        let pedidoSalvo;
+
+        // DETECTAR SE É EDIÇÃO COMPLETA
+        if (cliente && produtos && Array.isArray(produtos) && produtos.length > 0 && data_agendada && municipio_entrega) {
+          // 1. Atualizar dados do cliente correspondente
+          await client.query(`
+            UPDATE clientes 
+            SET nome = $1, telefone = $2, email = $3, logradouro = $4, numero = $5, complemento = $6, bairro = $7, municipio = $8, updated_at = NOW()
+            WHERE id = $9
+          `, [cliente.nome, cliente.telefone, cliente.email, cliente.logradouro, cliente.numero, cliente.complemento, cliente.bairro, cliente.municipio, clienteId]);
+
+          // 2. Obter taxa de entrega
+          const taxaQuery = await client.query('SELECT valor_taxa FROM taxas_entrega WHERE municipio = $1', [municipio_entrega]);
+          if (taxaQuery.rows.length === 0) {
+            throw new Error(`Município '${municipio_entrega}' não é atendido pela logística Bemavi.`);
+          }
+          const valorEntrega = Number(taxaQuery.rows[0].valor_taxa);
+
+          // 3. Calcular preço oficial dos produtos no banco (evita manipulação externa)
+          let valorProdutos = 0;
+          const itensComPreco = [];
+
+          for (const item of produtos) {
+            const prodQuery = await client.query('SELECT preco_base FROM produtos WHERE id = $1', [item.produto_id]);
+            if (prodQuery.rows.length === 0) {
+              throw new Error(`Produto com ID ${item.produto_id} não existe no catálogo.`);
+            }
+            const precoUnitario = Number(prodQuery.rows[0].preco_base);
+            valorProdutos += precoUnitario * item.quantidade;
+            itensComPreco.push({
+              produto_id: item.produto_id,
+              quantidade: item.quantidade,
+              preco_unitario: precoUnitario
+            });
+          }
+
+          const valorTotal = valorProdutos + valorEntrega;
+
+          // 4. Atualizar Pedido
+          const updatePedidoQuery = `
+            UPDATE pedidos 
+            SET data_agendada = $1, municipio_entrega = $2, valor_produtos = $3, valor_entrega = $4, valor_total = $5, status = $6, recorrente_flag = $7, recorrente_intervalo = $8, observacao = $9, updated_at = NOW() 
+            WHERE id = $10 RETURNING *
+          `;
+          const updatePedidoRes = await client.query(updatePedidoQuery, [
+            data_agendada, municipio_entrega, valorProdutos, valorEntrega, valorTotal, status, recorrente_flag, recorrente_intervalo || null, observacao || null, id
+          ]);
+          pedidoSalvo = updatePedidoRes.rows[0];
+
+          // 5. Atualizar Itens do Pedido (Exclui antigos e reinseri novos)
+          await client.query('DELETE FROM itens_pedido WHERE pedido_id = $1', [id]);
+          
+          const insertItemQuery = `
+            INSERT INTO itens_pedido (pedido_id, produto_id, quantity = quantidade, preco_unitario)
+            VALUES ($1, $2, $3, $4)
+          `;
+          // Ajustado query para usar a coluna correta 'quantidade'
+          const insertItemCorrectQuery = `
+            INSERT INTO itens_pedido (pedido_id, produto_id, quantidade, preco_unitario)
+            VALUES ($1, $2, $3, $4)
+          `;
+
+          for (const item of itensComPreco) {
+            await client.query(insertItemCorrectQuery, [id, item.produto_id, item.quantidade, item.preco_unitario]);
+          }
+        } 
+        // CASO CONTRÁRIO: ATUALIZAÇÃO RÁPIDA DE STATUS
+        else {
+          const updatePedidoQuery = `
+            UPDATE pedidos 
+            SET status = $1, updated_at = NOW() 
+            WHERE id = $2 RETURNING *
+          `;
+          const updatePedidoRes = await client.query(updatePedidoQuery, [status, id]);
+          pedidoSalvo = updatePedidoRes.rows[0];
+        }
 
         // Regra de Negócio Crítica: Ao marcar como "Entregue", gera a Transação Financeira de Receita
         if (status === 'Entregue' && statusAnterior !== 'Entregue') {
-          // Verificar se já existe lançamento financeiro para evitar duplicidade
           const transQuery = await client.query('SELECT id FROM transacoes_financeiras WHERE pedido_id = $1', [id]);
           if (transQuery.rows.length === 0) {
             const insertFinanceiroQuery = `
               INSERT INTO transacoes_financeiras (tipo, valor, data, descricao, categoria, pedido_id)
               VALUES ('Receita', $1, CURRENT_DATE, $2, 'Venda de Pedido', $3)
             `;
-            const descricaoReceita = `Entrega de Pão Bemavi - Cliente: ${pedido.cliente_nome}`;
-            await client.query(insertFinanceiroQuery, [pedido.valor_total, descricaoReceita, id]);
+            const clienteNome = cliente ? cliente.nome : pedido.cliente_nome;
+            const descricaoReceita = `Entrega de Pão Bemavi - Cliente: ${clienteNome}`;
+            await client.query(insertFinanceiroQuery, [pedidoSalvo.valor_total, descricaoReceita, id]);
           }
         }
 
@@ -241,8 +310,8 @@ export default async function handler(req: any, res: any) {
 
       return res.status(200).json(pedidoAtualizado);
     } catch (error: any) {
-      console.error('Falha ao atualizar status de pedido:', error);
-      return res.status(500).json({ error: 'Erro ao atualizar status do pedido.', details: error.message });
+      console.error('Falha ao atualizar/editar pedido no Neon:', error);
+      return res.status(500).json({ error: 'Erro ao atualizar/editar pedido.', details: error.message });
     }
   }
 

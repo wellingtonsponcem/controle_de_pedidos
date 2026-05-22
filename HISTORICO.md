@@ -56,3 +56,9 @@ Este arquivo mantém o histórico consolidado de decisões e progresso do projet
 - **Qualidade**: Executados `npx tsc --noEmit` e `npm test` baseados em propriedades com sucesso absoluto.
 ### [2026-05-22] - Semeadura e Estruturação de Tabelas no Neon (v2.9.0) (Concluído)
 - **Migração do Banco**: Adicionado atalho `db:migrate` no `package.json` e executada a migração com sucesso, garantindo 100% da DDL estruturada e os dados iniciais de taxas de frete (Vitória, Vila Velha, Serra) e pães Bemavi semeados no Neon Postgres.
+
+### [2026-05-22] - Roteirização Inteligente e Edição de Pedidos (v2.10.0) (Concluído)
+- **Roteamento & Maps**: Planejador geográfico com múltiplos waypoints na Grande Vitória e timeline interativa de entregas integrada ao Google Maps.
+- **Edição Completa**: Modal `#orderEditModal` atômico para modificações de clientes e itens, com recálculo síncrono de taxas de frete locais e PUT no Neon Postgres.
+- **Validação de Qualidade**: Verificado com `npx tsc --noEmit` e testes baseados em propriedades `fast-check` passando 100% com sucesso.
+
