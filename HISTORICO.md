@@ -58,7 +58,9 @@ Este arquivo mantém o histórico consolidado de decisões e progresso do projet
 - **Migração do Banco**: Adicionado atalho `db:migrate` no `package.json` e executada a migração com sucesso, garantindo 100% da DDL estruturada e os dados iniciais de taxas de frete (Vitória, Vila Velha, Serra) e pães Bemavi semeados no Neon Postgres.
 
 ### [2026-05-22] - Roteirização Inteligente e Edição de Pedidos (v2.10.0) (Concluído)
-- **Roteamento & Maps**: Planejador geográfico com múltiplos waypoints na Grande Vitória e timeline interativa de entregas integrada ao Google Maps.
-- **Edição Completa**: Modal `#orderEditModal` atômico para modificações de clientes e itens, com recálculo síncrono de taxas de frete locais e PUT no Neon Postgres.
-- **Validação de Qualidade**: Verificado com `npx tsc --noEmit` e testes baseados em propriedades `fast-check` passando 100% com sucesso.
+- **Roteamento & Edição**: Roteador com múltiplos waypoints na Grande Vitória e timeline interativa de entregas integrada ao Google Maps. Modal `#orderEditModal` atômico para modificação de pedidos com PUT no Neon Postgres.
+
+### [2026-05-22] - Planejamento da Gestão de Consignações (v2.11.0) (Em Andamento)
+- **Arquitetura & Design**: Elaborado plano de implementação detalhado (`implementation_plan.md`) definindo tabelas (`consignacoes`, `itens_consignacao`), APIs serverless atômicas com rollback em caso de queda de banco, sincronização offline no IndexedDB e integração automatizada com fluxo de caixa do financeiro.
+
 
