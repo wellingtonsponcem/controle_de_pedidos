@@ -54,4 +54,5 @@ Este arquivo mantém o histórico consolidado de decisões e progresso do projet
 - **CRUD e Cache Offline**: Implementadas as funções administrativas no `app.js` integrando modais de produtos e o backend Neon Postgres, com sincronização offline no IndexedDB.
 - **Filtro de Inativos**: Atualizadas as buscas no catálogo público e no seletor de pedidos para exibir estritamente produtos com `ativo !== false`.
 - **Qualidade**: Executados `npx tsc --noEmit` e `npm test` baseados em propriedades com sucesso absoluto.
-
+### [2026-05-22] - Semeadura e Estruturação de Tabelas no Neon (v2.9.0) (Concluído)
+- **Migração do Banco**: Adicionado atalho `db:migrate` no `package.json` e executada a migração com sucesso, garantindo 100% da DDL estruturada e os dados iniciais de taxas de frete (Vitória, Vila Velha, Serra) e pães Bemavi semeados no Neon Postgres.
