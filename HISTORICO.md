@@ -28,7 +28,10 @@ Este arquivo mantém o histórico consolidado de decisões e progresso do projet
 - **Ambiente & Analytics**: Criado `.env`, `.gitignore` e integrado script estático Vercel Insights no `index.html`.
 
 ### [2026-05-22] - Refatoração Visual do Dashboard Mobile (v2.4.0) (Concluído)
-- **Cabeçalho & Abas**: Convertido o menu superior mobile em abas minimalistas com indicador inferior (#F59E0B) sem o fundo amarelo.
-- **Fila de Produção**: Botão de atualizar volumoso substituído por ícone sync SVG absoluto com animação rotativa. Adicionado Empty State dinâmico com botão "+ Criar Pedido".
-- **Visual & Dicas**: Emojis nativos substituídos por SVGs no tom ouro Bemavi. Dicas de expedição reestruturadas para Accordion nativo com `<details>` e `<summary>` e transições 3D.
-- **Testes & Lints**: Validada execução dos testes do Jest (Property-Based) e verificação do TypeScript sem erros.
+- **Visual & UI**: Superior com abas minimalistas douradas (#F59E0B). Ícone sync SVG absoluto com rotação 3D. Emojis trocados por SVGs e dicas convertidas em Accordion.
+
+### [2026-05-22] - Ergonomia do Formulário de Novo Pedido (v2.5.0) (Concluído)
+- **Formulário & Inputs**: Empilhamento vertical de campos lado a lado em mobile. Borda sutil de 1px solid #2A2A2A, radius de 6px e foco com brilho dourado suave.
+- **Estruturação & Totais**: Afastados títulos de seção em 16px. Aumentado gap para 24px. Bloco de totais redesenhado em Recibo (#1A1A1A) com Total Geral em destaque (1.5rem).
+- **Botão Fixo (Sticky)**: Botão de agendamento fixado no rodapé com vidro translúcido premium (blur de 12px) sob o viewport mobile.
+- **Qualidade**: Testes Jest (fast-check) bem-sucedidos e compilação do TypeScript concluída sem erros.

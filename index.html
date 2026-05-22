@@ -206,7 +206,7 @@
             <!-- Formulário de Agendamento -->
             <form id="orderCreationForm" class="order-form">
               
-              <h3 style="font-size: 1.1rem; color: var(--primary); margin-top: 0.5rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+              <h3 class="form-section-header">
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                   <circle cx="12" cy="7" r="4"></circle>
@@ -230,7 +230,7 @@
                 <input type="email" id="cli_email" placeholder="cliente@email.com">
               </div>
 
-              <h3 style="font-size: 1.1rem; color: var(--primary); margin-top: 0.5rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+              <h3 class="form-section-header">
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="1" y="3" width="15" height="13"></rect>
                   <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
@@ -307,7 +307,7 @@
               </div>
 
               <!-- Resumo de Totais do Form -->
-              <div style="background: rgba(0,0,0,0.25); border-radius: 8px; padding: 1rem; font-size: 0.95rem; display: flex; flex-direction: column; gap: 0.4rem; border: 1px solid var(--border-subtle);">
+              <div class="receipt-card">
                 <div style="display: flex; justify-content: space-between;">
                   <span>Subtotal Pães:</span>
                   <span id="carrinhoTotalProdutos">R$ 0,00</span>
@@ -316,15 +316,17 @@
                   <span>Taxa de Entrega:</span>
                   <span id="carrinhoTaxaEntrega">R$ 8,00</span>
                 </div>
-                <div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 1.1rem; color: var(--primary); border-top: 1px dashed var(--border-subtle); padding-top: 0.5rem; margin-top: 0.25rem;">
-                  <span>Total Geral:</span>
-                  <span id="carrinhoTotalGeral">R$ 8,00</span>
+                <div style="display: flex; justify-content: space-between; font-weight: 700; border-top: 1px dashed var(--border-subtle); padding-top: 0.75rem; margin-top: 0.5rem; align-items: center;">
+                  <span style="font-size: 1.1rem; color: var(--text-main);">Total Geral:</span>
+                  <span id="carrinhoTotalGeral" class="receipt-total-value">R$ 8,00</span>
                 </div>
               </div>
 
-              <button type="submit" id="btnSubmitOrder" class="btn btn-primary" style="width: 100%; justify-content: center; font-size: 1.05rem; padding: 0.85rem;">
-                ✨ Confirmar & Agendar Pedido
-              </button>
+              <div class="form-actions-sticky">
+                <button type="submit" id="btnSubmitOrder" class="btn btn-primary" style="width: 100%; justify-content: center; font-size: 1.05rem; padding: 0.85rem; border: none; font-weight: 600;">
+                  ✨ Confirmar & Agendar Pedido
+                </button>
+              </div>
             </form>
           </div>
 
