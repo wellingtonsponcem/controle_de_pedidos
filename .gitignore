@@ -1,0 +1,36 @@
+# Dependências de Pacotes
+node_modules/
+
+# Arquivos de Variáveis de Ambiente e Segredos (Super Importante!)
+.env
+.env.local
+.env.*.local
+
+# Builds e Saídas de Compilação
+dist/
+out/
+build/
+.next/
+
+# Configurações Locais de Ferramentas e IDEs
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# Diretórios Locais do Vercel CLI
+.vercel/
+
+# Logs de Erro
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Arquivos do Sistema Operacional
+Thumbs.db
+Desktop.ini
+.DS_Store

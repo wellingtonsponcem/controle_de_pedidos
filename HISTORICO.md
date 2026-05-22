@@ -45,10 +45,17 @@ Este arquivo mantém o histórico consolidado e contínuo de decisões e progres
   - `api/pedidos.ts`: Agendamento atômico, validação de preços e gatilho de receita no status "Entregue".
   - `api/financeiro.ts`: Fluxo consolidado (Lucro = Receitas - Despesas) e lançamentos de despesas/insumos.
   - `api/cron-recorrencia.ts`: Varredura periódica e pré-geração autônoma de pedidos recorrentes como "Rascunho" sem duplicidade.
-- **Status**: Fase 2 concluída. Iniciando desenvolvimento do Frontend PWA Premium.
+- **Status**: Fase 2 concluída. Configurações locais de ambiente estabelecidas.
 
-### [2026-05-22] - Diagnóstico do Erro Vercel DEPLOYMENT_NOT_FOUND & Ajuste TypeScript (v2.1.0)
-- **Diagnóstico**: O erro "DEPLOYMENT_NOT_FOUND" em bemavi.vercel.app indica que o domínio está registrado na Vercel, mas não há nenhuma build/implantação de produção ativa e com sucesso associada a ele.
-- **Ajuste TypeScript**: Corrigido erro de deprecation no `tsconfig.json` adicionando `"ignoreDeprecations": "6.0"` para garantir compilação limpa do `tsc` e das serverless functions da Vercel.
-- **Testes**: Rodados testes baseados em propriedades com sucesso absoluto no módulo financeiro (100% passados).
+### [2026-05-22] - Diagnóstico Vercel & Ajuste TypeScript (v2.1.0)
+- **Diagnóstico**: Erro "DEPLOYMENT_NOT_FOUND" em bemavi.vercel.app devido à ausência de deploys ativos.
+- **Ajuste TypeScript**: Corrigido erro de deprecation no `tsconfig.json` com `"ignoreDeprecations": "6.0"`.
+- **Testes**: Rodados testes baseados em propriedades com fast-check (100% passados).
 
+### [2026-05-22] - Variáveis de Ambiente Locais & Segurança (v2.2.0)
+- **Ação**: Criado `.env` com conexões locais e `CRON_SECRET`.
+- **Segurança**: Criado `.gitignore` protegendo credenciais e builds de irem ao ar.
+
+### [2026-05-22] - Integração com Vercel Analytics (v2.3.0)
+- **Constatação**: O projeto adota HTML/CSS/JS estático puro com serverless na pasta `api/`. A dependência `@vercel/analytics/next` é voltada apenas para Next.js.
+- **Solução**: Adicionado o script de rastreamento nativo estático da Vercel (`/_vercel/insights/script.js`) no `index.html` para integração limpa sem bundlers.
