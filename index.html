@@ -40,13 +40,28 @@
       <!-- NAVEGAÇÃO SPA -->
       <nav class="nav-tabs" aria-label="Navegação Principal do Sistema">
         <button id="tabBtnDashboard" class="tab-btn active" data-tab="dashboard" aria-controls="dashboard" aria-selected="true">
-          📊 Dashboard
+          <svg class="tab-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="9" y1="3" x2="9" y2="21"></line>
+            <line x1="9" y1="9" x2="21" y2="9"></line>
+            <line x1="9" y1="15" x2="21" y2="15"></line>
+          </svg>
+          Dashboard
         </button>
         <button id="tabBtnPedidos" class="tab-btn" data-tab="pedidos" aria-controls="pedidos" aria-selected="false">
-          🍞 Novo Pedido
+          <svg class="tab-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;">
+            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <path d="M16 10a4 4 0 0 1-8 0"></path>
+          </svg>
+          Novo Pedido
         </button>
         <button id="tabBtnFinanceiro" class="tab-btn" data-tab="financeiro" aria-controls="financeiro" aria-selected="false">
-          💰 Financeiro
+          <svg class="tab-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;">
+            <line x1="12" y1="1" x2="12" y2="23"></line>
+            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+          </svg>
+          Financeiro
         </button>
       </nav>
       
@@ -65,13 +80,23 @@
         <div class="dashboard-grid">
           
           <!-- Lista de Pedidos Ativos -->
-          <div class="card-panel">
+          <div class="card-panel" style="position: relative;">
+            <button id="btnRefreshDashboard" class="btn-sync" onclick="refreshDashboard()" aria-label="Atualizar Fila de Produção">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+              </svg>
+            </button>
             <div class="panel-header">
               <h2 class="panel-title">
-                📅 Fila de Produção & Entregas
+                <svg class="title-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+                Fila de Produção & Entregas
                 <span id="pedidosTotalCount" class="badge-count">0</span>
               </h2>
-              <button id="btnRefreshDashboard" class="btn btn-secondary" onclick="refreshDashboard()">🔄 Atualizar</button>
             </div>
             
             <div id="ordersList" class="orders-list">
@@ -81,17 +106,53 @@
 
           <!-- Dicas / Painel Auxiliar de Produção -->
           <div class="card-panel" style="display:flex; flex-direction:column; gap:1.25rem;">
-            <h3 class="panel-title">💡 Dicas de Expedição</h3>
-            <div style="font-size: 0.9rem; line-height: 1.5; color: var(--text-muted); display:flex; flex-direction:column; gap:1rem;">
-              <p>🌱 <strong>Processo Artesanal</strong>: O tempo médio de fermentação natural dos pães caseiros Bemavi é de 24 horas. Certifique-se de agendar com antecedência.</p>
-              <p>🛵 <strong>Logística de Entrega</strong>: As taxas de entrega estão configuradas por município da Grande Vitória:
-                <ul style="padding-left:1.2rem; display:flex; flex-direction:column; gap:0.25rem;">
-                  <li>Vitória: R$ 8,00</li>
-                  <li>Vila Velha: R$ 10,00</li>
-                  <li>Serra: R$ 12,00</li>
-                </ul>
-              </p>
-              <p>🔄 <strong>Recorrência de Clientes</strong>: Pedidos recorrentes geram rascunhos de forma antecipada para garantir a prioridade na produção semanal ou mensal.</p>
+            <h3 class="panel-title">
+              <svg class="title-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+                <path d="M9.663 17h4.673M12 3v1m6.364.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 1 1 7.072 0l-.548.547A3.374 3.374 0 0 0 14 18.5V19a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.5c0-.98-.4-1.92-1.109-2.618l-.548-.547z"/>
+              </svg>
+              Dicas de Expedição
+            </h3>
+            <div class="tips-accordion">
+              <details class="tips-item" open>
+                <summary class="tips-summary">
+                  <span class="tips-title">🌱 Processo Artesanal</span>
+                  <svg class="chevron-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </summary>
+                <div class="tips-content">
+                  O tempo médio de fermentação natural dos pães caseiros Bemavi é de 24 horas. Certifique-se de agendar com antecedência.
+                </div>
+              </details>
+              
+              <details class="tips-item">
+                <summary class="tips-summary">
+                  <span class="tips-title">🛵 Logística de Entrega</span>
+                  <svg class="chevron-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </summary>
+                <div class="tips-content">
+                  As taxas de entrega estão configuradas por município da Grande Vitória:
+                  <ul style="padding-left:1.2rem; display:flex; flex-direction:column; gap:0.25rem; margin-top: 0.5rem; color: var(--text-muted);">
+                    <li>Vitória: R$ 8,00</li>
+                    <li>Vila Velha: R$ 10,00</li>
+                    <li>Serra: R$ 12,00</li>
+                  </ul>
+                </div>
+              </details>
+              
+              <details class="tips-item">
+                <summary class="tips-summary">
+                  <span class="tips-title">🔄 Recorrência de Clientes</span>
+                  <svg class="chevron-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </summary>
+                <div class="tips-content">
+                  Pedidos recorrentes geram rascunhos de forma antecipada para garantir a prioridade na produção semanal ou mensal.
+                </div>
+              </details>
             </div>
           </div>
 
@@ -104,7 +165,12 @@
           
           <!-- Lado Esquerdo: Catálogo Bemavi -->
           <div class="card-panel">
-            <h2 class="panel-title" style="margin-bottom: 1.5rem;">🥖 Nosso Catálogo de Pães</h2>
+            <h2 class="panel-title" style="margin-bottom: 1.5rem;">
+              <svg class="title-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+              </svg>
+              Nosso Catálogo de Pães
+            </h2>
             <div id="catalogGrid" class="bread-catalog-grid">
               <div class="carrinho-empty">Buscando pães disponíveis no catálogo...</div>
             </div>
@@ -112,7 +178,14 @@
 
           <!-- Lado Direito: Carrinho & Formulário de Cadastro/Agendamento -->
           <div class="card-panel" style="display:flex; flex-direction:column; gap:1.5rem;">
-            <h2 class="panel-title">🛒 Detalhes do Novo Pedido</h2>
+            <h2 class="panel-title">
+              <svg class="title-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+                <circle cx="9" cy="21" r="1"></circle>
+                <circle cx="20" cy="21" r="1"></circle>
+                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+              </svg>
+              Detalhes do Novo Pedido
+            </h2>
             
             <!-- Carrinho de Compras -->
             <div class="carrinho-container">
@@ -133,7 +206,13 @@
             <!-- Formulário de Agendamento -->
             <form id="orderCreationForm" class="order-form">
               
-              <h3 style="font-size: 1.1rem; color: var(--primary); margin-top: 0.5rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.5rem;">📋 Dados do Cliente</h3>
+              <h3 style="font-size: 1.1rem; color: var(--primary); margin-top: 0.5rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+                Dados do Cliente
+              </h3>
               
               <div class="form-group-row">
                 <div class="form-group">
@@ -151,7 +230,15 @@
                 <input type="email" id="cli_email" placeholder="cliente@email.com">
               </div>
 
-              <h3 style="font-size: 1.1rem; color: var(--primary); margin-top: 0.5rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.5rem;">🚚 Endereço & Agendamento</h3>
+              <h3 style="font-size: 1.1rem; color: var(--primary); margin-top: 0.5rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="1" y="3" width="15" height="13"></rect>
+                  <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+                  <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                  <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                </svg>
+                Endereço & Agendamento
+              </h3>
 
               <div class="form-group-row">
                 <div class="form-group">
@@ -194,7 +281,14 @@
               <div style="background: rgba(255,255,255,0.02); border: 1px dashed var(--border-subtle); padding: 1rem; border-radius: 8px; margin-top: 0.5rem;">
                 <div class="form-group" style="flex-direction: row; align-items: center; gap: 0.5rem;">
                   <input type="checkbox" id="recorrente_flag" style="width: 18px; height: 18px; cursor: pointer;">
-                  <label for="recorrente_flag" style="cursor: pointer; user-select: none; font-size: 0.95rem;">🔄 Este é um Pedido Recorrente (Assinatura)</label>
+                  <label for="recorrente_flag" style="cursor: pointer; user-select: none; font-size: 0.95rem; display: flex; align-items: center; gap: 0.35rem;">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle;">
+                      <polyline points="23 4 23 10 17 10"></polyline>
+                      <polyline points="1 20 1 14 7 14"></polyline>
+                      <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                    </svg>
+                    Este é um Pedido Recorrente (Assinatura)
+                  </label>
                 </div>
                 
                 <div id="intervaloRecorrenciaBox" class="form-group" style="display: none; margin-top: 0.75rem;">
@@ -265,10 +359,21 @@
           <div class="dashboard-grid">
             
             <!-- Tabela de Lançamentos -->
-            <div class="card-panel">
+            <div class="card-panel" style="position: relative;">
+              <button id="btnRefreshFinance" class="btn-sync" onclick="refreshFinanceiro()" aria-label="Atualizar Extrato">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                </svg>
+              </button>
               <div class="panel-header">
-                <h2 class="panel-title">📝 Extrato de Transações Recentes</h2>
-                <button id="btnRefreshFinance" class="btn btn-secondary" onclick="refreshFinanceiro()">🔄 Atualizar</button>
+                <h2 class="panel-title">
+                  <svg class="title-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+                    <line x1="18" y1="20" x2="18" y2="10"></line>
+                    <line x1="12" y1="20" x2="12" y2="4"></line>
+                    <line x1="6" y1="20" x2="6" y2="14"></line>
+                  </svg>
+                  Extrato de Transações Recentes
+                </h2>
               </div>
               
               <div class="transacoes-table-box">
@@ -293,7 +398,13 @@
 
             <!-- Cadastro de Despesa Manual (Compras de Insumos) -->
             <div class="card-panel" style="display:flex; flex-direction:column; gap:1.25rem;">
-              <h2 class="panel-title">🛒 Novo Lançamento de Caixa</h2>
+              <h2 class="panel-title">
+                <svg class="title-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+                  <rect x="2" y="5" width="20" height="14" rx="2" ry="2"></rect>
+                  <line x1="2" y1="10" x2="22" y2="10"></line>
+                </svg>
+                Novo Lançamento de Caixa
+              </h2>
               
               <form id="financeCreationForm" class="order-form">
                 <div class="form-group">

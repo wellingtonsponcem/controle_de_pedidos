@@ -1,61 +1,34 @@
 # Histórico de Desenvolvimento - Controle de Pedidos
 
 ## Sobre este Arquivo
-Este arquivo mantém o histórico consolidado e contínuo de decisões e progresso do projeto, garantindo a portabilidade do contexto para qualquer IDE ou assistente de IA.
-**Instrução para Assistentes e IDEs de IA**: Mantenha este arquivo sempre atualizado, com no máximo 70 linhas, preservando a linearidade e as regras arquiteturais fundamentais.
+Este arquivo mantém o histórico consolidado de decisões e progresso do projeto para portabilidade de contexto.
+**Instrução para Assistentes e IDEs de IA**: Mantenha este arquivo atualizado, com no máximo 70 linhas, preservando a linearidade e as regras arquiteturais fundamentais.
 
 ---
 
 ## 🛠 Diretrizes e Padrões Obrigatórios
 
-1. **Idioma**: Todas as comunicações e entregas devem ser em português do Brasil.
-2. **Spec-Driven Development (SDD)**: O desenvolvimento segue o framework SpecKit (`.specify/`). Nenhuma funcionalidade deve ser escrita sem especificação (`spec.md`), plano de implementação (`plan.md`) e checklist de tarefas (`tasks.md`) previamente validados e aprovados.
-3. **Property-Based Testing**: Testes unitários e de integração devem adotar testes baseados em propriedades usando bibliotecas como `fast-check` para ambientes Node.js. Evite depender unicamente de entradas estáticas.
-4. **Profiling e Heap Snapshots**: Monitoramento ativo de CPU e consumo de memória (Chrome DevTools ou py-spy). Devem ser gerados snapshots periódicos da Heap para validação e mitigação de vazamento de memória.
-5. **Resiliência a Banco de Dados (DB Fallback)**: A lógica do sistema deve ser desenhada prevendo transações atômicas e rollbacks seguros caso o banco de dados falhe no meio de requisições, preservando a consistência dos dados.
-6. **Hospedagem & Vercel Gratuita**: Implantação nativa na Vercel (plano Hobby). Frontend estático em HTML/CSS/JS (Vanilla) e Serverless Functions no backend (Node.js/TypeScript em `api/`). Respeitar o limite de 10s de timeout e sistema de arquivos somente leitura.
-7. **Commits Semânticos**: Cada entrega ou ação finalizada requer sugestões explícitas de mensagens de commit em português.
+1. **Idioma**: Todas as comunicações e entregas em português do Brasil.
+2. **Spec-Driven Development (SDD)**: Seguir o framework SpecKit (`.specify/`).
+3. **Property-Based Testing**: Adotar testes baseados em propriedades usando `fast-check`.
+4. **Profiling e Heap Snapshots**: Monitoramento ativo de CPU/memória e vazamentos.
+5. **Resiliência a Banco de Dados**: Transações atômicas e rollbacks seguros.
+6. **Hospedagem & Vercel**: Estático no frontend, Serverless no backend (`api/`), banco Neon Postgres.
+7. **Commits Semânticos**: Sugerir mensagens de commit em português ao finalizar ações.
 
 ---
 
 ## 📅 Linha do Tempo e Ações Executadas
 
-### [2026-05-22] - Inicialização do SDD e Constituição do Projeto
-- **Ação**: Execução do comando `/speckit.constitution` para iniciar o fluxo Spec-Driven Development.
-- **Pre-hook**: Executado hook automático de inicialização do Git (`initialize-repo.ps1`) com correção de parser encoding no PowerShell de Windows.
-- **Constituição (v1.0.0)**: Criada e ratificada a Constituição do Projeto (`.specify/memory/constitution.md`).
-- **Histórico**: Criação inicial do arquivo `HISTORICO.md` contendo a portabilidade de contexto.
+### [2026-05-22] - Inicialização e Arquitetura Base (v1.0.0 a v2.3.0)
+- **SDD & Specs**: Ratificada a constituição em `.specify/memory/constitution.md` e especificações do negócio em `specs/001-controle-pedidos-paes/`.
+- **Fase 1 (DB)**: Criada migração Neon Postgres em `neon/migrations/` com esquemas, triggers e dados populados de Vitória, Vila Velha, Serra e pães.
+- **Fase 2 (APIs Backend)**: Desenvolvido utilitário resiliente com rollback em `api/_db.ts`. Implementados endpoints serverless: `produtos.ts`, `pedidos.ts`, `financeiro.ts` e `cron-recorrencia.ts`.
+- **Diagnóstico & Ajustes**: Corrigido typescript deprecation no `tsconfig.json`. Validada execução de testes baseados em propriedades com `fast-check` (100% de sucesso).
+- **Ambiente & Analytics**: Criado `.env`, `.gitignore` e integrado script estático Vercel Insights no `index.html`.
 
-### [2026-05-22] - Emenda da Constituição para Vercel Gratuita (v1.1.0)
-- **Ação**: Atualização da constituição (`constitution.md`) e do log técnico para incorporar a stack compatível com a Vercel gratuita (Hobby).
-- **Detecção**: Estabelecidos limites de Serverless Functions (timeout estrito de 10s), sistema de arquivos somente leitura, e persistência de dados em banco de dados externo (como Supabase Postgres).
-- **Adequação**: Frontend definido como HTML5, Vanilla CSS moderno e JS Vanilla, e backend com Node.js/TypeScript na pasta `api/` da Vercel.
-
-### [2026-05-22] - Especificação Funcional do Controle de Pedidos de Pão (v1.1.0)
-- **Ação**: Execução do comando `/speckit.specify` para o projeto de Controle de Pedidos de Pão Caseiro.
-- **Pre-hook**: Executada criação automática de feature branch (`001-controle-pedidos-paes`) e inicialização da estrutura física em `specs/001-controle-pedidos-paes/`.
-- **Especificação**: Desenvolvido o arquivo `spec.md` cobrindo o catálogo de pães (versões/sabores/modelos), entregas na Grande Vitória, agendamentos, recorrência, controle financeiro (compras/vendas) e arquitetura PWA responsiva.
-- **Qualidade**: Gerado o arquivo de validação de qualidade `checklists/requirements.md` e mapeados 3 pontos críticos para decisão do usuário (taxas de entrega, comportamento de recorrência e complexidade do fluxo de insumos).
-
-### [2026-05-22] - Conclusão das Fases 1 e 2 (v2.0.0)
-- **Fase 1 (Banco de Dados)**: Migração estrutural Neon Postgres `neon/migrations/..._schema_inicial.sql` criada com triggers, índices e população (Vitória, Vila Velha, Serra e pães).
-- **Fase 2 (APIs Backend)**: Desenvolvido utilitário resiliente com transação de conexão segura e rollbacks em `api/_db.ts`.
-- **Endpoints Serverless**:
-  - `api/produtos.ts`: Catálogo de pães com cache dinâmico e resiliência HTTP 503.
-  - `api/pedidos.ts`: Agendamento atômico, validação de preços e gatilho de receita no status "Entregue".
-  - `api/financeiro.ts`: Fluxo consolidado (Lucro = Receitas - Despesas) e lançamentos de despesas/insumos.
-  - `api/cron-recorrencia.ts`: Varredura periódica e pré-geração autônoma de pedidos recorrentes como "Rascunho" sem duplicidade.
-- **Status**: Fase 2 concluída. Configurações locais de ambiente estabelecidas.
-
-### [2026-05-22] - Diagnóstico Vercel & Ajuste TypeScript (v2.1.0)
-- **Diagnóstico**: Erro "DEPLOYMENT_NOT_FOUND" em bemavi.vercel.app devido à ausência de deploys ativos.
-- **Ajuste TypeScript**: Corrigido erro de deprecation no `tsconfig.json` com `"ignoreDeprecations": "6.0"`.
-- **Testes**: Rodados testes baseados em propriedades com fast-check (100% passados).
-
-### [2026-05-22] - Variáveis de Ambiente Locais & Segurança (v2.2.0)
-- **Ação**: Criado `.env` com conexões locais e `CRON_SECRET`.
-- **Segurança**: Criado `.gitignore` protegendo credenciais e builds de irem ao ar.
-
-### [2026-05-22] - Integração com Vercel Analytics (v2.3.0)
-- **Constatação**: O projeto adota HTML/CSS/JS estático puro com serverless na pasta `api/`. A dependência `@vercel/analytics/next` é voltada apenas para Next.js.
-- **Solução**: Adicionado o script de rastreamento nativo estático da Vercel (`/_vercel/insights/script.js`) no `index.html` para integração limpa sem bundlers.
+### [2026-05-22] - Refatoração Visual do Dashboard Mobile (v2.4.0) (Concluído)
+- **Cabeçalho & Abas**: Convertido o menu superior mobile em abas minimalistas com indicador inferior (#F59E0B) sem o fundo amarelo.
+- **Fila de Produção**: Botão de atualizar volumoso substituído por ícone sync SVG absoluto com animação rotativa. Adicionado Empty State dinâmico com botão "+ Criar Pedido".
+- **Visual & Dicas**: Emojis nativos substituídos por SVGs no tom ouro Bemavi. Dicas de expedição reestruturadas para Accordion nativo com `<details>` e `<summary>` e transições 3D.
+- **Testes & Lints**: Validada execução dos testes do Jest (Property-Based) e verificação do TypeScript sem erros.

@@ -323,6 +323,9 @@ document.getElementById('addProdutoBtn').addEventListener('click', () => {
 
 // 9. Dashboard de Pedidos (Produção & Status)
 async function refreshDashboard() {
+  const btn = document.getElementById('btnRefreshDashboard');
+  if (btn) btn.classList.add('spinning');
+
   try {
     if (state.isOnline) {
       const response = await fetch('/api/pedidos');
@@ -335,6 +338,12 @@ async function refreshDashboard() {
   }
 
   renderPedidos();
+
+  if (btn) {
+    setTimeout(() => {
+      btn.classList.remove('spinning');
+    }, 800);
+  }
 }
 
 function renderPedidos() {
@@ -342,7 +351,23 @@ function renderPedidos() {
   const countEl = document.getElementById('pedidosTotalCount');
 
   if (state.pedidos.length === 0) {
-    listEl.innerHTML = '<div class="carrinho-empty">Nenhum pedido agendado ou pendente de produção.</div>';
+    listEl.innerHTML = `
+      <div class="carrinho-empty" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.25rem; padding: 3rem 1.5rem; text-align: center;">
+        <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="var(--text-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.6; margin-bottom: 0.5rem;">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span style="font-size: 1rem; font-weight: 500; color: var(--text-muted);">Nenhum pedido agendado ou pendente de produção.</span>
+        <button class="btn btn-primary" onclick="switchTab('pedidos')" style="font-size: 0.95rem; padding: 0.65rem 1.5rem; display: flex; align-items: center; gap: 0.5rem; justify-content: center; border-radius: 8px; box-shadow: 0 4px 15px var(--primary-glow); border: none; font-weight: 600; cursor: pointer;">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Criar Pedido
+        </button>
+      </div>
+    `;
     countEl.textContent = '0';
     return;
   }

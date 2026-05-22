@@ -243,6 +243,7 @@ main {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  line-height: 1.2;
 }
 
 .badge-count {
@@ -783,4 +784,178 @@ tr:hover {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--primary);
+}
+
+/* ============================================================================
+   REFATORAÇÃO MOBILE & PREMIUM DASHBOARD - BEMAVI PÃO ARTESANAL
+   ============================================================================ */
+
+/* Alinhamento de Ícones de Título */
+.title-icon {
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+/* Botão de Sincronização Autônomo e Absoluto */
+.btn-sync {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  padding: 8px;
+  cursor: pointer;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-smooth);
+  z-index: 10;
+}
+
+.btn-sync:hover {
+  color: var(--primary);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 0 10px rgba(217, 119, 6, 0.1);
+}
+
+.btn-sync:active {
+  transform: scale(0.9);
+}
+
+/* Animação do Sync */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.btn-sync.spinning svg {
+  animation: spin 0.8s linear infinite;
+}
+
+/* Accordion de Dicas de Expedição */
+.tips-accordion {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.tips-item {
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  overflow: hidden;
+  transition: var(--transition-smooth);
+}
+
+.tips-item[open] {
+  border-color: rgba(217, 119, 6, 0.3);
+  background: rgba(0, 0, 0, 0.25);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.tips-summary {
+  padding: 0.85rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  outline: none;
+  list-style: none; /* remove o triângulo padrão */
+}
+
+.tips-summary::-webkit-details-marker {
+  display: none; /* remove o triângulo padrão no Safari */
+}
+
+.tips-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.chevron-icon {
+  color: var(--text-muted);
+  transition: transform 0.3s ease;
+}
+
+.tips-item[open] .chevron-icon {
+  transform: rotate(180deg);
+  color: var(--primary);
+}
+
+.tips-content {
+  padding: 0 1.25rem 1rem 1.25rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+  border-top: 1px dashed rgba(255, 255, 255, 0.02);
+  padding-top: 0.75rem;
+  animation: slideDown 0.25s ease-out;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsividade Mobile - Abas Minimalistas */
+@media (max-width: 768px) {
+  header {
+    flex-direction: column;
+    gap: 1.25rem;
+    padding: 1.25rem 1rem;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .logo-block {
+    justify-content: center;
+  }
+
+  .nav-tabs {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    width: 100%;
+    justify-content: space-around;
+    border-bottom: 1px solid var(--border-subtle);
+    gap: 0;
+  }
+
+  .tab-btn {
+    border-radius: 0;
+    padding: 0.85rem 0.25rem;
+    font-size: 0.85rem;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    box-shadow: none;
+    flex: 1;
+    justify-content: center;
+    gap: 0.35rem;
+  }
+
+  .tab-btn:hover {
+    background: transparent;
+  }
+
+  .tab-btn.active {
+    color: #F59E0B;
+    background: transparent;
+    box-shadow: none;
+    border-bottom: 2px solid #F59E0B;
+    font-weight: 600;
+  }
+  
+  .btn-sync {
+    top: 1.25rem;
+    right: 1.25rem;
+  }
 }
