@@ -34,4 +34,16 @@ Este arquivo mantém o histórico consolidado de decisões e progresso do projet
 - **Formulário & Inputs**: Empilhamento vertical de campos lado a lado em mobile. Borda sutil de 1px solid #2A2A2A, radius de 6px e foco com brilho dourado suave.
 - **Estruturação & Totais**: Afastados títulos de seção em 16px. Aumentado gap para 24px. Bloco de totais redesenhado em Recibo (#1A1A1A) com Total Geral em destaque (1.5rem).
 - **Botão Fixo (Sticky)**: Botão de agendamento fixado no rodapé com vidro translúcido premium (blur de 12px) sob o viewport mobile.
-- **Qualidade**: Testes Jest (fast-check) bem-sucedidos e compilação do TypeScript concluída sem erros.
+- **Qualidade**: Atualizado `tsconfig.json` para `"module": "node16"`, `"moduleResolution": "node16"` e `"isolatedModules": true`, eliminando o erro de depreciação do TS 6.0 e avisos do ts-jest. Compilação e testes (fast-check) concluídos com 100% de sucesso.
+
+### [2026-05-22] - Refatoração do Dashboard Financeiro Mobile (v2.6.0) (Concluído)
+- **Cards & Grids**: Hero card de Saldo com fonte 2.25rem em largura inteira. Receitas e Despesas parelhados lado a lado (1fr 1fr) com tamanho menor para evitar quebras.
+- **Extrato Responsivo**: Tabela HTML removida. Implementada lista de transações flex/grid. No mobile, vira lista empilhada com categoria/data e cor dinâmica baseada no tipo.
+- **Modal & Bottom Sheet**: Formulário de Novo Lançamento extraído em Modal Overlay de fundo escuro, transicionado em Bottom Sheet a partir do rodapé em celulares.
+- **Lógica & Sincronização**: Criadas funções `openFinanceModal` e `closeFinanceModal` globais, com fechamento automático no envio bem-sucedido e resiliência offline do IndexedDB preservada. Testes de propriedades fast-check validados com sucesso.
+
+### [2026-05-22] - Ajustes de Frete Dinâmicos e Flexibilidade de Logística (v2.7.0) (Concluído)
+- **Painel Administrativo & UI**: Adicionado card "Ajustes de Frete" na coluna lateral do Dashboard com inputs numéricos e checkbox para "Frete Grátis Global".
+- **Backend Serverless & API**: Criada API `/api/taxas.ts` que permite a persistência e atualização atômica das taxas no Neon Postgres de forma resiliente a falhas de conexão (HTTP 503).
+- **Lógica Frontend & PWA**: Lógica desenvolvida em `app.js` integrada ao `localStorage` para funcionamento 100% offline (resiliência PWA), com sincronização inteligente de frete no restabelecimento da conexão (`syncOfflineData`).
+- **Validação**: Testes Jest baseados em propriedades fast-check e compilação do TypeScript mantidos em 100% de sucesso.

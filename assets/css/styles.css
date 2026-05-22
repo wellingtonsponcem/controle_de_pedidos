@@ -104,6 +104,7 @@ header {
   font-size: 1.5rem;
   background: linear-gradient(135deg, var(--text-main) 30%, var(--primary) 100%);
   -webkit-background-clip: text;
+  background-clip: text; /* Propriedade padrão para compatibilidade */
   -webkit-text-fill-color: transparent;
 }
 
@@ -704,26 +705,18 @@ main {
   color: hsl(0, 75%, 65%) !important;
 }
 
-/* Transações */
-.transacoes-table-box {
-  overflow-x: auto;
+/* Transações Responsivas baseadas em Grid/Flex */
+.transacoes-list-box {
   border-radius: 12px;
   border: 1px solid var(--border-subtle);
   background: rgba(0, 0, 0, 0.15);
+  overflow: hidden;
 }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-  text-align: left;
-  font-size: 0.95rem;
-}
-
-th, td {
+.transacao-header {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1.2fr 1fr 1fr;
   padding: 1rem 1.25rem;
-}
-
-th {
   background: rgba(255, 255, 255, 0.02);
   color: var(--text-muted);
   font-weight: 600;
@@ -733,17 +726,42 @@ th {
   letter-spacing: 0.05em;
 }
 
-tr {
+.transacao-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1.2fr 1fr 1fr;
+  align-items: center;
+  padding: 1rem 1.25rem;
   border-bottom: 1px solid var(--border-subtle);
   transition: var(--transition-smooth);
 }
 
-tr:last-child {
+.transacao-row:last-child {
   border-bottom: none;
 }
 
-tr:hover {
+.transacao-row:hover {
   background: rgba(255, 255, 255, 0.01);
+}
+
+.transacao-desc {
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.transacao-meta {
+  display: none; /* Esconde a Categoria e Data empilhadas no Desktop */
+}
+
+.transacao-valor {
+  font-weight: 600;
+}
+
+.transacao-valor.val-receita {
+  color: hsl(145, 65%, 60%);
+}
+
+.transacao-valor.val-despesa {
+  color: hsl(0, 75%, 70%);
 }
 
 .td-tipo-badge {
@@ -751,10 +769,100 @@ tr:hover {
   font-weight: 700;
   padding: 0.2rem 0.5rem;
   border-radius: 4px;
+  display: inline-block;
 }
 
 .td-tipo-receita { background: rgba(16, 185, 129, 0.12); color: hsl(145, 65%, 60%); }
 .td-tipo-despesa { background: rgba(239, 68, 68, 0.12); color: hsl(0, 75%, 70%); }
+
+/* Modal & Bottom Sheet de Lançamento de Caixa */
+.finance-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.finance-modal.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.finance-modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.finance-modal-content {
+  background: hsl(25, 18%, 12%);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  width: 90%;
+  max-width: 500px;
+  position: relative;
+  z-index: 1001;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.8);
+  transform: translateY(20px);
+  transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.finance-modal.active .finance-modal-content {
+  transform: translateY(0);
+}
+
+.finance-modal-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.finance-modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+  max-height: 80vh;
+}
+
+.btn-close-modal {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-smooth);
+}
+
+.btn-close-modal:hover {
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Botão Fixo no Rodapé do Financeiro */
+.finance-mobile-sticky-action {
+  display: none;
+}
 
 /* 8. Toast / Notificação */
 .toast-container {
@@ -1016,8 +1124,207 @@ tr:hover {
     margin-bottom: -1.25rem;
     border-radius: 0 0 16px 16px;
   }
+
+  /* Responsividade Financeira Mobile */
+  .resumo-financeiro-cards {
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  
+  #saldoCard {
+    grid-column: span 2;
+    order: -1;
+  }
+  
+  #saldoCard .fin-card-value {
+    font-size: 2.25rem;
+  }
+  
+  .finance-card:not(#saldoCard) .fin-card-value {
+    font-size: 1.35rem;
+  }
+  
+  .finance-card:not(#saldoCard) .fin-card-label {
+    font-size: 0.7rem;
+    letter-spacing: 0.02em;
+  }
+  
+  /* Extrato Financeiro Mobile (Tabela em Lista Flex) */
+  .transacao-header {
+    display: none;
+  }
+  
+  .transacao-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #2A2A2A;
+    background: transparent !important;
+  }
+  
+  .transacao-row:last-child {
+    border-bottom: none;
+  }
+  
+  .transacao-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-start;
+  }
+  
+  .transacao-desc {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--text-main);
+  }
+  
+  .transacao-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+  
+  .transacao-tipo-desktop,
+  .transacao-categoria-desktop,
+  .transacao-data-desktop {
+    display: none;
+  }
+  
+  .transacao-valor {
+    font-size: 1.05rem;
+    font-weight: 700;
+    text-align: right;
+  }
+  
+  /* Bottom Sheet do Modal Financeiro no Mobile */
+  .finance-modal {
+    align-items: flex-end;
+  }
+  
+  .finance-modal-content {
+    width: 100%;
+    max-width: 100%;
+    border-radius: 20px 20px 0 0;
+    border-bottom: none;
+    transform: translateY(100%);
+    background: rgba(21, 16, 12, 0.98);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+  
+  .finance-modal.active .finance-modal-content {
+    transform: translateY(0);
+  }
+  
+  /* Botão Sticky Mobile Financeiro */
+  .finance-mobile-sticky-action {
+    display: block;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(21, 16, 12, 0.95);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 1rem 1.25rem;
+    border-top: 1px solid var(--border-subtle);
+    z-index: 90;
+    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.5);
+  }
+  
+  .finance-dashboard {
+    padding-bottom: 80px;
+  }
 }
 
 .form-actions-sticky {
   margin-top: 1.5rem;
+}
+
+/* ============================================================================
+   8. CONFIGURAÇÃO DE TAXAS DE FRETE PERSONALIZADAS
+   ============================================================================ */
+.frete-config-box {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.15);
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-subtle);
+}
+
+.frete-config-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.frete-config-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.frete-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.frete-currency {
+  position: absolute;
+  left: 8px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.frete-input-wrapper input {
+  width: 90px;
+  text-align: right;
+  padding: 6px 8px 6px 26px;
+  border: 1px solid #2a2a2a;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.2);
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 0.9rem;
+  transition: var(--transition-smooth);
+}
+
+.frete-input-wrapper input:focus {
+  outline: none;
+  border-color: #F59E0B;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.frete-config-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border-subtle);
+}
+
+.frete-config-checkbox-row input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: #F59E0B;
+}
+
+.frete-config-checkbox-row label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-main);
+  cursor: pointer;
+  user-select: none;
 }

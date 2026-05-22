@@ -16,6 +16,195 @@ const state = {
   isOnline: navigator.onLine
 };
 
+// Configurações de Frete da Grande Vitória (valores iniciais reduzidos e controle síncrono local)
+const freteConfig = { vitoria: 5.0, vilaVelha: 6.0, serra: 7.0, gratis: false };
+
+function loadFreteConfig() {
+  try {
+    const saved = localStorage.getItem('bemavi_frete_config');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed) {
+        freteConfig.vitoria = typeof parsed.vitoria === 'number' ? parsed.vitoria : 5.0;
+        freteConfig.vilaVelha = typeof parsed.vilaVelha === 'number' ? parsed.vilaVelha : 6.0;
+        freteConfig.serra = typeof parsed.serra === 'number' ? parsed.serra : 7.0;
+        freteConfig.gratis = typeof parsed.gratis === 'boolean' ? parsed.gratis : false;
+      }
+    }
+  } catch (e) {
+    console.error('Erro ao ler bemavi_frete_config do localStorage:', e);
+  }
+
+  // Atualizar inputs na interface se existirem
+  const inputVitoria = document.getElementById('cfg_frete_vitoria');
+  const inputVilaVelha = document.getElementById('cfg_frete_vilavelha');
+  const inputSerra = document.getElementById('cfg_frete_serra');
+  const checkboxGratis = document.getElementById('cfg_frete_gratis');
+
+  if (inputVitoria) inputVitoria.value = freteConfig.vitoria.toFixed(2);
+  if (inputVilaVelha) inputVilaVelha.value = freteConfig.vilaVelha.toFixed(2);
+  if (inputSerra) inputSerra.value = freteConfig.serra.toFixed(2);
+  if (checkboxGratis) checkboxGratis.checked = freteConfig.gratis;
+
+  toggleInputsFreteState(freteConfig.gratis);
+  updateTipsFrete();
+}
+
+function toggleInputsFreteState(isDisabled) {
+  const inputVitoria = document.getElementById('cfg_frete_vitoria');
+  const inputVilaVelha = document.getElementById('cfg_frete_vilavelha');
+  const inputSerra = document.getElementById('cfg_frete_serra');
+
+  if (inputVitoria) inputVitoria.disabled = isDisabled;
+  if (inputVilaVelha) inputVilaVelha.disabled = isDisabled;
+  if (inputSerra) inputSerra.disabled = isDisabled;
+}
+
+function updateTipsFrete() {
+  const labelVitoria = document.getElementById('tips_frete_vitoria');
+  const labelVilaVelha = document.getElementById('tips_frete_vilavelha');
+  const labelSerra = document.getElementById('tips_frete_serra');
+
+  if (labelVitoria) {
+    labelVitoria.textContent = freteConfig.gratis ? 'R$ 0,00 (Grátis)' : `R$ ${freteConfig.vitoria.toFixed(2)}`;
+  }
+  if (labelVilaVelha) {
+    labelVilaVelha.textContent = freteConfig.gratis ? 'R$ 0,00 (Grátis)' : `R$ ${freteConfig.vilaVelha.toFixed(2)}`;
+  }
+  if (labelSerra) {
+    labelSerra.textContent = freteConfig.gratis ? 'R$ 0,00 (Grátis)' : `R$ ${freteConfig.serra.toFixed(2)}`;
+  }
+}
+
+function saveFreteConfig() {
+  try {
+    localStorage.setItem('bemavi_frete_config', JSON.stringify(freteConfig));
+  } catch (e) {
+    console.error('Erro ao salvar bemavi_frete_config no localStorage:', e);
+  }
+}
+
+async function syncFreteConfigToBackend() {
+  if (!state.isOnline) return;
+
+  try {
+    const payload = {
+      taxas: {
+        "Vitória": freteConfig.gratis ? 0 : freteConfig.vitoria,
+        "Vila Velha": freteConfig.gratis ? 0 : freteConfig.vilaVelha,
+        "Serra": freteConfig.gratis ? 0 : freteConfig.serra
+      }
+    };
+
+    const response = await fetch('/api/taxas', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (response.ok) {
+      console.log('[Frete Sync] Taxas de entrega sincronizadas com o banco de dados Neon.');
+    } else {
+      console.warn('[Frete Sync] Falha ao sincronizar taxas de entrega com backend.');
+    }
+  } catch (e) {
+    console.error('[Frete Sync] Erro de rede ao sincronizar taxas de entrega:', e);
+  }
+}
+
+async function fetchFreteConfigFromBackend() {
+  if (!state.isOnline) return;
+
+  try {
+    const response = await fetch('/api/taxas');
+    if (response.ok) {
+      const data = await response.json();
+      if (Array.isArray(data) && data.length > 0) {
+        let vitoriaVal = 5.0;
+        let vilaVelhaVal = 6.0;
+        let serraVal = 7.0;
+
+        data.forEach(item => {
+          const val = parseFloat(item.valor_taxa) || 0;
+          if (item.municipio === 'Vitória') vitoriaVal = val;
+          if (item.municipio === 'Vila Velha') vilaVelhaVal = val;
+          if (item.municipio === 'Serra') serraVal = val;
+        });
+
+        const todosGratis = (vitoriaVal === 0 && vilaVelhaVal === 0 && serraVal === 0);
+
+        if (todosGratis) {
+          freteConfig.gratis = true;
+        } else {
+          freteConfig.gratis = false;
+          freteConfig.vitoria = vitoriaVal;
+          freteConfig.vilaVelha = vilaVelhaVal;
+          freteConfig.serra = serraVal;
+        }
+
+        saveFreteConfig();
+        
+        const inputVitoria = document.getElementById('cfg_frete_vitoria');
+        const inputVilaVelha = document.getElementById('cfg_frete_vilavelha');
+        const inputSerra = document.getElementById('cfg_frete_serra');
+        const checkboxGratis = document.getElementById('cfg_frete_gratis');
+
+        if (inputVitoria) inputVitoria.value = freteConfig.vitoria.toFixed(2);
+        if (inputVilaVelha) inputVilaVelha.value = freteConfig.vilaVelha.toFixed(2);
+        if (inputSerra) inputSerra.value = freteConfig.serra.toFixed(2);
+        if (checkboxGratis) checkboxGratis.checked = freteConfig.gratis;
+
+        toggleInputsFreteState(freteConfig.gratis);
+        updateTipsFrete();
+        
+        if (typeof renderCarrinho === 'function') {
+          renderCarrinho();
+        }
+      }
+    }
+  } catch (e) {
+    console.error('[Frete Fetch] Falha ao carregar taxas de entrega do backend Neon:', e);
+  }
+}
+
+window.updateConfigFrete = function() {
+  const inputVitoria = document.getElementById('cfg_frete_vitoria');
+  const inputVilaVelha = document.getElementById('cfg_frete_vilavelha');
+  const inputSerra = document.getElementById('cfg_frete_serra');
+
+  if (inputVitoria) freteConfig.vitoria = Math.max(0, parseFloat(inputVitoria.value) || 0);
+  if (inputVilaVelha) freteConfig.vilaVelha = Math.max(0, parseFloat(inputVilaVelha.value) || 0);
+  if (inputSerra) freteConfig.serra = Math.max(0, parseFloat(inputSerra.value) || 0);
+
+  saveFreteConfig();
+  updateTipsFrete();
+  
+  if (typeof renderCarrinho === 'function') {
+    renderCarrinho();
+  }
+
+  // Tenta sincronizar com o banco se estiver online
+  syncFreteConfigToBackend();
+};
+
+window.toggleFreteGratis = function() {
+  const checkboxGratis = document.getElementById('cfg_frete_gratis');
+  if (checkboxGratis) {
+    freteConfig.gratis = checkboxGratis.checked;
+  }
+
+  toggleInputsFreteState(freteConfig.gratis);
+  saveFreteConfig();
+  updateTipsFrete();
+  
+  if (typeof renderCarrinho === 'function') {
+    renderCarrinho();
+  }
+
+  // Tenta sincronizar com o banco se estiver online
+  syncFreteConfigToBackend();
+};
+
 // 2. Inicialização e Registro de PWA Service Worker
 document.addEventListener('DOMContentLoaded', () => {
   initApp();
@@ -33,6 +222,12 @@ async function initApp() {
   setupNavigation();
   setupNetworkMonitoring();
   await initIndexedDB();
+  
+  // Carregar configurações de frete síncronas do localStorage
+  loadFreteConfig();
+  
+  // Tentar carregar taxas atualizadas do banco de dados se estiver online
+  fetchFreteConfigFromBackend();
   
   // Carregar dados iniciais
   await renderCatalogo();
@@ -286,11 +481,13 @@ function renderCarrinho() {
   // Calcular totais
   const subtotal = state.carrinho.reduce((acc, curr) => acc + (curr.preco * curr.quantidade), 0);
   
-  // Obter taxa
+  // Obter taxa dinamicamente a partir do freteConfig ou frete gratuito ativado
   let taxa = 0;
-  if (municipioSelect.value === 'Vitória') taxa = 8.0;
-  if (municipioSelect.value === 'Vila Velha') taxa = 10.0;
-  if (municipioSelect.value === 'Serra') taxa = 12.0;
+  if (!freteConfig.gratis) {
+    if (municipioSelect.value === 'Vitória') taxa = freteConfig.vitoria;
+    else if (municipioSelect.value === 'Vila Velha') taxa = freteConfig.vilaVelha;
+    else if (municipioSelect.value === 'Serra') taxa = freteConfig.serra;
+  }
 
   totalProdutosEl.textContent = `R$ ${subtotal.toFixed(2)}`;
   taxaEntregaEl.textContent = `R$ ${taxa.toFixed(2)}`;
@@ -569,7 +766,7 @@ function renderFinanceiro() {
   const desEl = document.getElementById('totalDespesas');
   const salEl = document.getElementById('saldoLiquido');
   const salCard = document.getElementById('saldoCard');
-  const tableBody = document.getElementById('financeTableBody');
+  const listBody = document.getElementById('financeListBody');
 
   const { total_receitas, total_despesas, lucro_liquido } = state.financeiro.resumo;
 
@@ -584,22 +781,33 @@ function renderFinanceiro() {
     salCard.classList.remove('saldo-negativo');
   }
 
+  if (!listBody) return;
+
   if (state.financeiro.transacoes.length === 0) {
-    tableBody.innerHTML = '<tr><td colspan="5" class="carrinho-empty" style="text-align:center;">Nenhum lançamento financeiro registrado.</td></tr>';
+    listBody.innerHTML = '<div class="carrinho-empty" style="text-align:center;">Nenhum lançamento financeiro registrado.</div>';
     return;
   }
 
-  tableBody.innerHTML = state.financeiro.transacoes.map(t => {
+  listBody.innerHTML = state.financeiro.transacoes.map(t => {
     return `
-      <tr>
-        <td><strong>${t.descricao}</strong></td>
-        <td><span class="td-tipo-badge td-tipo-${t.tipo.toLowerCase()}">${t.tipo}</span></td>
-        <td style="font-weight: 600; color: ${t.tipo === 'Receita' ? 'hsl(145, 65%, 60%)' : 'hsl(0, 75%, 70%)'};">
+      <div class="transacao-row">
+        <div class="transacao-info">
+          <span class="transacao-desc">${t.descricao}</span>
+          <div class="transacao-meta">
+            <span class="transacao-cat">${t.categoria}</span>
+            <span>•</span>
+            <span class="transacao-data">${t.data}</span>
+          </div>
+        </div>
+        <div class="transacao-tipo-desktop">
+          <span class="td-tipo-badge td-tipo-${t.tipo.toLowerCase()}">${t.tipo}</span>
+        </div>
+        <div class="transacao-valor val-${t.tipo.toLowerCase()}">
           ${t.tipo === 'Receita' ? '+' : '-'} R$ ${Number(t.valor).toFixed(2)}
-        </td>
-        <td>${t.categoria}</td>
-        <td>${t.data}</td>
-      </tr>
+        </div>
+        <div class="transacao-categoria-desktop">${t.categoria}</div>
+        <div class="transacao-data-desktop">${t.data}</div>
+      </div>
     `;
   }).join('');
 }
@@ -628,6 +836,7 @@ function setupFinanceForm() {
         if (response.ok) {
           showToast('Despesa/Compra registrada com sucesso!', 'success');
           form.reset();
+          closeFinanceModal();
           await refreshFinanceiro();
         } else {
           const err = await response.json();
@@ -638,6 +847,7 @@ function setupFinanceForm() {
         await writeIndexedDB('despesas_offline', payload);
         showToast('Offline! Compra guardada de forma segura para envio posterior.', 'info');
         form.reset();
+        closeFinanceModal();
         await refreshFinanceiro();
       }
     } catch (error) {
@@ -645,6 +855,7 @@ function setupFinanceForm() {
       await writeIndexedDB('despesas_offline', payload);
       showToast('Falha de rede! Lançamento retido localmente para sincronização.', 'info');
       form.reset();
+      closeFinanceModal();
     }
   });
 }
@@ -691,6 +902,9 @@ async function syncOfflineData() {
       showToast('Lançamentos financeiros offline sincronizados!', 'success');
       await refreshFinanceiro();
     }
+
+    // C. Sincronizar configurações de frete acumuladas localmente
+    await syncFreteConfigToBackend();
   } catch (error) {
     console.error('Erro na rotina de sincronização em segundo plano:', error);
   }
@@ -721,3 +935,20 @@ document.getElementById('recorrente_flag').addEventListener('change', (e) => {
   const intervalBox = document.getElementById('intervaloRecorrenciaBox');
   intervalBox.style.display = e.target.checked ? 'block' : 'none';
 });
+
+// 14. Controle do Modal / Bottom Sheet Financeiro (Responsivo)
+window.openFinanceModal = function() {
+  const modal = document.getElementById('financeModal');
+  if (modal) {
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+};
+
+window.closeFinanceModal = function() {
+  const modal = document.getElementById('financeModal');
+  if (modal) {
+    modal.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+};

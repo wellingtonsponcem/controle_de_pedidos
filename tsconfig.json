@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
     "target": "es2022",
-    "module": "commonjs",
-    "moduleResolution": "node",
+    "module": "node16",
+    "moduleResolution": "node16",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -10,7 +10,7 @@
     "outDir": "./dist",
     "rootDir": ".",
     "types": ["node", "jest"],
-    "ignoreDeprecations": "6.0"
+    "isolatedModules": true
   },
   "include": ["api/**/*", "tests/**/*"]
 }
