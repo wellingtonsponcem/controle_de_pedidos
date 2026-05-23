@@ -482,9 +482,35 @@
                 </div>
               </div>
 
-              <div class="form-group">
-                <label for="observacao">Observações Adicionais</label>
-                <textarea id="observacao" rows="2" placeholder="Ex: Deixar na portaria, pão fatiado, etc."></textarea>
+              <!-- Informações de Pagamento Antecipado na Criação -->
+              <div class="form-group-row" style="background: rgba(255,255,255,0.01); border: 1px solid var(--border-subtle); padding: 1rem; border-radius: 8px; margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.75rem;">
+                <div class="form-group" style="flex-direction: row; align-items: center; gap: 0.5rem; margin-bottom: 0;">
+                  <input type="checkbox" id="order_pago" style="width: 18px; height: 18px; cursor: pointer;" onchange="toggleOrderCreationPaymentSelect()">
+                  <label for="order_pago" style="cursor: pointer; user-select: none; font-size: 0.95rem; font-weight: 600; display: flex; align-items: center; gap: 0.35rem; margin-bottom: 0;">
+                    💵 Pedido já está Pago (Antecipado)
+                  </label>
+                </div>
+                
+                <div id="orderCreationPaymentBox" class="form-group" style="display: none; width: 100%;">
+                  <label for="order_meio_pagamento">Meio de Pagamento Utilizado *</label>
+                  <select id="order_meio_pagamento" style="padding: 0.6rem; font-size: 0.85rem;">
+                    <option value="PIX">⚡ PIX</option>
+                    <option value="Dinheiro">💵 Dinheiro</option>
+                    <option value="Débito">💳 Débito</option>
+                    <option value="Crédito">🪙 Crédito</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group-row">
+                <div class="form-group" style="flex: 1;">
+                  <label for="order_desconto">Desconto Aplicado (R$)</label>
+                  <input type="number" id="order_desconto" step="0.50" min="0" placeholder="0.00" style="padding: 0.6rem; font-size: 0.85rem;" oninput="renderCarrinho()">
+                </div>
+                <div class="form-group" style="flex: 2;">
+                  <label for="observacao">Observações Adicionais</label>
+                  <textarea id="observacao" rows="1" placeholder="Ex: Deixar na portaria, fatiado..." style="padding: 0.6rem; font-size: 0.85rem; height: 38px; resize: none;"></textarea>
+                </div>
               </div>
 
               <!-- Resumo de Totais do Form -->
@@ -756,13 +782,7 @@
                 </div>
                 <div class="form-group">
                   <label for="prod_modelo">Modelo / Peso *</label>
-                  <select id="prod_modelo" required>
-                    <option value="Forma (Grande - 650g)">Forma (Grande - 650g)</option>
-                    <option value="Forma (Médio - 450g)">Forma (Médio - 450g)</option>
-                    <option value="Bola (Grande - 600g)">Bola (Grande - 600g)</option>
-                    <option value="Baguete (350g)">Baguete (350g)</option>
-                    <option value="Individual (Unidade)">Individual (Unidade)</option>
-                  </select>
+                  <input type="text" id="prod_modelo" required placeholder="Ex: Forma (Grande - 650g), Baguete (350g)">
                 </div>
               </div>
 
@@ -910,9 +930,35 @@
                 </select>
               </div>
 
-              <div class="form-group">
-                <label for="edit_observacao">Observações Adicionais</label>
-                <textarea id="edit_observacao" rows="2" placeholder="Ex: Deixar na portaria, fatiado..."></textarea>
+              <!-- Informações de Pagamento Antecipado na Edição -->
+              <div class="form-group-row" style="background: rgba(255,255,255,0.01); border: 1px solid var(--border-subtle); padding: 1rem; border-radius: 8px; margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.75rem;">
+                <div class="form-group" style="flex-direction: row; align-items: center; gap: 0.5rem; margin-bottom: 0;">
+                  <input type="checkbox" id="edit_pago" style="width: 18px; height: 18px; cursor: pointer;" onchange="toggleOrderEditPaymentSelect()">
+                  <label for="edit_pago" style="cursor: pointer; user-select: none; font-size: 0.95rem; font-weight: 600; display: flex; align-items: center; gap: 0.35rem; margin-bottom: 0;">
+                    💵 Pedido já está Pago (Antecipado)
+                  </label>
+                </div>
+                
+                <div id="orderEditPaymentBox" class="form-group" style="display: none; width: 100%;">
+                  <label for="edit_meio_pagamento">Meio de Pagamento Utilizado *</label>
+                  <select id="edit_meio_pagamento" style="padding: 0.6rem; font-size: 0.85rem;">
+                    <option value="PIX">⚡ PIX</option>
+                    <option value="Dinheiro">💵 Dinheiro</option>
+                    <option value="Débito">💳 Débito</option>
+                    <option value="Crédito">🪙 Crédito</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group-row">
+                <div class="form-group" style="flex: 1;">
+                  <label for="edit_desconto">Desconto Aplicado (R$)</label>
+                  <input type="number" id="edit_desconto" step="0.50" min="0" placeholder="0.00" style="padding: 0.6rem; font-size: 0.85rem;" oninput="renderCarrinhoEdicao()">
+                </div>
+                <div class="form-group" style="flex: 2;">
+                  <label for="edit_observacao">Observações Adicionais</label>
+                  <textarea id="edit_observacao" rows="1" placeholder="Ex: Deixar na portaria, fatiado..." style="padding: 0.6rem; font-size: 0.85rem; height: 38px; resize: none;"></textarea>
+                </div>
               </div>
 
               <h3 class="form-section-header">

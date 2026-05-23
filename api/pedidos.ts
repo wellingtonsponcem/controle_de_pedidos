@@ -88,7 +88,7 @@ export default async function handler(req: any, res: any) {
   // MÉTODO POST: Criação Atômica de Pedido (Cliente + Pedido + Itens)
   // ============================================================================
   else if (method === 'POST') {
-    const { cliente, produtos, data_agendada, municipio_entrega, recorrente_flag, recorrente_intervalo, observacao } = req.body;
+    const { cliente, produtos, data_agendada, municipio_entrega, recorrente_flag, recorrente_intervalo, observacao, pago, meio_pagamento, desconto } = req.body;
 
     // Validações básicas de payload
     if (!cliente || !produtos || !Array.isArray(produtos) || produtos.length === 0 || !data_agendada || !municipio_entrega) {
@@ -125,7 +125,8 @@ export default async function handler(req: any, res: any) {
           });
         }
 
-        const valorTotal = valorProdutos + valorEntrega;
+        const descontoVal = Math.max(0, Number(desconto) || 0);
+        const valorTotal = Math.max(0, valorProdutos + valorEntrega - descontoVal);
 
         // 3. Cadastrar ou obter cliente (Upsert simplificado por telefone)
         const clienteCheck = await client.query('SELECT id FROM clientes WHERE telefone = $1 AND nome = $2', [cliente.telefone, cliente.nome]);
@@ -150,25 +151,51 @@ export default async function handler(req: any, res: any) {
           clienteId = insertClienteRes.rows[0].id;
         }
 
-        // 4. Inserir Pedido
-        // Regra de negócio: Pedidos recorrentes iniciam como "Rascunho". Pedidos comuns com agendamento direto iniciam como "Pendente".
+        // 4. Calcular o valor líquido se já estiver pago antecipadamente
+        let valorLiquido = null;
+        let pagoFlag = false;
+        let dataPagamento = null;
+        let meio = null;
+
+        if (pago === true) {
+          pagoFlag = true;
+          dataPagamento = new Date();
+          meio = meio_pagamento || 'PIX';
+          const taxaResult = await client.query('SELECT porcentagem_taxa FROM taxas_maquininha WHERE meio_pagamento = $1', [meio]);
+          const taxa = taxaResult.rows.length > 0 ? Number(taxaResult.rows[0].porcentagem_taxa) : 0;
+          valorLiquido = calcularValorLiquido(valorTotal, taxa);
+        }
+
+        // 5. Inserir Pedido com controle de pagamento
         const statusInicial = recorrente_flag ? 'Rascunho' : 'Pendente';
         const insertPedidoQuery = `
-          INSERT INTO pedidos (cliente_id, data_agendada, municipio_entrega, valor_produtos, valor_entrega, valor_total, status, recorrente_flag, recorrente_intervalo, observacao)
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *
+          INSERT INTO pedidos (cliente_id, data_agendada, municipio_entrega, valor_produtos, valor_entrega, valor_total, status, recorrente_flag, recorrente_intervalo, observacao, pago, data_pagamento, meio_pagamento, valor_liquido, desconto)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING *
         `;
         const insertPedidoRes = await client.query(insertPedidoQuery, [
-          clienteId, data_agendada, municipio_entrega, valorProdutos, valorEntrega, valorTotal, statusInicial, recorrente_flag, recorrente_intervalo || null, observacao || null
+          clienteId, data_agendada, municipio_entrega, valorProdutos, valorEntrega, valorTotal, statusInicial, recorrente_flag, recorrente_intervalo || null, observacao || null, pagoFlag, dataPagamento, meio, valorLiquido, descontoVal
         ]);
         const pedidoCriado = insertPedidoRes.rows[0];
 
-        // 5. Inserir Itens do Pedido
+        // 6. Inserir Itens do Pedido
         const insertItemQuery = `
           INSERT INTO itens_pedido (pedido_id, produto_id, quantidade, preco_unitario)
           VALUES ($1, $2, $3, $4)
         `;
         for (const item of itensComPreco) {
           await client.query(insertItemQuery, [pedidoCriado.id, item.produto_id, item.quantidade, item.preco_unitario]);
+        }
+
+        // 7. Se foi pago antecipadamente, lança receita de caixa de forma atômica
+        if (pagoFlag) {
+          const insertFinanceiroQuery = `
+            INSERT INTO transacoes_financeiras (tipo, valor, data, descricao, categoria, pedido_id)
+            VALUES ('Receita', $1, CURRENT_DATE, $2, 'Venda de Pedido', $3)
+          `;
+          const taxaResult = await client.query('SELECT porcentagem_taxa FROM taxas_maquininha WHERE meio_pagamento = $1', [meio]);
+          const taxa = taxaResult.rows.length > 0 ? Number(taxaResult.rows[0].porcentagem_taxa) : 0;
+          const descricaoReceita = `Entrega de Pão Bemavi - Cliente: ${cliente.nome} (${meio} - Líquido: R$ ${Number(valorLiquido).toFixed(2)} | Bruto: R$ ${valorTotal.toFixed(2)} | Taxa: ${taxa}%) (Pago Antecipado)`;
+          await client.query(insertFinanceiroQuery, [valorLiquido, descricaoReceita, pedidoCriado.id]);
         }
 
         return pedidoCriado;
@@ -214,7 +241,7 @@ export default async function handler(req: any, res: any) {
       }
     }
 
-    const { id, status, meio_pagamento, cliente, produtos, data_agendada, municipio_entrega, recorrente_flag, recorrente_intervalo, observacao } = req.body;
+    const { id, status, pago, meio_pagamento, cliente, produtos, data_agendada, municipio_entrega, recorrente_flag, recorrente_intervalo, observacao, desconto } = req.body;
 
     if (!id || !status) {
       return res.status(400).json({ error: 'Pedido ID e Status são obrigatórios.' });
@@ -241,6 +268,7 @@ export default async function handler(req: any, res: any) {
 
         const pedido = pedQuery.rows[0];
         const statusAnterior = pedido.status;
+        const pagoAnterior = pedido.pago === true;
         const clienteId = pedido.cliente_id;
 
         // Se já está entregue, não permite nenhuma alteração física ou de status
@@ -250,7 +278,20 @@ export default async function handler(req: any, res: any) {
 
         let pedidoSalvo;
 
+        // Determinar novos valores de pagamento e desconto
+        let pagoNovo = pago !== undefined ? (pago === true) : pagoAnterior;
+        let meioNovo = meio_pagamento || pedido.meio_pagamento || null;
+        let descontoNovo = desconto !== undefined ? Math.max(0, Number(desconto) || 0) : Number(pedido.desconto || 0);
+
+        // Se mudar o status para 'Entregue', força pago = true
+        if (status === 'Entregue') {
+          pagoNovo = true;
+          if (!meioNovo) meioNovo = 'PIX';
+        }
+
         // DETECTAR SE É EDIÇÃO COMPLETA
+        let valorTotal = 0;
+        let valorEntrega = 0;
         if (cliente && produtos && Array.isArray(produtos) && produtos.length > 0 && data_agendada && municipio_entrega) {
           // 1. Atualizar dados e coordenadas do cliente correspondente
           await client.query(`
@@ -264,7 +305,7 @@ export default async function handler(req: any, res: any) {
           if (taxaQuery.rows.length === 0) {
             throw new Error(`Município '${municipio_entrega}' não é atendido pela logística Bemavi.`);
           }
-          const valorEntrega = Number(taxaQuery.rows[0].valor_taxa);
+          valorEntrega = Number(taxaQuery.rows[0].valor_taxa);
 
           // 3. Calcular preço oficial dos produtos no banco (evita manipulação externa)
           let valorProdutos = 0;
@@ -284,16 +325,41 @@ export default async function handler(req: any, res: any) {
             });
           }
 
-          const valorTotal = valorProdutos + valorEntrega;
+          valorTotal = Math.max(0, valorProdutos + valorEntrega - descontoNovo);
+        } else {
+          valorTotal = Math.max(0, Number(pedido.valor_produtos) + Number(pedido.valor_entrega) - descontoNovo);
+          valorEntrega = Number(pedido.valor_entrega);
+        }
 
-          // 4. Atualizar Pedido
+        // Calcular o valor líquido correspondente se estiver pago
+        let valorLiquido = null;
+        let dataPagamento = pedido.data_pagamento;
+
+        if (pagoNovo) {
+          const meio = meioNovo || 'PIX';
+          const taxaResult = await client.query('SELECT porcentagem_taxa FROM taxas_maquininha WHERE meio_pagamento = $1', [meio]);
+          const taxa = taxaResult.rows.length > 0 ? Number(taxaResult.rows[0].porcentagem_taxa) : 0;
+          const totalRef = valorTotal !== undefined ? valorTotal : Number(pedido.valor_total);
+          valorLiquido = calcularValorLiquido(totalRef, taxa);
+          
+          if (!pagoAnterior) {
+            dataPagamento = new Date();
+          }
+        } else {
+          dataPagamento = null;
+          meioNovo = null;
+        }
+
+        // EXECUTAR ATUALIZAÇÃO DO PEDIDO
+        if (cliente && produtos && Array.isArray(produtos) && produtos.length > 0 && data_agendada && municipio_entrega) {
+          // 4. Atualizar Pedido Completo
           const updatePedidoQuery = `
             UPDATE pedidos 
-            SET data_agendada = $1, municipio_entrega = $2, valor_produtos = $3, valor_entrega = $4, valor_total = $5, status = $6, recorrente_flag = $7, recorrente_intervalo = $8, observacao = $9, updated_at = NOW() 
-            WHERE id = $10 RETURNING *
+            SET data_agendada = $1, municipio_entrega = $2, valor_produtos = $3, valor_entrega = $4, valor_total = $5, status = $6, recorrente_flag = $7, recorrente_intervalo = $8, observacao = $9, pago = $10, data_pagamento = $11, meio_pagamento = $12, valor_liquido = $13, desconto = $14, updated_at = NOW() 
+            WHERE id = $15 RETURNING *
           `;
           const updatePedidoRes = await client.query(updatePedidoQuery, [
-            data_agendada, municipio_entrega, valorProdutos, valorEntrega, valorTotal, status, recorrente_flag, recorrente_intervalo || null, observacao || null, id
+            data_agendada, municipio_entrega, Math.max(0, valorTotal + descontoNovo - Number(valorEntrega)), valorEntrega, valorTotal, status, recorrente_flag, recorrente_intervalo || null, observacao || null, pagoNovo, dataPagamento, meioNovo, valorLiquido, descontoNovo, id
           ]);
           pedidoSalvo = updatePedidoRes.rows[0];
 
@@ -305,60 +371,60 @@ export default async function handler(req: any, res: any) {
             VALUES ($1, $2, $3, $4)
           `;
 
-          for (const item of itensComPreco) {
-            await client.query(insertItemCorrectQuery, [id, item.produto_id, item.quantidade, item.preco_unitario]);
+          for (const item of produtos) {
+            const prodQuery = await client.query('SELECT preco_base FROM produtos WHERE id = $1', [item.produto_id]);
+            const precoUnitario = Number(prodQuery.rows[0].preco_base);
+            await client.query(insertItemCorrectQuery, [id, item.produto_id, item.quantidade, precoUnitario]);
           }
         } 
-        // CASO CONTRÁRIO: ATUALIZAÇÃO RÁPIDA DE STATUS
+        // CASO CONTRÁRIO: ATUALIZAÇÃO RÁPIDA DE STATUS OU PAGAMENTO OU DESCONTO
         else {
           const updatePedidoQuery = `
             UPDATE pedidos 
-            SET status = $1, updated_at = NOW() 
-            WHERE id = $2 RETURNING *
+            SET status = $1, pago = $2, data_pagamento = $3, meio_pagamento = $4, valor_liquido = $5, desconto = $6, valor_total = $7, updated_at = NOW() 
+            WHERE id = $8 RETURNING *
           `;
-          const updatePedidoRes = await client.query(updatePedidoQuery, [status, id]);
+          const updatePedidoRes = await client.query(updatePedidoQuery, [status, pagoNovo, dataPagamento, meioNovo, valorLiquido, descontoNovo, valorTotal, id]);
           pedidoSalvo = updatePedidoRes.rows[0];
         }
 
-        // Regra de Negócio Crítica: Ao marcar como "Entregue", gera a Transação Financeira de Receita Líquida
-        if (status === 'Entregue' && statusAnterior !== 'Entregue') {
-          const meio = meio_pagamento || 'PIX';
-          
-          // 1. Buscar taxa configurada no banco
-          const taxaResult = await client.query('SELECT porcentagem_taxa FROM taxas_maquininha WHERE meio_pagamento = $1', [meio]);
-          const taxa = taxaResult.rows.length > 0 ? Number(taxaResult.rows[0].porcentagem_taxa) : 0;
-
-          // 2. Calcular valor líquido
-          const valorLiquido = calcularValorLiquido(Number(pedidoSalvo.valor_total), taxa);
-
-          // 3. Atualizar o pedido com meio de pagamento e valor líquido correspondentes
-          const updatePedidoFinQuery = `
-            UPDATE pedidos
-            SET meio_pagamento = $1, valor_liquido = $2
-            WHERE id = $3
-            RETURNING *
-          `;
-          const updatedPedResult = await client.query(updatePedidoFinQuery, [meio, valorLiquido, id]);
-          pedidoSalvo = {
-            ...pedidoSalvo,
-            ...updatedPedResult.rows[0],
-            valor_liquido: Number(updatedPedResult.rows[0].valor_liquido)
-          };
-
-          // 4. Excluir lançamentos anteriores para este pedido (Idempotência Financeira Absoluta)
+        // Regra de Negócio Crítica de Integração Financeira Atômica e Idempotente
+        if (pagoNovo) {
+          // Excluir qualquer lançamento de receita anterior para este pedido (idempotência absoluta)
           await client.query('DELETE FROM transacoes_financeiras WHERE pedido_id = $1', [id]);
 
-          // 5. Inserir receita líquida
+          // Lançar a nova receita líquida no caixa
           const insertFinanceiroQuery = `
             INSERT INTO transacoes_financeiras (tipo, valor, data, descricao, categoria, pedido_id)
             VALUES ('Receita', $1, CURRENT_DATE, $2, 'Venda de Pedido', $3)
           `;
+          const meio = meioNovo || 'PIX';
+          const taxaResult = await client.query('SELECT porcentagem_taxa FROM taxas_maquininha WHERE meio_pagamento = $1', [meio]);
+          const taxa = taxaResult.rows.length > 0 ? Number(taxaResult.rows[0].porcentagem_taxa) : 0;
           const clienteNome = cliente ? cliente.nome : pedido.cliente_nome;
-          const descricaoReceita = `Entrega de Pão Bemavi - Cliente: ${clienteNome} (${meio} - Líquido: R$ ${valorLiquido.toFixed(2)} | Bruto: R$ ${Number(pedidoSalvo.valor_total).toFixed(2)} | Taxa: ${taxa}%)`;
+          const descricaoReceita = `Entrega de Pão Bemavi - Cliente: ${clienteNome} (${meio} - Líquido: R$ ${Number(valorLiquido).toFixed(2)} | Bruto: R$ ${Number(pedidoSalvo.valor_total).toFixed(2)} | Taxa: ${taxa}%)` + (status === 'Entregue' ? '' : ' (Pago Antecipado)');
           await client.query(insertFinanceiroQuery, [valorLiquido, descricaoReceita, id]);
+        } 
+        // Se mudou de pago para não pago ou se foi cancelado, remove a receita do caixa
+        else if (!pagoNovo && pagoAnterior) {
+          await client.query('DELETE FROM transacoes_financeiras WHERE pedido_id = $1', [id]);
+        }
+        
+        // Se o pedido foi cancelado (status === 'Cancelado'), garante remoção da receita em qualquer circunstância
+        if (status === 'Cancelado') {
+          await client.query('DELETE FROM transacoes_financeiras WHERE pedido_id = $1', [id]);
+          await client.query('UPDATE pedidos SET pago = FALSE, data_pagamento = NULL, meio_pagamento = NULL, valor_liquido = NULL WHERE id = $1', [id]);
+          pedidoSalvo.pago = false;
+          pedidoSalvo.valor_liquido = null;
         }
 
-        return pedidoSalvo;
+        return {
+          ...pedidoSalvo,
+          valor_liquido: pedidoSalvo.valor_liquido ? Number(pedidoSalvo.valor_liquido) : null,
+          valor_total: Number(pedidoSalvo.valor_total),
+          valor_produtos: Number(pedidoSalvo.valor_produtos),
+          valor_entrega: Number(pedidoSalvo.valor_entrega)
+        };
       });
 
       return res.status(200).json(pedidoAtualizado);

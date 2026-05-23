@@ -306,6 +306,22 @@ window.updateConfigTaxasMaquininha = function() {
   syncTaxasMaquininhaToBackend();
 };
 
+window.toggleOrderCreationPaymentSelect = function() {
+  const checkbox = document.getElementById('order_pago');
+  const box = document.getElementById('orderCreationPaymentBox');
+  if (checkbox && box) {
+    box.style.display = checkbox.checked ? 'block' : 'none';
+  }
+};
+
+window.toggleOrderEditPaymentSelect = function() {
+  const checkbox = document.getElementById('edit_pago');
+  const box = document.getElementById('orderEditPaymentBox');
+  if (checkbox && box) {
+    box.style.display = checkbox.checked ? 'block' : 'none';
+  }
+};
+
 // 2. Inicialização e Registro de PWA Service Worker
 document.addEventListener('DOMContentLoaded', () => {
   initApp();
@@ -604,9 +620,12 @@ function renderCarrinho() {
     else if (municipioSelect.value === 'Serra') taxa = freteConfig.serra;
   }
 
+  const descontoInput = document.getElementById('order_desconto');
+  const desconto = Math.max(0, parseFloat(descontoInput ? descontoInput.value : 0) || 0);
+
   totalProdutosEl.textContent = `R$ ${subtotal.toFixed(2)}`;
   taxaEntregaEl.textContent = `R$ ${taxa.toFixed(2)}`;
-  totalGeralEl.textContent = `R$ ${(subtotal + taxa).toFixed(2)}`;
+  totalGeralEl.textContent = `R$ ${Math.max(0, subtotal + taxa - desconto).toFixed(2)}`;
 }
 
 window.alterarQtdCarrinho = function(productId, delta) {
@@ -714,9 +733,15 @@ function renderPedidos() {
         <button class="btn btn-primary" onclick="alterarStatusPedido('${pedido.id}', 'Agendado')">Agendar Produção</button>
       `;
     } else if (pedido.status === 'Agendado') {
-      acoesHtml += `
-        <button class="btn btn-success" onclick="abrirModalEntregaPedido('${pedido.id}')">Marcar como Entregue</button>
-      `;
+      if (pedido.pago === true) {
+        acoesHtml += `
+          <button class="btn btn-success" onclick="alterarStatusPedido('${pedido.id}', 'Entregue')">Marcar como Entregue</button>
+        `;
+      } else {
+        acoesHtml += `
+          <button class="btn btn-success" onclick="abrirModalEntregaPedido('${pedido.id}')">Marcar como Entregue</button>
+        `;
+      }
     }
 
     if (pedido.status !== 'Entregue' && pedido.status !== 'Cancelado') {
@@ -744,7 +769,12 @@ function renderPedidos() {
               ${pedido.recorrente_flag ? `<span class="meta-item" style="color: var(--primary);">🔁 Recorrente (${pedido.recorrente_intervalo})</span>` : ''}
             </div>
           </div>
-          <span class="order-status-badge badge-${pedido.status.toLowerCase()}">${pedido.status}</span>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+            <span class="order-status-badge badge-${pedido.status.toLowerCase()}">${pedido.status}</span>
+            <span class="order-status-badge" style="background: ${pedido.pago ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)'}; color: ${pedido.pago ? '#10B981' : '#F59E0B'}; border: 1px solid ${pedido.pago ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.3)'}; margin-right: 0; font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; font-weight: 600;">
+              ${pedido.pago ? '⚡ Pago' : '💵 Pendente'}
+            </span>
+          </div>
         </div>
         
         <div class="order-items-box">
@@ -760,7 +790,7 @@ function renderPedidos() {
         <div class="order-bottom-actions">
           <div class="order-price">
             R$ ${Number(pedido.valor_total).toFixed(2)}
-            <span class="order-price-detail">(Pães: R$ ${Number(pedido.valor_produtos).toFixed(2)} + Taxa: R$ ${Number(pedido.valor_entrega).toFixed(2)})</span>
+            <span class="order-price-detail">(Pães: R$ ${Number(pedido.valor_produtos).toFixed(2)} + Taxa: R$ ${Number(pedido.valor_entrega).toFixed(2)}${Number(pedido.desconto) > 0 ? ` - Desconto: R$ ${Number(pedido.desconto).toFixed(2)}` : ''})</span>
           </div>
           <div class="actions-group">
             ${acoesHtml}
@@ -830,7 +860,10 @@ function setupOrderForm() {
       municipio_entrega: document.getElementById('municipio_entrega').value,
       recorrente_flag: document.getElementById('recorrente_flag').checked,
       recorrente_intervalo: document.getElementById('recorrente_flag').checked ? document.getElementById('recorrente_intervalo').value : null,
-      observacao: document.getElementById('observacao').value || null
+      observacao: document.getElementById('observacao').value || null,
+      pago: document.getElementById('order_pago').checked,
+      meio_pagamento: document.getElementById('order_pago').checked ? document.getElementById('order_meio_pagamento').value : null,
+      desconto: parseFloat(document.getElementById('order_desconto').value) || 0
     };
 
     try {
@@ -873,6 +906,10 @@ function limparFormularioPedido() {
   state.carrinho = [];
   state.novoClienteCoords = null;
   renderCarrinho();
+  const paymentBox = document.getElementById('orderCreationPaymentBox');
+  if (paymentBox) paymentBox.style.display = 'none';
+  const descontoInput = document.getElementById('order_desconto');
+  if (descontoInput) descontoInput.value = '';
 }
 
 // 11. Módulo Financeiro (Caixa & Dashboard de Fluxo de Caixa)
@@ -1585,6 +1622,21 @@ window.openOrderEditModal = function(pedidoId) {
   }
 
   document.getElementById('edit_observacao').value = pedido.observacao || '';
+  document.getElementById('edit_desconto').value = pedido.desconto && Number(pedido.desconto) > 0 ? Number(pedido.desconto).toFixed(2) : '';
+
+  const editPagoCheckbox = document.getElementById('edit_pago');
+  const editMeioSelect = document.getElementById('edit_meio_pagamento');
+  const editPagoBox = document.getElementById('orderEditPaymentBox');
+  
+  if (editPagoCheckbox) {
+    editPagoCheckbox.checked = pedido.pago === true;
+    if (editPagoBox) {
+      editPagoBox.style.display = pedido.pago ? 'block' : 'none';
+    }
+  }
+  if (editMeioSelect) {
+    editMeioSelect.value = pedido.meio_pagamento || 'PIX';
+  }
 
   // Carregar produtos no carrinho de edição
   state.editCarrinho = pedido.itens.map(item => ({
@@ -1659,9 +1711,12 @@ function renderCarrinhoEdicao() {
     else if (municipioSelect.value === 'Serra') taxa = freteConfig.serra;
   }
 
+  const descontoInput = document.getElementById('edit_desconto');
+  const desconto = Math.max(0, parseFloat(descontoInput ? descontoInput.value : 0) || 0);
+
   totalProdutosEl.textContent = `R$ ${subtotal.toFixed(2)}`;
   taxaEntregaEl.textContent = `R$ ${taxa.toFixed(2)}`;
-  totalGeralEl.textContent = `R$ ${(subtotal + taxa).toFixed(2)}`;
+  totalGeralEl.textContent = `R$ ${Math.max(0, subtotal + taxa - desconto).toFixed(2)}`;
 }
 
 window.alterarQtdCarrinhoEdicao = function(productId, delta) {
@@ -1734,7 +1789,10 @@ function setupOrderEditForm() {
       municipio_entrega: document.getElementById('edit_municipio_entrega').value,
       recorrente_flag: document.getElementById('edit_recorrente_flag').checked,
       recorrente_intervalo: document.getElementById('edit_recorrente_flag').checked ? document.getElementById('edit_recorrente_intervalo').value : null,
-      observacao: document.getElementById('edit_observacao').value || null
+      observacao: document.getElementById('edit_observacao').value || null,
+      pago: document.getElementById('edit_pago').checked,
+      meio_pagamento: document.getElementById('edit_pago').checked ? document.getElementById('edit_meio_pagamento').value : null,
+      desconto: parseFloat(document.getElementById('edit_desconto').value) || 0
     };
 
     if (!state.isOnline) {

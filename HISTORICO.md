@@ -7,14 +7,9 @@ Este arquivo mantém o histórico consolidado de decisões e progresso do projet
 ---
 
 ## 🛠 Diretrizes e Padrões Obrigatórios
-
-1. **Idioma**: Todas as comunicações e entregas em português do Brasil.
-2. **Spec-Driven Development (SDD)**: Seguir o framework SpecKit (`.specify/`).
-3. **Property-Based Testing**: Adotar testes baseados em propriedades usando `fast-check`.
-4. **Profiling e Heap Snapshots**: Monitoramento ativo de CPU/memória e vazamentos.
-5. **Resiliência a Banco de Dados**: Transações atômicas e rollbacks seguros.
-6. **Hospedagem & Vercel**: Estático no frontend, Serverless no backend (`api/`), banco Neon Postgres.
-7. **Commits Semânticos**: Sugerir mensagens de commit em português ao finalizar ações.
+- **Qualidade & Processo**: Idioma PT-BR, Spec-Driven (SpecKit), Property-Based Testing (`fast-check`), Profiling, transações atômicas e rollbacks resilientes.
+- **Stack**: Vercel Serverless (APIs em `/api`), Neon Postgres, Frontend SPA responsivo em CSS Vanilla e PWA resiliente offline com IndexedDB.
+- **Commits**: Sugerir títulos semânticos em português ao finalizar as tarefas.
 
 ---
 
@@ -49,19 +44,24 @@ Este arquivo mantém o histórico consolidado de decisões e progresso do projet
 - **Validação**: Testes Jest baseados em propriedades fast-check e compilação do TypeScript mantidos em 100% de sucesso.
 
 ### [2026-05-22] - Catálogo SPA & CRUD Administrativo de Produtos (v2.8.0) (Concluído)
-- **Layout Desktop Grid**: Reorganizado dashboard com CSS Grid assimétrico (`2fr 1fr`), colocando a Fila na esquerda e os Ajustes de Frete/Expedição empilhados na direita.
-- **Roteamento SPA**: Injetada a aba "Catálogo" e sua estrutura responsiva para o gerenciamento de produtos com cadastro, edição e ativação/desativação.
-- **CRUD e Cache Offline**: Implementadas as funções administrativas no `app.js` integrando modais de produtos e o backend Neon Postgres, com sincronização offline no IndexedDB.
-- **Filtro de Inativos**: Atualizadas as buscas no catálogo público e no seletor de pedidos para exibir estritamente produtos com `ativo !== false`.
-- **Qualidade**: Executados `npx tsc --noEmit` e `npm test` baseados em propriedades com sucesso absoluto.
+- **SDD & Specs**: Ratificada a constituição em `.specify/memory/constitution.md` e especificações do negócio.
+- **Fase 1 (DB)**: Criada migração Neon Postgres, triggers e dados populados.
+- **Fase 2 (APIs Backend)**: Desenvolvido utilitário resiliente e endpoints serverless (produtos, pedidos, financeiro).
+- **Ambiente**: Configurado TS 6.0, `fast-check` e Vercel Insights.
 
-### [2026-05-22] - Tabelas, Roteirização e Edição de Pedidos (v2.9.0 a v2.10.0) (Concluído)
-- **Banco & Rota**: Aplicada DDL estrutural e sementes. Roteador sequencial de e-Bike (Vizinho Mais Próximo + Haversine) com timeline no Google Maps. Modal `#orderEditModal` atômico.
+### [2026-05-22] - UX/UI Mobile, Ajustes de Frete e Catálogo SPA (v2.4.0 a v2.8.0) (Concluído)
+- **Interface**: Abas douradas, sticky buttons, modal Bottom Sheet, CSS Grid Desktop assimétrico e roteamento SPA.
+- **Logística & Produtos**: Ajustes dinâmicos de frete, sincronização offline (IndexedDB) e CRUD administrativo de produtos.
 
-### [2026-05-22] - Gestão de Consignações de Pães (v2.11.0) (Concluído)
-- **Consignações (PWA/DB)**: Estrutura Neon (`20260522000003_create_consignations.sql`), API serverless atômica, cache local IndexedDB, idempotência no caixa com categoria `'Venda Consignada'` e testes com `fast-check`.
+### [2026-05-22 a 2026-05-23] - Logística, Consignações e Taxas da Maquininha (v2.9.0 a v2.12.0) (Concluído)
+- **Logística & Consignações**: Roteador e-Bike (Vizinho Mais Próximo), Timeline no Maps e módulo de gestão de consignações.
+- **Maquininha**: Cálculo de taxas no modal `#orderDeliveryModal` (Débito 2.27%, Crédito 3.99%) e caixa líquido imediato.
 
-### [2026-05-23] - Meios de Pagamento & Taxas da Maquininha (v2.12.0) (Concluído)
-- **Taxas da Maquininha**: DDL e API serverless (`/api/taxas-maquininha`). Ajustes rápidos e persistência offline.
-- **Fechamento Líquido & WOW**: Modal `#orderDeliveryModal` com cálculo de valor líquido em tempo real (Débito a 2.27% para R$30 -> R$29.32). Lançamento de receita líquida idempotente no caixa.
-- **Property Tests**: 4 novas propriedades testadas com `fast-check` (total de 12 passed) livre de leaks.
+### [2026-05-23] - Pagamentos Antecipados de Pedidos e Idempotência de Caixa (v2.13.0) (Concluído)
+- **Banco & APIs**: Colunas `pago`/`data_pagamento` integradas com rollback atômico e idempotência financeira no caixa.
+- **Interface & PWA**: Checkbox/seletor na criação/edição, badges `⚡ Pago`/`💵 Pendente` e encerramento imediato de pedidos quitados.
+
+### [2026-05-23] - Abatimento de Descontos e Peso Digitável no Catálogo (v2.14.0) (Concluído)
+- **DB & APIs**: Coluna `desconto` na tabela `pedidos` (Neon). POST/PUT tratam o desconto e recalculam o total e o valor líquido.
+- **Interface & PWA**: Campo de desconto na criação/edição com recálculo visual em tempo real e digitação livre do "Modelo/Peso" no catálogo.
+- **Verificação**: Compilação TypeScript (`npx tsc --noEmit`) e 12 testes fast-check com 100% de sucesso.
