@@ -71,6 +71,15 @@
           </svg>
           Financeiro
         </button>
+        <button id="tabBtnConsignacoes" class="tab-btn" data-tab="consignacoes" aria-controls="consignacoes" aria-selected="false">
+          <svg class="tab-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+          Consignações
+        </button>
       </nav>
       
       <!-- BADGE DE REDE ONLINE/OFFLINE -->
@@ -544,6 +553,77 @@
         </div>
       </section>
 
+      <!-- 4. ABA DE GESTÃO DE CONSIGNAÇÕES -->
+      <section id="consignacoes" class="tab-content" role="tabpanel" aria-labelledby="tabBtnConsignacoes">
+        <div class="finance-dashboard">
+          
+          <!-- Cards de Indicadores de Consignação -->
+          <div class="resumo-financeiro-cards">
+            
+            <div class="finance-card receitas">
+              <span class="fin-card-label">🤝 Total Deixado (Em Aberto)</span>
+              <span id="consignadoTotalDeixado" class="fin-card-value">R$ 0,00</span>
+            </div>
+            
+            <div class="finance-card despesas">
+              <span class="fin-card-label">💰 Total Liquidado (Fechado)</span>
+              <span id="consignadoTotalArrecadado" class="fin-card-value">R$ 0,00</span>
+            </div>
+            
+            <div id="consignadoCard" class="finance-card saldo">
+              <span class="fin-card-label">📦 Lotes Ativos</span>
+              <span id="consignadoLotesAtivos" class="fin-card-value">0</span>
+            </div>
+            
+          </div>
+
+          <!-- Listagem de Consignações -->
+          <div class="card-panel" style="position: relative;">
+            <button id="btnRefreshConsignacoes" class="btn-sync" onclick="refreshConsignacoes()" aria-label="Atualizar Consignações">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+              </svg>
+            </button>
+            <div class="panel-header" style="justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;">
+              <h2 class="panel-title">
+                <svg class="title-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+                Lotes de Consignação Recentes
+              </h2>
+              <button id="btnOpenConsignationModal" class="btn btn-primary" onclick="openConsignationModal()" style="font-size: 0.85rem; padding: 0.5rem 1.2rem; z-index: 15; margin-right: 2.5rem; border: none; font-weight: 600;">
+                ➕ Nova Consignação
+              </button>
+            </div>
+            
+            <div class="transacoes-list-box">
+              <div class="transacao-header" style="grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1.5fr;">
+                <div>Parceiro (Amigo)</div>
+                <div>Status</div>
+                <div>Itens Deixados</div>
+                <div>Valor Previsto</div>
+                <div>Data Envio</div>
+                <div style="text-align: right;">Ações</div>
+              </div>
+              <div id="consignacoesListBody">
+                <div class="carrinho-empty">Carregando consignações do banco...</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Botão Sticky Mobile para abrir modal de consignações -->
+          <div class="finance-mobile-sticky-action">
+            <button class="btn btn-primary" onclick="openConsignationModal()" style="width: 100%; justify-content: center; font-size: 1.05rem; padding: 0.85rem; border: none; font-weight: 600;">
+              ➕ Nova Consignação
+            </button>
+          </div>
+
+        </div>
+      </section>
+
       <!-- MODAL / BOTTOM SHEET DE NOVO LANÇAMENTO FINANCEIRO -->
       <div id="financeModal" class="finance-modal" role="dialog" aria-modal="true" aria-labelledby="financeModalTitle">
         <div class="finance-modal-overlay" onclick="closeFinanceModal()"></div>
@@ -846,6 +926,136 @@
               <div class="form-actions-sticky" style="position: static; margin-top: 1rem;">
                 <button type="submit" id="btnSubmitEditOrder" class="btn btn-primary" style="width: 100%; justify-content: center; font-size: 1.05rem; padding: 0.85rem; border: none; font-weight: 600;">
                   💾 Salvar Alterações
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODAL DE CADASTRO DE CONSIGNAÇÃO -->
+      <div id="consignationModal" class="finance-modal" role="dialog" aria-modal="true" aria-labelledby="consignationModalTitle">
+        <div class="finance-modal-overlay" onclick="closeConsignationModal()"></div>
+        <div class="finance-modal-content">
+          <div class="finance-modal-header">
+            <h2 id="consignationModalTitle" class="panel-title" style="font-size: 1.2rem;">
+              <svg class="title-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+              </svg>
+              Nova Consignação de Pães
+            </h2>
+            <button class="btn-close-modal" type="button" onclick="closeConsignationModal()" aria-label="Fechar formulário">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+          <div class="finance-modal-body">
+            <form id="consignationCreationForm" class="order-form">
+              <div class="form-group">
+                <label for="cons_amigo">Nome do Amigo (Parceiro) *</label>
+                <input type="text" id="cons_amigo" required placeholder="Ex: Carlos Oliveira">
+              </div>
+              
+              <div class="form-group">
+                <label for="cons_telefone">Telefone / WhatsApp</label>
+                <input type="text" id="cons_telefone" placeholder="Ex: 27 99999-9999">
+              </div>
+
+              <div class="form-group">
+                <label for="cons_data_envio">Data de Envio *</label>
+                <input type="date" id="cons_data_envio" required>
+              </div>
+
+              <div class="form-group">
+                <label for="cons_observacao">Observações</label>
+                <textarea id="cons_observacao" rows="2" placeholder="Ex: Deixado na banquinha dele, acerto no final de semana..."></textarea>
+              </div>
+
+              <h3 class="form-section-header" style="margin-top: 1.5rem; font-size: 1rem;">
+                🥖 Selecionar Pães e Quantidades
+              </h3>
+              
+              <div class="carrinho-container" style="margin-bottom: 1.5rem;">
+                <div id="consignationProductsList" style="display: flex; flex-direction: column; gap: 12px;">
+                  <!-- Lista de pães ativos gerada dinamicamente via JS -->
+                </div>
+              </div>
+
+              <!-- Resumo Previsto -->
+              <div class="receipt-card">
+                <div style="display: flex; justify-content: space-between; font-weight: 700; align-items: center;">
+                  <span style="font-size: 1rem; color: var(--text-main);">Total Geral Previsto:</span>
+                  <span id="consignationTotalPrevisto" class="receipt-total-value">R$ 0,00</span>
+                </div>
+              </div>
+
+              <div class="form-actions-sticky" style="position: static; margin-top: 1.5rem;">
+                <button type="submit" id="btnSubmitConsignation" class="btn btn-primary" style="width: 100%; justify-content: center; font-size: 1.05rem; padding: 0.85rem; border: none; font-weight: 600;">
+                  ✨ Registrar Envio de Lote
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODAL DE ACERTO DE VENDAS DE CONSIGNAÇÃO -->
+      <div id="consignationSalesModal" class="finance-modal" role="dialog" aria-modal="true" aria-labelledby="consignationSalesTitle">
+        <div class="finance-modal-overlay" onclick="closeConsignationSalesModal()"></div>
+        <div class="finance-modal-content">
+          <div class="finance-modal-header">
+            <h2 id="consignationSalesTitle" class="panel-title" style="font-size: 1.2rem;">
+              <svg class="title-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+                <line x1="12" y1="1" x2="12" y2="23"></line>
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+              </svg>
+              Acerto de Vendas de Consignação
+            </h2>
+            <button class="btn-close-modal" type="button" onclick="closeConsignationSalesModal()" aria-label="Fechar formulário">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+          <div class="finance-modal-body">
+            <form id="consignationSalesForm" class="order-form">
+              <input type="hidden" id="acerto_consignacao_id">
+              
+              <div class="receipt-card" style="margin-bottom: 1.5rem; background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.2);">
+                <div style="font-weight: 600; color: #F59E0B; margin-bottom: 4px;">Informações do Parceiro:</div>
+                <div id="acerto_amigo_nome" style="font-size: 1.1rem; font-weight: 700; color: var(--text-main);">Carlos Oliveira</div>
+                <div id="acerto_amigo_detalhes" style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">Envio: 22/05/2026 | Fone: 27 99999-9999</div>
+              </div>
+
+              <h3 class="form-section-header" style="font-size: 1rem;">
+                🥖 Lançar Quantidades Vendidas
+              </h3>
+
+              <div class="carrinho-container" style="margin-bottom: 1.5rem;">
+                <div id="acertoItemsList" style="display: flex; flex-direction: column; gap: 12px;">
+                  <!-- Lista de itens do lote deixados com inputs para acerto, gerada via JS -->
+                </div>
+              </div>
+
+              <!-- Resumo do Acerto -->
+              <div class="receipt-card">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                  <span>Total Deixado Originalmente:</span>
+                  <span id="acertoTotalDeixado" style="color: var(--text-muted);">R$ 0,00</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-weight: 700; border-top: 1px dashed var(--border-subtle); padding-top: 0.75rem; margin-top: 0.5rem; align-items: center;">
+                  <span style="font-size: 1.1rem; color: var(--text-main);">Valor de Receita Real (Vendido):</span>
+                  <span id="acertoTotalVendido" class="receipt-total-value" style="color: #10B981;">R$ 0,00</span>
+                </div>
+              </div>
+
+              <div class="form-actions-sticky" style="position: static; margin-top: 1.5rem;">
+                <button type="submit" id="btnSubmitAcerto" class="btn btn-primary" style="width: 100%; justify-content: center; font-size: 1.05rem; padding: 0.85rem; border: none; font-weight: 600;">
+                  💰 Finalizar & Registrar Entrada no Caixa
                 </button>
               </div>
             </form>

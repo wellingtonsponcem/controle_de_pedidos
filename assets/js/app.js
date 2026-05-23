@@ -8,6 +8,7 @@ const state = {
   activeTab: 'dashboard',
   produtos: [],
   pedidos: [],
+  consignacoes: [],
   financeiro: {
     resumo: { total_receitas: 0, total_despesas: 0, lucro_liquido: 0 },
     transacoes: []
@@ -242,6 +243,8 @@ async function initApp() {
   setupOrderForm();
   setupFinanceForm();
   setupProductForm();
+  setupConsignationForm();
+  setupConsignationSalesForm();
   
   // Tentar sincronização inicial se estiver online
   if (state.isOnline) {
@@ -277,6 +280,7 @@ function switchTab(tabId) {
   if (tabId === 'dashboard') refreshDashboard();
   if (tabId === 'financeiro') refreshFinanceiro();
   if (tabId === 'catalogo') refreshCatalogManagement();
+  if (tabId === 'consignacoes') refreshConsignacoes();
 }
 
 // 5. Monitoramento de Rede e Badge Visual
@@ -305,7 +309,7 @@ function setupNetworkMonitoring() {
 // 6. Camada de Persistência Local (IndexedDB)
 let db;
 const DB_NAME = 'BemaviDB';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 function initIndexedDB() {
   return new Promise((resolve, reject) => {
@@ -337,6 +341,11 @@ function initIndexedDB() {
       // Store para Despesas Offline pendentes de sincronização
       if (!database.objectStoreNames.contains('despesas_offline')) {
         database.createObjectStore('despesas_offline', { autoIncrement: true });
+      }
+      
+      // Store para Consignações Offline pendentes de sincronização
+      if (!database.objectStoreNames.contains('consignacoes_offline')) {
+        database.createObjectStore('consignacoes_offline', { autoIncrement: true });
       }
     };
   });
@@ -927,6 +936,25 @@ async function syncOfflineData() {
 
     // C. Sincronizar configurações de frete acumuladas localmente
     await syncFreteConfigToBackend();
+
+    // D. Sincronizar Consignações acumuladas offline
+    const consignacoesOffline = await readAllIndexedDB('consignacoes_offline');
+    if (consignacoesOffline.length > 0) {
+      console.log(`[Offline Sync] Sincronizando ${consignacoesOffline.length} consignações pendentes...`);
+      for (const cons of consignacoesOffline) {
+        const res = await fetch('/api/consignacoes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(cons)
+        });
+        if (res.ok) {
+          console.log('[Offline Sync] Consignação sincronizada.');
+        }
+      }
+      await clearIndexedDBStore('consignacoes_offline');
+      showToast('Consignações offline sincronizadas!', 'success');
+      await refreshConsignacoes();
+    }
   } catch (error) {
     console.error('Erro na rotina de sincronização em segundo plano:', error);
   }
@@ -1816,6 +1844,398 @@ function setupAddressAutocomplete(inputId, suggestionsId, onSelect) {
     if (e.target !== input && e.target !== suggestionsContainer && !suggestionsContainer.contains(e.target)) {
       suggestionsContainer.innerHTML = '';
       suggestionsContainer.style.display = 'none';
+    }
+  });
+}
+
+// ============================================================================
+// 20. MÓDULO DE GESTÃO DE CONSIGNAÇÕES DE PÃES (BEMAVI)
+// ============================================================================
+
+async function refreshConsignacoes() {
+  const btn = document.getElementById('btnRefreshConsignacoes');
+  if (btn) btn.classList.add('spinning');
+
+  try {
+    if (state.isOnline) {
+      const response = await fetch('/api/consignacoes');
+      if (response.ok) {
+        state.consignacoes = await response.json();
+      }
+    } else {
+      const offlineItems = await readAllIndexedDB('consignacoes_offline');
+      state.consignacoes = offlineItems.map((c, idx) => ({
+        id: `offline-${idx}`,
+        amigo_nome: c.amigo_nome,
+        amigo_telefone: c.amigo_telefone,
+        data_envio: c.data_envio,
+        status: 'Aberto',
+        observacao: c.observacao,
+        itens: c.itens.map(it => ({
+          ...it,
+          produto_nome: state.produtos.find(p => p.id === it.produto_id)?.nome || 'Pão Bemavi'
+        }))
+      }));
+    }
+  } catch (error) {
+    console.error('Erro ao atualizar consignações:', error);
+  }
+
+  renderConsignacoes();
+
+  if (btn) {
+    setTimeout(() => {
+      btn.classList.remove('spinning');
+    }, 800);
+  }
+}
+
+function renderConsignacoes() {
+  const listEl = document.getElementById('consignacoesListBody');
+  const totalDeixadoEl = document.getElementById('consignadoTotalDeixado');
+  const totalArrecadadoEl = document.getElementById('consignadoTotalArrecadado');
+  const lotesAtivosEl = document.getElementById('consignadoLotesAtivos');
+
+  if (!listEl) return;
+
+  let totalDeixado = 0;
+  let totalArrecadado = 0;
+  let lotesAtivos = 0;
+
+  state.consignacoes.forEach(c => {
+    const valorLote = c.itens.reduce((acc, it) => acc + (it.quantidade_deixada * it.preco_unitario), 0);
+    const valorVendido = c.itens.reduce((acc, it) => acc + (it.quantidade_vendida * it.preco_unitario), 0);
+
+    if (c.status === 'Aberto') {
+      totalDeixado += valorLote;
+      lotesAtivos++;
+    } else if (c.status === 'Fechado') {
+      totalArrecadado += valorVendido;
+    }
+  });
+
+  if (totalDeixadoEl) totalDeixadoEl.textContent = `R$ ${totalDeixado.toFixed(2)}`;
+  if (totalArrecadadoEl) totalArrecadadoEl.textContent = `R$ ${totalArrecadado.toFixed(2)}`;
+  if (lotesAtivosEl) lotesAtivosEl.textContent = lotesAtivos;
+
+  if (state.consignacoes.length === 0) {
+    listEl.innerHTML = `
+      <div class="carrinho-empty" style="padding: 2rem 1rem; text-align: center;">
+        Nenhum lote de consignação cadastrado.
+      </div>
+    `;
+    return;
+  }
+
+  listEl.innerHTML = state.consignacoes.map(c => {
+    const dataEnvioFormatada = c.data_envio ? c.data_envio.split('-').reverse().join('/') : '';
+    const qtdItens = c.itens.reduce((acc, it) => acc + it.quantidade_deixada, 0);
+    const valorLote = c.itens.reduce((acc, it) => acc + (it.quantidade_deixada * it.preco_unitario), 0);
+    const valorVendido = c.itens.reduce((acc, it) => acc + (it.quantidade_vendida * it.preco_unitario), 0);
+
+    const isAberto = c.status === 'Aberto';
+    const badgeClass = isAberto ? 'badge-rascunho' : 'badge-entregue';
+    const statusText = isAberto ? 'Aberto' : 'Acertado';
+
+    let acoesHtml = '';
+    if (isAberto) {
+      acoesHtml = `<button class="btn btn-primary btn-table-action" onclick="openConsignationSalesModal('${c.id}')" style="padding: 4px 8px; font-size: 0.8rem;">Acerto</button>`;
+    } else {
+      acoesHtml = `<span style="font-size: 0.85rem; color: #10B981; font-weight: 600;">Liquidado (R$ ${valorVendido.toFixed(2)})</span>`;
+    }
+
+    return `
+      <div class="transacao-row" style="grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1.5fr; align-items: center; padding: 12px 16px;">
+        <div style="font-weight: 600; color: var(--text-main);">${c.amigo_nome} ${c.amigo_telefone ? `<br><span style="font-size:0.8rem; font-weight:normal; color:var(--text-muted);">📞 ${c.amigo_telefone}</span>` : ''}</div>
+        <div><span class="order-status-badge ${badgeClass}" style="margin: 0;">${statusText}</span></div>
+        <div style="color: var(--text-main);">${qtdItens} pães</div>
+        <div style="font-weight: 600; color: var(--primary);">R$ ${valorLote.toFixed(2)}</div>
+        <div style="color: var(--text-muted); font-size: 0.85rem;">${dataEnvioFormatada}</div>
+        <div style="text-align: right;">${acoesHtml}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+window.openConsignationModal = function() {
+  const modal = document.getElementById('consignationModal');
+  if (!modal) return;
+
+  const form = document.getElementById('consignationCreationForm');
+  if (form) form.reset();
+
+  document.getElementById('cons_data_envio').value = new Date().toISOString().split('T')[0];
+  document.getElementById('consignationTotalPrevisto').textContent = 'R$ 0,00';
+
+  const listContainer = document.getElementById('consignationProductsList');
+  const ativos = state.produtos.filter(p => p.ativo !== false);
+
+  if (ativos.length === 0) {
+    listContainer.innerHTML = '<div class="carrinho-empty">Nenhum pão ativo no catálogo.</div>';
+    return;
+  }
+
+  listContainer.innerHTML = ativos.map(prod => `
+    <div style="display: grid; grid-template-columns: 2fr 1fr 1.2fr; gap: 8px; align-items: center; background: rgba(255,255,255,0.02); padding: 8px; border-radius: 6px; border: 1px solid var(--border-subtle);">
+      <div style="font-size: 0.9rem; font-weight: 600; color: var(--text-main);">
+        ${prod.nome} <br>
+        <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">${prod.modelo}</span>
+      </div>
+      <div>
+        <input type="number" class="cons-qtd-input" data-prod-id="${prod.id}" min="0" value="0" style="width: 100%; padding: 4px; border: 1px solid var(--border-subtle); background: rgba(0,0,0,0.2); color: var(--text-main); border-radius: 4px; text-align: center;" oninput="updateConsignationTotal()">
+      </div>
+      <div>
+        <input type="number" class="cons-preco-input" data-prod-id="${prod.id}" step="0.01" min="0" value="${Number(prod.preco_base).toFixed(2)}" style="width: 100%; padding: 4px; border: 1px solid var(--border-subtle); background: rgba(0,0,0,0.2); color: var(--text-main); border-radius: 4px; text-align: center;" oninput="updateConsignationTotal()">
+      </div>
+    </div>
+  `).join('');
+
+  modal.classList.add('active');
+  document.body.style.overflow = 'hidden';
+};
+
+window.closeConsignationModal = function() {
+  const modal = document.getElementById('consignationModal');
+  if (modal) {
+    modal.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+};
+
+window.updateConsignationTotal = function() {
+  const qInputs = document.querySelectorAll('.cons-qtd-input');
+  const pInputs = document.querySelectorAll('.cons-preco-input');
+  let total = 0;
+
+  qInputs.forEach(qi => {
+    const prodId = qi.dataset.prodId;
+    const qtd = parseInt(qi.value) || 0;
+    const pi = Array.from(pInputs).find(input => input.dataset.prodId === prodId);
+    const preco = parseFloat(pi ? pi.value : 0) || 0;
+    total += qtd * preco;
+  });
+
+  const totalEl = document.getElementById('consignationTotalPrevisto');
+  if (totalEl) totalEl.textContent = `R$ ${total.toFixed(2)}`;
+};
+
+function setupConsignationForm() {
+  const form = document.getElementById('consignationCreationForm');
+  if (!form) return;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const amigo_nome = document.getElementById('cons_amigo').value;
+    const amigo_telefone = document.getElementById('cons_telefone').value;
+    const data_envio = document.getElementById('cons_data_envio').value;
+    const observacao = document.getElementById('cons_observacao').value;
+
+    const qInputs = document.querySelectorAll('.cons-qtd-input');
+    const pInputs = document.querySelectorAll('.cons-preco-input');
+    const itens = [];
+
+    qInputs.forEach(qi => {
+      const prodId = qi.dataset.prodId;
+      const qtd = parseInt(qi.value) || 0;
+      if (qtd > 0) {
+        const pi = Array.from(pInputs).find(input => input.dataset.prodId === prodId);
+        const preco = parseFloat(pi ? pi.value : 0) || 0;
+        itens.push({
+          produto_id: prodId,
+          quantidade_deixada: qtd,
+          preco_unitario: preco
+        });
+      }
+    });
+
+    if (itens.length === 0) {
+      showToast('Por favor, informe a quantidade de pelo menos um pão.', 'error');
+      return;
+    }
+
+    const payload = {
+      amigo_nome,
+      amigo_telefone: amigo_telefone || null,
+      data_envio,
+      observacao: observacao || null,
+      itens
+    };
+
+    try {
+      if (state.isOnline) {
+        const response = await fetch('/api/consignacoes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+          showToast('Lote de consignação registrado com sucesso na nuvem!', 'success');
+          closeConsignationModal();
+          await refreshConsignacoes();
+        } else {
+          const err = await response.json();
+          showToast(err.error || 'Erro ao criar consignação.', 'error');
+        }
+      } else {
+        await writeIndexedDB('consignacoes_offline', payload);
+        showToast('Offline! Consignação guardada localmente de forma segura no PWA.', 'info');
+        closeConsignationModal();
+        await refreshConsignacoes();
+      }
+    } catch (error) {
+      console.error('Falha de rede ao registrar consignação:', error);
+      await writeIndexedDB('consignacoes_offline', payload);
+      showToast('Falha de rede! Guardado no IndexedDB local.', 'info');
+      closeConsignationModal();
+      await refreshConsignacoes();
+    }
+  });
+}
+
+window.openConsignationSalesModal = function(consignationId) {
+  const modal = document.getElementById('consignationSalesModal');
+  if (!modal) return;
+
+  const consignacao = state.consignacoes.find(c => c.id === consignationId);
+  if (!consignacao) {
+    showToast('Consignação não encontrada.', 'error');
+    return;
+  }
+
+  document.getElementById('acerto_consignacao_id').value = consignacao.id;
+  document.getElementById('acerto_amigo_nome').textContent = consignacao.amigo_nome;
+  
+  const dataFormatada = consignacao.data_envio ? consignacao.data_envio.split('-').reverse().join('/') : '';
+  const fone = consignacao.amigo_telefone || 'Não informado';
+  document.getElementById('acerto_amigo_detalhes').textContent = `Envio: ${dataFormatada} | Fone: ${fone}`;
+
+  const listContainer = document.getElementById('acertoItemsList');
+  if (!listContainer) return;
+
+  listContainer.innerHTML = consignacao.itens.map(item => `
+    <div style="display: grid; grid-template-columns: 2.2fr 1fr 1.2fr; gap: 8px; align-items: center; background: rgba(255,255,255,0.02); padding: 8px; border-radius: 6px; border: 1px solid var(--border-subtle);">
+      <div style="font-size: 0.9rem; font-weight: 600; color: var(--text-main);">
+        ${item.produto_nome || 'Pão'} <br>
+        <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">Deixado: ${item.quantidade_deixada} | Preço: R$ ${Number(item.preco_unitario).toFixed(2)}</span>
+      </div>
+      <div>
+        <input type="number" class="acerto-qtd-input" data-item-id="${item.id}" data-max="${item.quantidade_deixada}" data-preco="${item.preco_unitario}" min="0" max="${item.quantidade_deixada}" value="0" style="width: 100%; padding: 6px; border: 1px solid var(--border-subtle); background: rgba(0,0,0,0.2); color: var(--text-main); border-radius: 4px; text-align: center;" oninput="updateAcertoTotal()">
+      </div>
+      <div style="text-align: right; font-weight: 600; font-size: 0.85rem; color: var(--text-muted);" class="acerto-subtotal-val" data-item-id="${item.id}">
+        R$ 0,00
+      </div>
+    </div>
+  `).join('');
+
+  const totalDeixado = consignacao.itens.reduce((acc, it) => acc + (it.quantidade_deixada * it.preco_unitario), 0);
+  document.getElementById('acertoTotalDeixado').textContent = `R$ ${totalDeixado.toFixed(2)}`;
+  document.getElementById('acertoTotalVendido').textContent = 'R$ 0,00';
+
+  modal.classList.add('active');
+  document.body.style.overflow = 'hidden';
+};
+
+window.closeConsignationSalesModal = function() {
+  const modal = document.getElementById('consignationSalesModal');
+  if (modal) {
+    modal.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+};
+
+window.updateAcertoTotal = function() {
+  const qInputs = document.querySelectorAll('.acerto-qtd-input');
+  let total = 0;
+
+  qInputs.forEach(qi => {
+    const itemId = qi.dataset.itemId;
+    const maxVal = parseInt(qi.dataset.max) || 0;
+    let qtd = parseInt(qi.value) || 0;
+
+    if (qtd > maxVal) {
+      qtd = maxVal;
+      qi.value = maxVal;
+    } else if (qtd < 0) {
+      qtd = 0;
+      qi.value = 0;
+    }
+
+    const preco = parseFloat(qi.dataset.preco) || 0;
+    const subtotal = qtd * preco;
+    total += subtotal;
+
+    const subEl = document.querySelector(`.acerto-subtotal-val[data-item-id="${itemId}"]`);
+    if (subEl) {
+      subEl.textContent = `R$ ${subtotal.toFixed(2)}`;
+      if (qtd > 0) {
+        subEl.style.color = '#10B981';
+      } else {
+        subEl.style.color = 'var(--text-muted)';
+      }
+    }
+  });
+
+  const totalEl = document.getElementById('acertoTotalVendido');
+  if (totalEl) totalEl.textContent = `R$ ${total.toFixed(2)}`;
+};
+
+function setupConsignationSalesForm() {
+  const form = document.getElementById('consignationSalesForm');
+  if (!form) return;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const id = document.getElementById('acerto_consignacao_id').value;
+    const qInputs = document.querySelectorAll('.acerto-qtd-input');
+    const itens = [];
+
+    qInputs.forEach(qi => {
+      const itemId = qi.dataset.itemId;
+      const qtd = parseInt(qi.value) || 0;
+      itens.push({
+        id: itemId,
+        quantidade_vendida: qtd
+      });
+    });
+
+    if (id.startsWith('offline-')) {
+      showToast('Por favor, sincronize o lote com a nuvem antes de fazer o acerto.', 'error');
+      return;
+    }
+
+    if (!state.isOnline) {
+      showToast('O acerto de vendas exige conexão online para garantir a integridade do caixa no banco Neon.', 'error');
+      return;
+    }
+
+    const payload = {
+      id,
+      data_acerto: new Date().toISOString().split('T')[0],
+      itens
+    };
+
+    try {
+      const response = await fetch('/api/consignacoes', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (response.ok) {
+        showToast('Acerto de consignação concluído e caixa atualizado!', 'success');
+        closeConsignationSalesModal();
+        await refreshConsignacoes();
+        await refreshFinanceiro();
+      } else {
+        const err = await response.json();
+        showToast(err.error || 'Erro ao realizar acerto.', 'error');
+      }
+    } catch (error) {
+      console.error('Falha crítica de rede no acerto da consignação:', error);
+      showToast('Falha de rede ao liquidar acerto. Verifique a internet.', 'error');
     }
   });
 }

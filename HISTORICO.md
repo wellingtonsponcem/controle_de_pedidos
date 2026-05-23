@@ -54,13 +54,14 @@ Este arquivo mantém o histórico consolidado de decisões e progresso do projet
 - **CRUD e Cache Offline**: Implementadas as funções administrativas no `app.js` integrando modais de produtos e o backend Neon Postgres, com sincronização offline no IndexedDB.
 - **Filtro de Inativos**: Atualizadas as buscas no catálogo público e no seletor de pedidos para exibir estritamente produtos com `ativo !== false`.
 - **Qualidade**: Executados `npx tsc --noEmit` e `npm test` baseados em propriedades com sucesso absoluto.
+
 ### [2026-05-22] - Semeadura e Estruturação de Tabelas no Neon (v2.9.0) (Concluído)
 - **Migração do Banco**: Adicionado atalho `db:migrate` no `package.json` e executada a migração com sucesso, garantindo 100% da DDL estruturada e os dados iniciais de taxas de frete (Vitória, Vila Velha, Serra) e pães Bemavi semeados no Neon Postgres.
 
 ### [2026-05-22] - Roteirização Inteligente e Edição de Pedidos (v2.10.0) (Concluído)
-- **Roteamento & Edição**: Roteador com múltiplos waypoints na Grande Vitória e timeline interativa de entregas integrada ao Google Maps. Modal `#orderEditModal` atômico para modificação de pedidos com PUT no Neon Postgres.
+- **Roteamento & Edição**: Roteador com waypoints na Grande Vitória com mapa. Modal de edição atômico de pedidos.
 
-### [2026-05-22] - Planejamento da Gestão de Consignações (v2.11.0) (Em Andamento)
-- **Arquitetura & Design**: Elaborado plano de implementação detalhado (`implementation_plan.md`) definindo tabelas (`consignacoes`, `itens_consignacao`), APIs serverless atômicas com rollback em caso de queda de banco, sincronização offline no IndexedDB e integração automatizada com fluxo de caixa do financeiro.
-
-
+### [2026-05-22] - Gestão de Consignações de Pães & Testes de Propriedade (v2.11.0) (Concluído)
+- **Consignações (PWA/DB)**: Criada estrutura Neon (`20260522000003_create_consignations.sql`), API serverless atômica (`api/consignacoes.ts`) e interface SPA offline com IndexedDB.
+- **Integração Financeira**: Idempotência garantida excluindo lançamentos anteriores antes de inserir novos acertos com categoria `'Venda Consignada'`.
+- **Property-Based Testing**: Criado `api/_consignacoes_utils.ts` e suite de testes `tests/consignacoes.test.ts` com `fast-check`. 100% de sucesso e monitorado livre de memory leaks.
