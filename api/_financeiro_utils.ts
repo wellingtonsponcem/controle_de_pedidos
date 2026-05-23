@@ -23,6 +23,27 @@ export function arredondarMoeda(valor: number): number {
 }
 
 /**
+ * Calcula o valor líquido de uma transação deduzindo a taxa da maquininha,
+ * aplicando arredondamento seguro contra inconsistências decimais (IEEE 754).
+ * Invariantes:
+ * - Se taxaPorcentagem === 0, retorna o próprio valorBruto arredondado.
+ * - Se taxaPorcentagem === 100, retorna exatamente 0.00.
+ * - valorLiquido <= valorBruto (para taxas positivas).
+ */
+export function calcularValorLiquido(valorBruto: number, taxaPorcentagem: number): number {
+  const valorBrutoArredondado = arredondarMoeda(valorBruto);
+  if (isNaN(valorBrutoArredondado) || valorBrutoArredondado <= 0) {
+    return 0;
+  }
+  const taxaArredondada = Math.max(0, Math.min(100, taxaPorcentagem));
+  if (isNaN(taxaArredondada) || taxaArredondada === 0) {
+    return valorBrutoArredondado;
+  }
+  const desconto = valorBrutoArredondado * (taxaArredondada / 100);
+  return arredondarMoeda(valorBrutoArredondado - desconto);
+}
+
+/**
  * Agrega e consolida uma lista de transações financeiras de forma puramente funcional.
  * Invariantes Garantidas:
  * 1. totalReceitas >= 0

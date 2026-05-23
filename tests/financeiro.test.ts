@@ -1,5 +1,5 @@
 import * as fc from 'fast-check';
-import { calcularBalanco, arredondarMoeda, TransacaoSimplificada } from '../api/_financeiro_utils';
+import { calcularBalanco, arredondarMoeda, calcularValorLiquido, TransacaoSimplificada } from '../api/_financeiro_utils';
 
 /**
  * Suite de Testes Baseados em Propriedades (Property-Based Testing) para o Módulo Financeiro Bemavi.
@@ -81,6 +81,67 @@ describe('Módulo Financeiro Bemavi - Property-Based Testing', () => {
             expect(balancoNovo.totalDespesas).toBe(arredondarMoeda(balancoOriginal.totalDespesas + valorExtraArredondado));
             expect(balancoNovo.totalReceitas).toBe(balancoOriginal.totalReceitas);
           }
+        }
+      ),
+      { numRuns: 1000 }
+    );
+  });
+
+  // Propriedade 4: Taxa de 0% mantém o valor bruto idêntico e arredondado
+  test('Propriedade: Taxa de 0% retorna exatamente o valor bruto arredondado', () => {
+    fc.assert(
+      fc.property(
+        fc.double({ min: 0, max: 1000000, noNaN: true }),
+        (valorBruto) => {
+          const valorLiquido = calcularValorLiquido(valorBruto, 0);
+          expect(valorLiquido).toBe(arredondarMoeda(valorBruto));
+        }
+      ),
+      { numRuns: 1000 }
+    );
+  });
+
+  // Propriedade 5: Taxa de 100% zera a receita líquida
+  test('Propriedade: Taxa de 100% sempre retorna zero', () => {
+    fc.assert(
+      fc.property(
+        fc.double({ min: 0, max: 1000000, noNaN: true }),
+        (valorBruto) => {
+          const valorLiquido = calcularValorLiquido(valorBruto, 100);
+          expect(valorLiquido).toBe(0);
+        }
+      ),
+      { numRuns: 1000 }
+    );
+  });
+
+  // Propriedade 6: O valor líquido nunca excede o valor bruto para taxas positivas
+  test('Propriedade: O valor líquido é sempre menor ou igual ao valor bruto', () => {
+    fc.assert(
+      fc.property(
+        fc.double({ min: 0.01, max: 50000, noNaN: true }),
+        fc.double({ min: 0, max: 100, noNaN: true }),
+        (valorBruto, taxa) => {
+          const valorLiquido = calcularValorLiquido(valorBruto, taxa);
+          expect(valorLiquido).toBeLessThanOrEqual(arredondarMoeda(valorBruto));
+          expect(valorLiquido).toBeGreaterThanOrEqual(0);
+        }
+      ),
+      { numRuns: 1000 }
+    );
+  });
+
+  // Propriedade 7: Aumentar a taxa nunca aumenta o valor líquido calculado
+  test('Propriedade: Aumentar a taxa nunca aumenta o valor líquido calculado', () => {
+    fc.assert(
+      fc.property(
+        fc.double({ min: 0.01, max: 50000, noNaN: true }),
+        fc.double({ min: 0, max: 99, noNaN: true }),
+        (valorBruto, taxaBase) => {
+          const valorLiquidoBase = calcularValorLiquido(valorBruto, taxaBase);
+          const valorLiquidoTaxaMaior = calcularValorLiquido(valorBruto, taxaBase + 1);
+          
+          expect(valorLiquidoTaxaMaior).toBeLessThanOrEqual(valorLiquidoBase);
         }
       ),
       { numRuns: 1000 }

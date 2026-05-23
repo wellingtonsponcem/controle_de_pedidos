@@ -1682,4 +1682,51 @@ main {
   color: var(--primary);
 }
 
+/* Estilos Premium para Meios de Pagamento no Modal de Entrega */
+.payment-method-option {
+  position: relative;
+  display: block;
+  cursor: pointer;
+}
+
+.payment-method-option input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.payment-method-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px 6px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  transition: var(--transition-smooth);
+  text-align: center;
+}
+
+.payment-method-card .payment-icon {
+  font-size: 1.25rem;
+}
+
+.payment-method-option input[type="radio"]:checked + .payment-method-card {
+  border-color: var(--primary);
+  background: rgba(245, 158, 11, 0.08);
+  color: var(--primary);
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.15);
+}
+
+.payment-method-option:hover .payment-method-card {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-main);
+}
+
 

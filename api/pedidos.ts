@@ -1,4 +1,5 @@
 import pool, { withTransaction } from './_db';
+import { calcularValorLiquido } from './_financeiro_utils';
 
 /**
  * Handler Serverless unificado /api/pedidos
@@ -213,7 +214,7 @@ export default async function handler(req: any, res: any) {
       }
     }
 
-    const { id, status, cliente, produtos, data_agendada, municipio_entrega, recorrente_flag, recorrente_intervalo, observacao } = req.body;
+    const { id, status, meio_pagamento, cliente, produtos, data_agendada, municipio_entrega, recorrente_flag, recorrente_intervalo, observacao } = req.body;
 
     if (!id || !status) {
       return res.status(400).json({ error: 'Pedido ID e Status são obrigatórios.' });
@@ -319,18 +320,42 @@ export default async function handler(req: any, res: any) {
           pedidoSalvo = updatePedidoRes.rows[0];
         }
 
-        // Regra de Negócio Crítica: Ao marcar como "Entregue", gera a Transação Financeira de Receita
+        // Regra de Negócio Crítica: Ao marcar como "Entregue", gera a Transação Financeira de Receita Líquida
         if (status === 'Entregue' && statusAnterior !== 'Entregue') {
-          const transQuery = await client.query('SELECT id FROM transacoes_financeiras WHERE pedido_id = $1', [id]);
-          if (transQuery.rows.length === 0) {
-            const insertFinanceiroQuery = `
-              INSERT INTO transacoes_financeiras (tipo, valor, data, descricao, categoria, pedido_id)
-              VALUES ('Receita', $1, CURRENT_DATE, $2, 'Venda de Pedido', $3)
-            `;
-            const clienteNome = cliente ? cliente.nome : pedido.cliente_nome;
-            const descricaoReceita = `Entrega de Pão Bemavi - Cliente: ${clienteNome}`;
-            await client.query(insertFinanceiroQuery, [pedidoSalvo.valor_total, descricaoReceita, id]);
-          }
+          const meio = meio_pagamento || 'PIX';
+          
+          // 1. Buscar taxa configurada no banco
+          const taxaResult = await client.query('SELECT porcentagem_taxa FROM taxas_maquininha WHERE meio_pagamento = $1', [meio]);
+          const taxa = taxaResult.rows.length > 0 ? Number(taxaResult.rows[0].porcentagem_taxa) : 0;
+
+          // 2. Calcular valor líquido
+          const valorLiquido = calcularValorLiquido(Number(pedidoSalvo.valor_total), taxa);
+
+          // 3. Atualizar o pedido com meio de pagamento e valor líquido correspondentes
+          const updatePedidoFinQuery = `
+            UPDATE pedidos
+            SET meio_pagamento = $1, valor_liquido = $2
+            WHERE id = $3
+            RETURNING *
+          `;
+          const updatedPedResult = await client.query(updatePedidoFinQuery, [meio, valorLiquido, id]);
+          pedidoSalvo = {
+            ...pedidoSalvo,
+            ...updatedPedResult.rows[0],
+            valor_liquido: Number(updatedPedResult.rows[0].valor_liquido)
+          };
+
+          // 4. Excluir lançamentos anteriores para este pedido (Idempotência Financeira Absoluta)
+          await client.query('DELETE FROM transacoes_financeiras WHERE pedido_id = $1', [id]);
+
+          // 5. Inserir receita líquida
+          const insertFinanceiroQuery = `
+            INSERT INTO transacoes_financeiras (tipo, valor, data, descricao, categoria, pedido_id)
+            VALUES ('Receita', $1, CURRENT_DATE, $2, 'Venda de Pedido', $3)
+          `;
+          const clienteNome = cliente ? cliente.nome : pedido.cliente_nome;
+          const descricaoReceita = `Entrega de Pão Bemavi - Cliente: ${clienteNome} (${meio} - Líquido: R$ ${valorLiquido.toFixed(2)} | Bruto: R$ ${Number(pedidoSalvo.valor_total).toFixed(2)} | Taxa: ${taxa}%)`;
+          await client.query(insertFinanceiroQuery, [valorLiquido, descricaoReceita, id]);
         }
 
         return pedidoSalvo;

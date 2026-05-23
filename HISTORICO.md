@@ -55,13 +55,13 @@ Este arquivo mantém o histórico consolidado de decisões e progresso do projet
 - **Filtro de Inativos**: Atualizadas as buscas no catálogo público e no seletor de pedidos para exibir estritamente produtos com `ativo !== false`.
 - **Qualidade**: Executados `npx tsc --noEmit` e `npm test` baseados em propriedades com sucesso absoluto.
 
-### [2026-05-22] - Semeadura e Estruturação de Tabelas no Neon (v2.9.0) (Concluído)
-- **Migração do Banco**: Adicionado atalho `db:migrate` no `package.json` e executada a migração com sucesso, garantindo 100% da DDL estruturada e os dados iniciais de taxas de frete (Vitória, Vila Velha, Serra) e pães Bemavi semeados no Neon Postgres.
+### [2026-05-22] - Tabelas, Roteirização e Edição de Pedidos (v2.9.0 a v2.10.0) (Concluído)
+- **Banco & Rota**: Aplicada DDL estrutural e sementes. Roteador sequencial de e-Bike (Vizinho Mais Próximo + Haversine) com timeline no Google Maps. Modal `#orderEditModal` atômico.
 
-### [2026-05-22] - Roteirização Inteligente e Edição de Pedidos (v2.10.0) (Concluído)
-- **Roteamento & Edição**: Roteador com waypoints na Grande Vitória com mapa. Modal de edição atômico de pedidos.
+### [2026-05-22] - Gestão de Consignações de Pães (v2.11.0) (Concluído)
+- **Consignações (PWA/DB)**: Estrutura Neon (`20260522000003_create_consignations.sql`), API serverless atômica, cache local IndexedDB, idempotência no caixa com categoria `'Venda Consignada'` e testes com `fast-check`.
 
-### [2026-05-22] - Gestão de Consignações de Pães & Testes de Propriedade (v2.11.0) (Concluído)
-- **Consignações (PWA/DB)**: Criada estrutura Neon (`20260522000003_create_consignations.sql`), API serverless atômica (`api/consignacoes.ts`) e interface SPA offline com IndexedDB.
-- **Integração Financeira**: Idempotência garantida excluindo lançamentos anteriores antes de inserir novos acertos com categoria `'Venda Consignada'`.
-- **Property-Based Testing**: Criado `api/_consignacoes_utils.ts` e suite de testes `tests/consignacoes.test.ts` com `fast-check`. 100% de sucesso e monitorado livre de memory leaks.
+### [2026-05-23] - Meios de Pagamento & Taxas da Maquininha (v2.12.0) (Concluído)
+- **Taxas da Maquininha**: DDL e API serverless (`/api/taxas-maquininha`). Ajustes rápidos e persistência offline.
+- **Fechamento Líquido & WOW**: Modal `#orderDeliveryModal` com cálculo de valor líquido em tempo real (Débito a 2.27% para R$30 -> R$29.32). Lançamento de receita líquida idempotente no caixa.
+- **Property Tests**: 4 novas propriedades testadas com `fast-check` (total de 12 passed) livre de leaks.

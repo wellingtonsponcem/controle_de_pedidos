@@ -18,7 +18,8 @@ const state = {
   novoClienteCoords: null,
   editClienteCoords: null,
   rotaPartidaCoords: { latitude: -20.3168, longitude: -40.3117 },
-  loteRotaCalculada: []
+  loteRotaCalculada: [],
+  taxasMaquininha: { debito: 2.27, credito: 3.99 }
 };
 
 // Configurações de Frete da Grande Vitória (valores iniciais reduzidos e controle síncrono local)
@@ -210,6 +211,101 @@ window.toggleFreteGratis = function() {
   syncFreteConfigToBackend();
 };
 
+// Configuração de Taxas da Maquininha de Cartão (LocalStorage + Backend Sync)
+function loadTaxasMaquininha() {
+  try {
+    const saved = localStorage.getItem('bemavi_taxas_maquininha');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed) {
+        state.taxasMaquininha.debito = typeof parsed.debito === 'number' ? parsed.debito : 2.27;
+        state.taxasMaquininha.credito = typeof parsed.credito === 'number' ? parsed.credito : 3.99;
+      }
+    }
+  } catch (e) {
+    console.error('Erro ao ler bemavi_taxas_maquininha do localStorage:', e);
+  }
+
+  // Atualizar inputs se existirem
+  const inputDebito = document.getElementById('cfg_taxa_debito');
+  const inputCredito = document.getElementById('cfg_taxa_credito');
+  if (inputDebito) inputDebito.value = state.taxasMaquininha.debito.toFixed(2);
+  if (inputCredito) inputCredito.value = state.taxasMaquininha.credito.toFixed(2);
+}
+
+function saveTaxasMaquininha() {
+  try {
+    localStorage.setItem('bemavi_taxas_maquininha', JSON.stringify(state.taxasMaquininha));
+  } catch (e) {
+    console.error('Erro ao salvar bemavi_taxas_maquininha no localStorage:', e);
+  }
+}
+
+async function syncTaxasMaquininhaToBackend() {
+  if (!state.isOnline) return;
+
+  try {
+    const payload = {
+      taxas: {
+        "Débito": state.taxasMaquininha.debito,
+        "Crédito": state.taxasMaquininha.credito
+      }
+    };
+
+    const response = await fetch('/api/taxas-maquininha', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (response.ok) {
+      console.log('[Taxas Sync] Taxas de maquininha sincronizadas com o banco Neon.');
+    } else {
+      console.warn('[Taxas Sync] Falha ao sincronizar taxas de maquininha com backend.');
+    }
+  } catch (e) {
+    console.error('[Taxas Sync] Erro de rede ao sincronizar taxas de maquininha:', e);
+  }
+}
+
+async function fetchTaxasMaquininhaFromBackend() {
+  if (!state.isOnline) return;
+
+  try {
+    const response = await fetch('/api/taxas-maquininha');
+    if (response.ok) {
+      const data = await response.json();
+      if (Array.isArray(data) && data.length > 0) {
+        data.forEach(item => {
+          const val = parseFloat(item.porcentagem_taxa) || 0;
+          if (item.meio_pagamento === 'Débito') state.taxasMaquininha.debito = val;
+          if (item.meio_pagamento === 'Crédito') state.taxasMaquininha.credito = val;
+        });
+
+        saveTaxasMaquininha();
+
+        const inputDebito = document.getElementById('cfg_taxa_debito');
+        const inputCredito = document.getElementById('cfg_taxa_credito');
+        if (inputDebito) inputDebito.value = state.taxasMaquininha.debito.toFixed(2);
+        if (inputCredito) inputCredito.value = state.taxasMaquininha.credito.toFixed(2);
+      }
+    }
+  } catch (e) {
+    console.error('[Taxas Fetch] Falha ao buscar taxas de maquininha do backend:', e);
+  }
+}
+
+window.updateConfigTaxasMaquininha = function() {
+  const inputDebito = document.getElementById('cfg_taxa_debito');
+  const inputCredito = document.getElementById('cfg_taxa_credito');
+
+  if (inputDebito) state.taxasMaquininha.debito = Math.max(0, Math.min(100, parseFloat(inputDebito.value) || 0));
+  if (inputCredito) state.taxasMaquininha.credito = Math.max(0, Math.min(100, parseFloat(inputCredito.value) || 0));
+
+  saveTaxasMaquininha();
+  syncTaxasMaquininhaToBackend();
+};
+
 // 2. Inicialização e Registro de PWA Service Worker
 document.addEventListener('DOMContentLoaded', () => {
   initApp();
@@ -228,11 +324,13 @@ async function initApp() {
   setupNetworkMonitoring();
   await initIndexedDB();
   
-  // Carregar configurações de frete síncronas do localStorage
+  // Carregar configurações de frete e taxas de maquininha síncronas do localStorage
   loadFreteConfig();
+  loadTaxasMaquininha();
   
   // Tentar carregar taxas atualizadas do banco de dados se estiver online
   fetchFreteConfigFromBackend();
+  fetchTaxasMaquininhaFromBackend();
   
   // Carregar dados iniciais
   await renderCatalogo();
@@ -245,6 +343,7 @@ async function initApp() {
   setupProductForm();
   setupConsignationForm();
   setupConsignationSalesForm();
+  setupOrderDeliveryForm();
   
   // Tentar sincronização inicial se estiver online
   if (state.isOnline) {
@@ -616,7 +715,7 @@ function renderPedidos() {
       `;
     } else if (pedido.status === 'Agendado') {
       acoesHtml += `
-        <button class="btn btn-success" onclick="alterarStatusPedido('${pedido.id}', 'Entregue')">Marcar como Entregue</button>
+        <button class="btn btn-success" onclick="abrirModalEntregaPedido('${pedido.id}')">Marcar como Entregue</button>
       `;
     }
 
@@ -955,6 +1054,9 @@ async function syncOfflineData() {
       showToast('Consignações offline sincronizadas!', 'success');
       await refreshConsignacoes();
     }
+
+    // E. Sincronizar configurações de taxas de maquininha
+    await syncTaxasMaquininhaToBackend();
   } catch (error) {
     console.error('Erro na rotina de sincronização em segundo plano:', error);
   }
@@ -2236,6 +2338,114 @@ function setupConsignationSalesForm() {
     } catch (error) {
       console.error('Falha crítica de rede no acerto da consignação:', error);
       showToast('Falha de rede ao liquidar acerto. Verifique a internet.', 'error');
+    }
+  });
+}
+
+// 16. Controle de Entrega de Pedidos (Confirmação com WOW Visual de Meios de Pagamento)
+window.abrirModalEntregaPedido = function(pedidoId) {
+  const modal = document.getElementById('orderDeliveryModal');
+  if (!modal) return;
+
+  const pedido = state.pedidos.find(p => p.id === pedidoId);
+  if (!pedido) return;
+
+  // Preencher os dados do modal
+  document.getElementById('delivery_pedido_id').value = pedidoId;
+  document.getElementById('delivery_valor_total').value = pedido.valor_total;
+  document.getElementById('delivery_cliente_nome').textContent = pedido.cliente.nome;
+
+  const itensTxt = pedido.itens.map(it => `${it.quantidade}x ${it.nome} (${it.modelo})`).join(', ');
+  document.getElementById('delivery_detalhes_pedido').textContent = `Itens: ${itensTxt} | Frete: R$ ${Number(pedido.valor_entrega).toFixed(2)}`;
+
+  // Forçar reset do rádio para PIX como padrão
+  const radios = document.getElementsByName('delivery_meio_pagamento');
+  radios.forEach(r => {
+    if (r.value === 'PIX') r.checked = true;
+  });
+
+  // Atualizar cálculo líquido estimulado
+  updateDeliveryValorLiquido();
+
+  // Ativar modal
+  modal.classList.add('active');
+  document.body.style.overflow = 'hidden';
+};
+
+window.closeOrderDeliveryModal = function() {
+  const modal = document.getElementById('orderDeliveryModal');
+  if (modal) {
+    modal.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+};
+
+window.updateDeliveryValorLiquido = function() {
+  const radios = document.getElementsByName('delivery_meio_pagamento');
+  let meio = 'PIX';
+  radios.forEach(r => {
+    if (r.checked) meio = r.value;
+  });
+
+  const valorBruto = parseFloat(document.getElementById('delivery_valor_total').value) || 0;
+  
+  // Buscar a taxa do estado local
+  const taxa = meio === 'PIX' || meio === 'Dinheiro' 
+    ? 0 
+    : (meio === 'Débito' ? state.taxasMaquininha.debito : state.taxasMaquininha.credito);
+
+  const taxaValor = valorBruto * (taxa / 100);
+  const valorLiquido = Math.round((valorBruto - taxaValor + Number.EPSILON) * 100) / 100;
+
+  // Atualizar visualização
+  document.getElementById('delivery_valor_bruto_txt').textContent = `R$ ${valorBruto.toFixed(2)}`;
+  document.getElementById('delivery_taxa_pct').textContent = `${taxa.toFixed(2)}%`;
+  document.getElementById('delivery_taxa_valor').textContent = `- R$ ${taxaValor.toFixed(2)}`;
+  document.getElementById('delivery_valor_liquido_txt').textContent = `R$ ${valorLiquido.toFixed(2)}`;
+};
+
+function setupOrderDeliveryForm() {
+  const form = document.getElementById('orderDeliveryForm');
+  if (!form) return;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const pedidoId = document.getElementById('delivery_pedido_id').value;
+    const radios = document.getElementsByName('delivery_meio_pagamento');
+    let meio = 'PIX';
+    radios.forEach(r => {
+      if (r.checked) meio = r.value;
+    });
+
+    if (!state.isOnline) {
+      showToast('O fechamento financeiro do pedido exige conexão ativa com a internet para calcular as taxas no banco Neon.', 'error');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/pedidos', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: pedidoId,
+          status: 'Entregue',
+          meio_pagamento: meio
+        })
+      });
+
+      if (response.ok) {
+        showToast('Pedido concluído e receita lançada no caixa com sucesso!', 'success');
+        closeOrderDeliveryModal();
+        await refreshDashboard();
+        await refreshFinanceiro();
+      } else {
+        const err = await response.json();
+        showToast(err.error || 'Erro ao concluir entrega.', 'error');
+      }
+    } catch (error) {
+      console.error('Falha crítica ao enviar conclusão de entrega:', error);
+      showToast('Falha de rede ao concluir o pedido.', 'error');
     }
   });
 }

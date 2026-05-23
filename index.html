@@ -165,6 +165,36 @@
               </div>
             </div>
 
+            <!-- Painel Administrativo de Configuração de Taxas de Maquininha -->
+            <div class="card-panel" style="display:flex; flex-direction:column; gap:1rem;">
+              <h3 class="panel-title" style="display: flex; align-items: center; font-size: 1.1rem;">
+                <svg class="title-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+                  <rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect>
+                  <line x1="2" y1="10" x2="22" y2="10"></line>
+                </svg>
+                Taxas da Maquininha
+              </h3>
+              <div class="frete-config-box">
+                <div class="frete-config-row">
+                  <span class="frete-config-label">Débito:</span>
+                  <div class="frete-input-wrapper">
+                    <span class="frete-currency">%</span>
+                    <input type="number" id="cfg_taxa_debito" step="0.01" min="0" max="100" placeholder="2.27" oninput="updateConfigTaxasMaquininha()">
+                  </div>
+                </div>
+                <div class="frete-config-row">
+                  <span class="frete-config-label">Crédito:</span>
+                  <div class="frete-input-wrapper">
+                    <span class="frete-currency">%</span>
+                    <input type="number" id="cfg_taxa_credito" step="0.01" min="0" max="100" placeholder="3.99" oninput="updateConfigTaxasMaquininha()">
+                  </div>
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); text-align: center; margin-top: 0.25rem;">
+                  ℹ️ PIX e Dinheiro possuem taxa automática de 0%.
+                </div>
+              </div>
+            </div>
+
             <!-- Painel Administrativo de Roteirização de Entregas -->
             <div class="card-panel" style="display:flex; flex-direction:column; gap:1rem;">
               <h3 class="panel-title" style="display: flex; align-items: center; font-size: 1.1rem;">
@@ -1056,6 +1086,92 @@
               <div class="form-actions-sticky" style="position: static; margin-top: 1.5rem;">
                 <button type="submit" id="btnSubmitAcerto" class="btn btn-primary" style="width: 100%; justify-content: center; font-size: 1.05rem; padding: 0.85rem; border: none; font-weight: 600;">
                   💰 Finalizar & Registrar Entrada no Caixa
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODAL DE CONFIRMAÇÃO DE ENTREGA E SELEÇÃO DE MEIO DE PAGAMENTO -->
+      <div id="orderDeliveryModal" class="finance-modal" role="dialog" aria-modal="true" aria-labelledby="orderDeliveryTitle">
+        <div class="finance-modal-overlay" onclick="closeOrderDeliveryModal()"></div>
+        <div class="finance-modal-content" style="max-width: 450px;">
+          <div class="finance-modal-header">
+            <h2 id="orderDeliveryTitle" class="panel-title" style="font-size: 1.2rem;">
+              <svg class="title-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              Confirmar Entrega do Pedido
+            </h2>
+            <button class="btn-close-modal" type="button" onclick="closeOrderDeliveryModal()" aria-label="Fechar formulário">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+          <div class="finance-modal-body">
+            <form id="orderDeliveryForm" class="order-form">
+              <input type="hidden" id="delivery_pedido_id">
+              <input type="hidden" id="delivery_valor_total">
+              
+              <div class="receipt-card" style="margin-bottom: 1.25rem; background: rgba(245, 158, 11, 0.03); border: 1px solid var(--border-subtle);">
+                <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">Cliente:</div>
+                <div id="delivery_cliente_nome" style="font-size: 1.15rem; font-weight: 700; color: var(--text-main); margin-bottom: 6px;">Wellington Ponce</div>
+                <div id="delivery_detalhes_pedido" style="font-size: 0.85rem; color: var(--text-muted);">Pães: R$ 0,00 | Frete: R$ 0,00</div>
+              </div>
+
+              <div class="form-group">
+                <label style="font-size: 0.95rem; font-weight: 600; color: var(--text-main); margin-bottom: 8px;">💳 Meio de Pagamento da Venda:</label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px;">
+                  <label class="payment-method-option">
+                    <input type="radio" name="delivery_meio_pagamento" value="PIX" checked onchange="updateDeliveryValorLiquido()">
+                    <span class="payment-method-card">
+                      <span class="payment-icon">⚡</span> PIX
+                    </span>
+                  </label>
+                  <label class="payment-method-option">
+                    <input type="radio" name="delivery_meio_pagamento" value="Dinheiro" onchange="updateDeliveryValorLiquido()">
+                    <span class="payment-method-card">
+                      <span class="payment-icon">💵</span> Dinheiro
+                    </span>
+                  </label>
+                  <label class="payment-method-option">
+                    <input type="radio" name="delivery_meio_pagamento" value="Débito" onchange="updateDeliveryValorLiquido()">
+                    <span class="payment-method-card">
+                      <span class="payment-icon">💳</span> Débito
+                    </span>
+                  </label>
+                  <label class="payment-method-option">
+                    <input type="radio" name="delivery_meio_pagamento" value="Crédito" onchange="updateDeliveryValorLiquido()">
+                    <span class="payment-method-card">
+                      <span class="payment-icon">🪙</span> Crédito
+                    </span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Resumo Líquido Automatizado (WOW!) -->
+              <div class="receipt-card" style="margin-top: 1.25rem; border-top: 1px solid var(--border-subtle); background: rgba(16, 185, 129, 0.02); border-color: rgba(16, 185, 129, 0.15);">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.9rem;">
+                  <span>Valor Bruto do Pedido:</span>
+                  <span id="delivery_valor_bruto_txt" style="font-weight: 500;">R$ 0,00</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.9rem; color: var(--text-muted);">
+                  <span>Taxa Aplicada (<span id="delivery_taxa_pct">0.00%</span>):</span>
+                  <span id="delivery_taxa_valor" style="color: #EF4444;">- R$ 0,00</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-weight: 700; border-top: 1px dashed rgba(16, 185, 129, 0.2); padding-top: 0.75rem; margin-top: 0.5rem; align-items: center;">
+                  <span style="font-size: 1.05rem; color: var(--text-main);">Valor Líquido (Caixa):</span>
+                  <span id="delivery_valor_liquido_txt" class="receipt-total-value" style="color: #10B981; font-size: 1.4rem;">R$ 0,00</span>
+                </div>
+              </div>
+
+              <div class="form-actions-sticky" style="position: static; margin-top: 1.5rem; display: flex; gap: 10px;">
+                <button type="button" class="btn btn-secondary" onclick="closeOrderDeliveryModal()" style="flex: 1; justify-content: center; font-weight: 600;">Voltar</button>
+                <button type="submit" id="btnSubmitDelivery" class="btn btn-success" style="flex: 2; justify-content: center; font-size: 1.05rem; padding: 0.85rem; border: none; font-weight: 600;">
+                  Confirmar & Lançar
                 </button>
               </div>
             </form>
