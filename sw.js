@@ -1,8 +1,12 @@
-const CACHE_NAME = 'bemavi-cache-v1';
+const CACHE_NAME = 'bemavi-cache-v2';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
+  './admin.html',
+  './catalogo.html',
   './manifest.json',
+  './assets/css/catalogo-publico.css',
+  './assets/js/catalogo-publico.js',
   './assets/css/styles.css',
   './assets/js/app.js',
   'https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;1,400&display=swap',

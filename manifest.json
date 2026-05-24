@@ -1,8 +1,8 @@
 {
-  "name": "Bemavi - Controle de Pedidos",
+  "name": "Bemavi - Catálogo de Pedidos",
   "short_name": "Bemavi",
-  "description": "Sistema de controle de pedidos, entregas e financeiro para a padaria artesanal Bemavi.",
-  "start_url": "./index.html",
+  "description": "Catálogo público da padaria artesanal Bemavi para pedidos pelo WhatsApp.",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#1a1613",
   "theme_color": "#d97706",

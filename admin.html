@@ -1,0 +1,1428 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bemavi - Controle de Pedidos de Pão Artesanal</title>
+  
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="Sistema de gestão de pedidos de panificação, agendamento de entregas na Grande Vitória, controle de recorrências e fluxo financeiro para a padaria artesanal Bemavi.">
+  <meta name="keywords" content="padaria artesanal, pão caseiro, Bemavi, controle de pedidos, Grande Vitória, PWA, agendamento de entregas">
+  <meta name="author" content="Bemavi">
+
+  <!-- Mobile Theme & PWA Manifest -->
+  <meta name="theme-color" content="#d97706">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/992/992747.png">
+  
+  <!-- Premium Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;1,400&display=swap" rel="stylesheet">
+  
+  <!-- Premium Vanilla CSS Stylesheet -->
+  <link rel="stylesheet" href="./assets/css/styles.css">
+</head>
+<body>
+
+  <div class="app-container">
+    
+    <!-- HEADER PREMIUM DO SISTEMA -->
+    <header>
+      <div class="logo-block">
+        <img class="logo-icon" src="https://cdn-icons-png.flaticon.com/512/992/992747.png" alt="Logo Bemavi Pão Artesanal">
+        <div class="logo-text">
+          <h1 class="logo-title">Bemavi</h1>
+          <span class="logo-subtitle">Pão Artesanal</span>
+        </div>
+      </div>
+      
+      <!-- NAVEGAÇÃO SPA -->
+      <nav class="nav-tabs" aria-label="Navegação Principal do Sistema">
+        <button id="tabBtnDashboard" class="tab-btn active" data-tab="dashboard" aria-controls="dashboard" aria-selected="true">
+          <svg class="tab-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="9" y1="3" x2="9" y2="21"></line>
+            <line x1="9" y1="9" x2="21" y2="9"></line>
+            <line x1="9" y1="15" x2="21" y2="15"></line>
+          </svg>
+          Dashboard
+        </button>
+        <button id="tabBtnCatalogo" class="tab-btn" data-tab="catalogo" aria-controls="catalogo" aria-selected="false">
+          <svg class="tab-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;">
+            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+            <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+            <line x1="12" y1="22.08" x2="12" y2="12"></line>
+          </svg>
+          Catálogo
+        </button>
+        <button id="tabBtnPedidos" class="tab-btn" data-tab="pedidos" aria-controls="pedidos" aria-selected="false">
+          <svg class="tab-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;">
+            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <path d="M16 10a4 4 0 0 1-8 0"></path>
+          </svg>
+          Novo Pedido
+        </button>
+        <button id="tabBtnFinanceiro" class="tab-btn" data-tab="financeiro" aria-controls="financeiro" aria-selected="false">
+          <svg class="tab-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;">
+            <line x1="12" y1="1" x2="12" y2="23"></line>
+            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+          </svg>
+          Financeiro
+        </button>
+        <button id="tabBtnConsignacoes" class="tab-btn" data-tab="consignacoes" aria-controls="consignacoes" aria-selected="false">
+          <svg class="tab-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+          Consignações
+        </button>
+        <button id="tabBtnInteligencia" class="tab-btn" data-tab="inteligencia" aria-controls="inteligencia" aria-selected="false">
+          <svg class="tab-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;">
+            <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+            <polyline points="2 17 12 22 22 17"></polyline>
+            <polyline points="2 12 12 17 22 12"></polyline>
+          </svg>
+          Assistente IA
+        </button>
+      </nav>
+      
+      <!-- BADGE DE REDE ONLINE/OFFLINE -->
+      <div id="networkBadge" class="network-badge online">
+        <span class="indicator"></span>
+        Conectando...
+      </div>
+    </header>
+
+    <!-- CORPO PRINCIPAL DO SISTEMA SPA -->
+    <main>
+      
+      <!-- 1. ABA DE DASHBOARD (CALENDÁRIO & PRODUÇÃO DE PEDIDOS) -->
+      <section id="dashboard" class="tab-content active" role="tabpanel" aria-labelledby="tabBtnDashboard">
+        <div class="dashboard-grid">
+          
+          <!-- Coluna Esquerda: Fila de Produção -->
+          <div class="dashboard-left-col">
+            <div class="card-panel" style="position: relative;">
+              <button id="btnRefreshDashboard" class="btn-sync" onclick="refreshDashboard()" aria-label="Atualizar Fila de Produção">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                </svg>
+              </button>
+              <div class="panel-header">
+                <h2 class="panel-title">
+                  <svg class="title-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                  </svg>
+                  Fila de Produção & Entregas
+                  <span id="pedidosTotalCount" class="badge-count">0</span>
+                </h2>
+                <button class="btn btn-primary" onclick="switchTab('pedidos')" style="font-size: 0.85rem; padding: 0.5rem 1.2rem; border: none; font-weight: 600; margin-right: 2.5rem;">
+                  ➕ Novo Pedido
+                </button>
+              </div>
+              
+              <!-- Sub-abas da Fila de Produção -->
+              <div class="sub-tabs-container">
+                <button class="sub-tab-btn active" id="subTabPendentes" onclick="switchSubTab('pendentes')">
+                  ⏳ Pendentes
+                </button>
+                <button class="sub-tab-btn" id="subTabRota" onclick="switchSubTab('rota')">
+                  🚴 Em Rota
+                </button>
+                <button class="sub-tab-btn" id="subTabConcluidos" onclick="switchSubTab('concluidos')">
+                  ✅ Concluídos
+                </button>
+              </div>
+              
+              <div id="ordersList" class="orders-list">
+                <div class="carrinho-empty">Carregando pedidos do Neon Postgres...</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Coluna Direita: Sidebar Operacional com Accordion Group -->
+          <div class="dashboard-right-col">
+            <div class="sidebar-accordion">
+              
+              <!-- Accordion 1: Ajustes de Frete -->
+              <details class="card-panel accordion-item" id="accordion_frete" open>
+                <summary class="panel-title" style="display: flex; align-items: center; justify-content: space-between; font-size: 1.1rem; cursor: pointer; user-select: none; outline: none; list-style: none;">
+                  <span style="display: flex; align-items: center; gap: 6px;">
+                    <svg class="title-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="3"></circle>
+                      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                    </svg>
+                    Ajustes de Frete
+                  </span>
+                  <svg class="chevron-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </summary>
+                <div class="accordion-content" style="margin-top: 1.25rem;">
+                  <div class="frete-config-box">
+                    <div class="frete-config-row">
+                      <span class="frete-config-label">Vitória:</span>
+                      <div class="frete-input-wrapper">
+                        <span class="frete-currency">R$</span>
+                        <input type="number" id="cfg_frete_vitoria" step="0.50" min="0" placeholder="0.00" oninput="updateConfigFrete()">
+                      </div>
+                    </div>
+                    <div class="frete-config-row">
+                      <span class="frete-config-label">Vila Velha:</span>
+                      <div class="frete-input-wrapper">
+                        <span class="frete-currency">R$</span>
+                        <input type="number" id="cfg_frete_vilavelha" step="0.50" min="0" placeholder="0.00" oninput="updateConfigFrete()">
+                      </div>
+                    </div>
+                    <div class="frete-config-row">
+                      <span class="frete-config-label">Serra:</span>
+                      <div class="frete-input-wrapper">
+                        <span class="frete-currency">R$</span>
+                        <input type="number" id="cfg_frete_serra" step="0.50" min="0" placeholder="0.00" oninput="updateConfigFrete()">
+                      </div>
+                    </div>
+                    <div class="frete-config-checkbox-row">
+                      <input type="checkbox" id="cfg_frete_gratis" onchange="toggleFreteGratis()">
+                      <label for="cfg_frete_gratis">✨ Ativar Frete Grátis Global</label>
+                    </div>
+                  </div>
+                </div>
+              </details>
+
+              <!-- Accordion 2: Taxas da Maquininha -->
+              <details class="card-panel accordion-item" id="accordion_taxas">
+                <summary class="panel-title" style="display: flex; align-items: center; justify-content: space-between; font-size: 1.1rem; cursor: pointer; user-select: none; outline: none; list-style: none;">
+                  <span style="display: flex; align-items: center; gap: 6px;">
+                    <svg class="title-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect>
+                      <line x1="2" y1="10" x2="22" y2="10"></line>
+                    </svg>
+                    Taxas da Maquininha
+                  </span>
+                  <svg class="chevron-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </summary>
+                <div class="accordion-content" style="margin-top: 1.25rem;">
+                  <div class="frete-config-box">
+                    <div class="frete-config-row">
+                      <span class="frete-config-label">Débito:</span>
+                      <div class="frete-input-wrapper">
+                        <span class="frete-currency">%</span>
+                        <input type="number" id="cfg_taxa_debito" step="0.01" min="0" max="100" placeholder="2.27" oninput="updateConfigTaxasMaquininha()">
+                      </div>
+                    </div>
+                    <div class="frete-config-row">
+                      <span class="frete-config-label">Crédito:</span>
+                      <div class="frete-input-wrapper">
+                        <span class="frete-currency">%</span>
+                        <input type="number" id="cfg_taxa_credito" step="0.01" min="0" max="100" placeholder="3.99" oninput="updateConfigTaxasMaquininha()">
+                      </div>
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); text-align: center; margin-top: 0.25rem;">
+                      ℹ️ PIX e Dinheiro possuem taxa automática de 0%.
+                    </div>
+                  </div>
+                </div>
+              </details>
+
+              <!-- Accordion 3: Roteirização de Entregas -->
+              <details class="card-panel accordion-item" id="accordion_roteirizacao">
+                <summary class="panel-title" style="display: flex; align-items: center; justify-content: space-between; font-size: 1.1rem; cursor: pointer; user-select: none; outline: none; list-style: none;">
+                  <span style="display: flex; align-items: center; gap: 6px;">
+                    <svg class="title-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"></polygon>
+                      <line x1="9" y1="3" x2="9" y2="18"></line>
+                      <line x1="15" y1="6" x2="15" y2="21"></line>
+                    </svg>
+                    Roteirização de Entregas
+                  </span>
+                  <svg class="chevron-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </summary>
+                <div class="accordion-content" style="margin-top: 1.25rem;">
+                  <div class="route-config-box" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                    <div class="form-group">
+                      <label for="rota_data" style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);">Data para Roteirização:</label>
+                      <input type="date" id="rota_data" style="padding: 0.6rem; font-size: 0.85rem;">
+                    </div>
+
+                    <div class="form-group" style="position: relative;">
+                      <label for="rota_partida" style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);">Endereço de Partida (Vitória): *</label>
+                      <input type="text" id="rota_partida" value="Rua Pedro Carlos de Souza, 222, Ilha de Santa Maria, Vitória - ES" autocomplete="off" style="padding: 0.6rem; font-size: 0.85rem;">
+                      <div id="rota_partida_suggestions" class="autocomplete-suggestions"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                      <label for="rota_horario" style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);">Horário Estimado de Saída:</label>
+                      <input type="time" id="rota_horario" value="08:00" style="padding: 0.6rem; font-size: 0.85rem;">
+                    </div>
+                    
+                    <button type="button" class="btn btn-primary" onclick="planejarMelhorRota()" style="width: 100%; justify-content: center; font-size: 0.9rem; padding: 0.7rem; border: none; font-weight: 600;">
+                      🗺️ Planejar Melhor Rota de Entrega
+                    </button>
+                  </div>
+                  
+                  <!-- Resultado do Roteamento -->
+                  <div id="routePlanningResult" style="display: none; border-top: 1px dashed var(--border-subtle); padding-top: 1rem; margin-top: 0.5rem; flex-direction: column; gap: 1rem;">
+                    <h4 style="font-size: 0.9rem; color: var(--primary); font-weight: 600;">Timeline Otimizada de Entrega</h4>
+                    <div id="routeTimeline" class="route-timeline">
+                      <!-- Inserção dinâmica via JS -->
+                    </div>
+                    <button type="button" id="btnSaveCalculatedRoutes" class="btn btn-primary" onclick="salvarRotasNoBanco()" style="width: 100%; justify-content: center; font-size: 0.85rem; padding: 0.6rem; border: none; font-weight: 600; display: none;">
+                      💾 Salvar Horários Calculados no Banco
+                    </button>
+                    <a id="btnOpenGoogleMapsRoute" href="#" target="_blank" class="btn btn-secondary" style="width: 100%; justify-content: center; font-size: 0.85rem; padding: 0.6rem; text-decoration: none;">
+                      🗺️ Abrir Rota no Google Maps
+                    </a>
+                  </div>
+                </div>
+              </details>
+
+              <!-- Accordion 4: Dicas de Expedição -->
+              <details class="card-panel accordion-item" id="accordion_dicas">
+                <summary class="panel-title" style="display: flex; align-items: center; justify-content: space-between; font-size: 1.1rem; cursor: pointer; user-select: none; outline: none; list-style: none;">
+                  <span style="display: flex; align-items: center; gap: 6px;">
+                    <svg class="title-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M9.663 17h4.673M12 3v1m6.364.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 1 1 7.072 0l-.548.547A3.374 3.374 0 0 0 14 18.5V19a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.5c0-.98-.4-1.92-1.109-2.618l-.548-.547z"/>
+                    </svg>
+                    Dicas de Expedição
+                  </span>
+                  <svg class="chevron-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </summary>
+                <div class="accordion-content" style="margin-top: 1.25rem;">
+                  <div class="tips-accordion">
+                    <details class="tips-item" open>
+                      <summary class="tips-summary">
+                        <span class="tips-title">🌱 Processo Artesanal</span>
+                        <svg class="chevron-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                      </summary>
+                      <div class="tips-content">
+                        O tempo médio de fermentação natural dos pães caseiros Bemavi é de 24 horas. Certifique-se de agendar com antecedência.
+                      </div>
+                    </details>
+                    
+                    <details class="tips-item">
+                      <summary class="tips-summary">
+                        <span class="tips-title">🛵 Logística de Entrega</span>
+                        <svg class="chevron-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                      </summary>
+                      <div class="tips-content">
+                        As taxas de entrega estão configuradas por município da Grande Vitória:
+                        <ul style="padding-left:1.2rem; display:flex; flex-direction:column; gap:0.25rem; margin-top: 0.5rem; color: var(--text-muted);">
+                          <li>Vitória: <strong id="tips_frete_vitoria" style="color: var(--primary);">R$ 0,00</strong></li>
+                          <li>Vila Velha: <strong id="tips_frete_vilavelha" style="color: var(--primary);">R$ 0,00</strong></li>
+                          <li>Serra: <strong id="tips_frete_serra" style="color: var(--primary);">R$ 0,00</strong></li>
+                        </ul>
+                      </div>
+                    </details>
+                    
+                    <details class="tips-item">
+                      <summary class="tips-summary">
+                        <span class="tips-title">🔄 Recorrência de Clientes</span>
+                        <svg class="chevron-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                      </summary>
+                      <div class="tips-content">
+                        Pedidos recorrentes geram rascunhos de forma antecipada para garantir a prioridade na produção semanal ou mensal.
+                      </div>
+                    </details>
+                  </div>
+                </div>
+              </details>
+              <div id="aiInsightDashboard" class="ai-context-card is-loading">
+                <div class="ai-context-header">
+                  <span>Analise operacional</span>
+                  <small>IA</small>
+                </div>
+                <div class="ai-context-body">Analisando fila, rotas e producao...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. ABA DE GERENCIAMENTO DE CATÁLOGO (CRUD DE PRODUTOS) -->
+      <section id="catalogo" class="tab-content" role="tabpanel" aria-labelledby="tabBtnCatalogo">
+        <div class="card-panel">
+          <div class="panel-header" style="justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem;">
+            <h2 class="panel-title">
+              <svg class="title-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                <line x1="12" y1="22.08" x2="12" y2="12"></line>
+              </svg>
+              Gerenciamento do Catálogo de Pães
+            </h2>
+            <button id="btnOpenProductModal" class="btn btn-primary" onclick="openProductModal()" style="font-size: 0.85rem; padding: 0.5rem 1.2rem; border: none; font-weight: 600;">
+              ➕ Novo Pão
+            </button>
+          </div>
+
+          <div id="aiInsightCatalogo" class="ai-context-card is-loading">
+            <div class="ai-context-header">
+              <span>Analise do catalogo</span>
+              <small>IA</small>
+            </div>
+            <div class="ai-context-body">Avaliando produtos, precos e historico de saida...</div>
+          </div>
+
+          <div class="responsive-table-container">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Nome do Pão</th>
+                  <th>Tipo / Versão</th>
+                  <th>Modelo / Peso</th>
+                  <th>Sabor / Ingredientes</th>
+                  <th>Preço Base</th>
+                  <th>Status</th>
+                  <th style="text-align: center;">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="catalogAdminListBody">
+                <tr>
+                  <td colspan="7" class="carrinho-empty">Carregando catálogo de produtos...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. ABA DE NOVO PEDIDO (CATÁLOGO & AGENDAMENTO) -->
+      <section id="pedidos" class="tab-content" role="tabpanel" aria-labelledby="tabBtnPedidos">
+        <div class="catalog-section">
+          
+          <!-- Lado Esquerdo: Catálogo Bemavi -->
+          <div class="card-panel">
+            <h2 class="panel-title" style="margin-bottom: 1.5rem;">
+              <svg class="title-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+              </svg>
+              Nosso Catálogo de Pães
+            </h2>
+            <div id="catalogGrid" class="bread-catalog-grid">
+              <div class="carrinho-empty">Buscando pães disponíveis no catálogo...</div>
+            </div>
+          </div>
+
+          <!-- Lado Direito: Carrinho & Formulário de Cadastro/Agendamento -->
+          <div class="card-panel" style="display:flex; flex-direction:column; gap:1.5rem;">
+            <h2 class="panel-title">
+              <svg class="title-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+                <circle cx="9" cy="21" r="1"></circle>
+                <circle cx="20" cy="21" r="1"></circle>
+                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+              </svg>
+              Detalhes do Novo Pedido
+            </h2>
+            
+            <!-- Carrinho de Compras -->
+            <div class="carrinho-container">
+              <h3 style="font-size: 0.95rem; margin-bottom: 0.75rem; color: var(--text-muted);">Pães Selecionados:</h3>
+              <div id="carrinhoItens">
+                <div class="carrinho-empty">Nenhum pão selecionado. Clique em 'Adicionar' no catálogo.</div>
+              </div>
+              
+              <!-- Seletor manual extra -->
+              <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
+                <select id="addProdutoSelect" style="flex:1; padding: 0.5rem; background:rgba(0,0,0,0.2); border:1px solid var(--border-subtle); color:var(--text-main); border-radius:6px; font-size:0.85rem;">
+                  <option value="">Carregando produtos...</option>
+                </select>
+                <button id="addProdutoBtn" class="btn btn-secondary" style="padding:0 1rem; font-size:0.8rem;">+ Adicionar</button>
+              </div>
+            </div>
+
+            <!-- Formulário de Agendamento -->
+            <form id="orderCreationForm" class="order-form">
+              
+              <h3 class="form-section-header">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+                Dados do Cliente
+              </h3>
+
+              <div id="aiInsightPedidos" class="ai-context-card is-loading">
+                <div class="ai-context-header">
+                  <span>Proxima venda</span>
+                  <small>IA</small>
+                </div>
+                <div class="ai-context-body">Observando historico para sugerir itens e recorrencia...</div>
+              </div>
+               
+              <div class="form-group-row">
+                <div class="form-group" style="position: relative;">
+                  <label for="cli_nome">Nome Completo *</label>
+                  <input type="text" id="cli_nome" required placeholder="Digite o nome do cliente" autocomplete="off">
+                  <div id="cli_nome_suggestions" class="autocomplete-suggestions"></div>
+                </div>
+                <div class="form-group">
+                  <label for="cli_telefone">Telefone / WhatsApp *</label>
+                  <input type="tel" id="cli_telefone" required placeholder="(27) 99999-9999">
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label for="cli_email">Email (Opcional)</label>
+                <input type="email" id="cli_email" placeholder="cliente@email.com">
+              </div>
+
+              <h3 class="form-section-header">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="1" y="3" width="15" height="13"></rect>
+                  <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+                  <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                  <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                </svg>
+                Endereço & Agendamento
+              </h3>
+
+              <div class="form-group-row">
+                <div class="form-group" style="position: relative;">
+                  <label for="cli_logradouro">Logradouro / Rua *</label>
+                  <input type="text" id="cli_logradouro" autocomplete="off" required placeholder="Digite a rua para autocompletar...">
+                  <div id="cli_logradouro_suggestions" class="autocomplete-suggestions"></div>
+                </div>
+                <div class="form-group">
+                  <label for="cli_numero">Número *</label>
+                  <input type="text" id="cli_numero" required placeholder="123">
+                </div>
+              </div>
+
+              <div class="form-group-row">
+                <div class="form-group">
+                  <label for="cli_complemento">Complemento</label>
+                  <input type="text" id="cli_complemento" placeholder="Apto, Casa...">
+                </div>
+                <div class="form-group">
+                  <label for="cli_bairro">Bairro *</label>
+                  <input type="text" id="cli_bairro" required placeholder="Bairro do cliente">
+                </div>
+              </div>
+
+              <div class="form-group-row">
+                <div class="form-group">
+                  <label for="municipio_entrega">Município (Grande Vitória) *</label>
+                  <select id="municipio_entrega" required>
+                    <option value="Vitória">Vitória (Taxa: R$ 8,00)</option>
+                    <option value="Vila Velha">Vila Velha (Taxa: R$ 10,00)</option>
+                    <option value="Serra">Serra (Taxa: R$ 12,00)</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="data_agendada">Dia da Entrega *</label>
+                  <input type="date" id="data_agendada" required>
+                </div>
+              </div>
+
+              <!-- Configurações de Recorrência -->
+              <div style="background: rgba(255,255,255,0.02); border: 1px dashed var(--border-subtle); padding: 1rem; border-radius: 8px; margin-top: 0.5rem;">
+                <div class="form-group" style="flex-direction: row; align-items: center; gap: 0.5rem;">
+                  <input type="checkbox" id="recorrente_flag" style="width: 18px; height: 18px; cursor: pointer;">
+                  <label for="recorrente_flag" style="cursor: pointer; user-select: none; font-size: 0.95rem; display: flex; align-items: center; gap: 0.35rem;">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle;">
+                      <polyline points="23 4 23 10 17 10"></polyline>
+                      <polyline points="1 20 1 14 7 14"></polyline>
+                      <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                    </svg>
+                    Este é um Pedido Recorrente (Assinatura)
+                  </label>
+                </div>
+                
+                <div id="intervaloRecorrenciaBox" class="form-group" style="display: none; margin-top: 0.75rem;">
+                  <label for="recorrente_intervalo">Intervalo de Recorrência *</label>
+                  <select id="recorrente_intervalo">
+                    <option value="Semanal">Semanal (Gera novos rascunhos a cada 7 dias)</option>
+                    <option value="Quinzenal">Quinzenal (Gera novos rascunhos a cada 14 dias)</option>
+                    <option value="Mensal">Mensal (Gera novos rascunhos a cada 30 dias)</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Informações de Pagamento Antecipado na Criação -->
+              <div class="form-group-row" style="background: rgba(255,255,255,0.01); border: 1px solid var(--border-subtle); padding: 1rem; border-radius: 8px; margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.75rem;">
+                <div class="form-group" style="flex-direction: row; align-items: center; gap: 0.5rem; margin-bottom: 0;">
+                  <input type="checkbox" id="order_pago" style="width: 18px; height: 18px; cursor: pointer;" onchange="toggleOrderCreationPaymentSelect()">
+                  <label for="order_pago" style="cursor: pointer; user-select: none; font-size: 0.95rem; font-weight: 600; display: flex; align-items: center; gap: 0.35rem; margin-bottom: 0;">
+                    💵 Pedido já está Pago (Antecipado)
+                  </label>
+                </div>
+                
+                <div id="orderCreationPaymentBox" class="form-group" style="display: none; width: 100%;">
+                  <label for="order_meio_pagamento">Meio de Pagamento Utilizado *</label>
+                  <select id="order_meio_pagamento" style="padding: 0.6rem; font-size: 0.85rem;">
+                    <option value="PIX">⚡ PIX</option>
+                    <option value="Dinheiro">💵 Dinheiro</option>
+                    <option value="Débito">💳 Débito</option>
+                    <option value="Crédito">🪙 Crédito</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group-row">
+                <div class="form-group" style="flex: 1;">
+                  <label for="order_desconto">Desconto Aplicado (R$)</label>
+                  <input type="number" id="order_desconto" step="0.50" min="0" placeholder="0.00" style="padding: 0.6rem; font-size: 0.85rem;" oninput="renderCarrinho()">
+                </div>
+                <div class="form-group" style="flex: 2;">
+                  <label for="observacao">Observações Adicionais</label>
+                  <textarea id="observacao" rows="1" placeholder="Ex: Deixar na portaria, fatiado..." style="padding: 0.6rem; font-size: 0.85rem; height: 38px; resize: none;"></textarea>
+                </div>
+              </div>
+
+              <!-- Resumo de Totais do Form -->
+              <div class="receipt-card">
+                <div style="display: flex; justify-content: space-between;">
+                  <span>Subtotal Pães:</span>
+                  <span id="carrinhoTotalProdutos">R$ 0,00</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                  <span>Taxa de Entrega:</span>
+                  <span id="carrinhoTaxaEntrega">R$ 8,00</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-weight: 700; border-top: 1px dashed var(--border-subtle); padding-top: 0.75rem; margin-top: 0.5rem; align-items: center;">
+                  <span style="font-size: 1.1rem; color: var(--text-main);">Total Geral:</span>
+                  <span id="carrinhoTotalGeral" class="receipt-total-value">R$ 8,00</span>
+                </div>
+              </div>
+
+              <div class="form-actions-sticky">
+                <button type="submit" id="btnSubmitOrder" class="btn btn-primary" style="width: 100%; justify-content: center; font-size: 1.05rem; padding: 0.85rem; border: none; font-weight: 600;">
+                  ✨ Confirmar & Agendar Pedido
+                </button>
+              </div>
+            </form>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- 3. ABA DE CONTROLE FINANCEIRO (FLUXO DE CAIXA CONSOLIDADO) -->
+      <section id="financeiro" class="tab-content" role="tabpanel" aria-labelledby="tabBtnFinanceiro">
+        <div class="finance-dashboard">
+          
+          <!-- Cards de Indicadores de Caixa -->
+          <div class="resumo-financeiro-cards">
+            
+            <div class="finance-card receitas">
+              <span class="fin-card-label">🟢 Total de Receitas (Vendas)</span>
+              <span id="totalReceitas" class="fin-card-value">R$ 0,00</span>
+            </div>
+            
+            <div class="finance-card despesas">
+              <span class="fin-card-label">🔴 Total de Despesas (Compras)</span>
+              <span id="totalDespesas" class="fin-card-value">R$ 0,00</span>
+            </div>
+            
+            <div id="saldoCard" class="finance-card saldo">
+              <span class="fin-card-label">💰 Saldo / Lucro Líquido</span>
+              <span id="saldoLiquido" class="fin-card-value">R$ 0,00</span>
+            </div>
+            
+          </div>
+
+          <!-- Extrato de Transações e Botão de Ação -->
+          <div class="card-panel" style="position: relative;">
+            <button id="btnRefreshFinance" class="btn-sync" onclick="refreshFinanceiro()" aria-label="Atualizar Extrato">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+              </svg>
+            </button>
+            <div class="panel-header" style="justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;">
+              <h2 class="panel-title">
+                <svg class="title-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+                  <line x1="18" y1="20" x2="18" y2="10"></line>
+                  <line x1="12" y1="20" x2="12" y2="4"></line>
+                  <line x1="6" y1="20" x2="6" y2="14"></line>
+                </svg>
+                Extrato de Transações Recentes
+              </h2>
+              <button id="btnOpenFinanceModal" class="btn btn-primary" onclick="openFinanceModal()" style="font-size: 0.85rem; padding: 0.5rem 1.2rem; z-index: 15; margin-right: 2.5rem; border: none; font-weight: 600;">
+                ➕ Novo Lançamento
+              </button>
+            </div>
+            
+            <div class="transacoes-list-box">
+              <div class="transacao-header">
+                <div>Descrição</div>
+                <div>Tipo</div>
+                <div>Valor</div>
+                <div>Categoria</div>
+                <div>Data</div>
+              </div>
+              <div id="financeListBody">
+                <div class="carrinho-empty">Carregando transações do banco...</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Botão Sticky Mobile para abrir modal financeiro -->
+          <div class="finance-mobile-sticky-action">
+            <button class="btn btn-primary" onclick="openFinanceModal()" style="width: 100%; justify-content: center; font-size: 1.05rem; padding: 0.85rem; border: none; font-weight: 600;">
+              ➕ Novo Lançamento
+            </button>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- 4. ABA DE GESTÃO DE CONSIGNAÇÕES -->
+      <section id="consignacoes" class="tab-content" role="tabpanel" aria-labelledby="tabBtnConsignacoes">
+        <div class="finance-dashboard">
+          
+          <!-- Cards de Indicadores de Consignação -->
+          <div class="resumo-financeiro-cards">
+            
+            <div class="finance-card receitas">
+              <span class="fin-card-label">🤝 Total Deixado (Em Aberto)</span>
+              <span id="consignadoTotalDeixado" class="fin-card-value">R$ 0,00</span>
+            </div>
+            
+            <div class="finance-card despesas">
+              <span class="fin-card-label">💰 Total Liquidado (Fechado)</span>
+              <span id="consignadoTotalArrecadado" class="fin-card-value">R$ 0,00</span>
+            </div>
+            
+            <div id="consignadoCard" class="finance-card saldo">
+              <span class="fin-card-label">📦 Lotes Ativos</span>
+              <span id="consignadoLotesAtivos" class="fin-card-value">0</span>
+            </div>
+            
+          </div>
+
+          <!-- Listagem de Consignações -->
+          <div class="card-panel" style="position: relative;">
+            <button id="btnRefreshConsignacoes" class="btn-sync" onclick="refreshConsignacoes()" aria-label="Atualizar Consignações">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+              </svg>
+            </button>
+            <div class="panel-header" style="justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;">
+              <h2 class="panel-title">
+                <svg class="title-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+                Lotes de Consignação Recentes
+              </h2>
+              <button id="btnOpenConsignationModal" class="btn btn-primary" onclick="openConsignationModal()" style="font-size: 0.85rem; padding: 0.5rem 1.2rem; z-index: 15; margin-right: 2.5rem; border: none; font-weight: 600;">
+                ➕ Nova Consignação
+              </button>
+            </div>
+            
+            <div class="transacoes-list-box">
+              <div class="transacao-header" style="grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1.5fr;">
+                <div>Parceiro (Amigo)</div>
+                <div>Status</div>
+                <div>Itens Deixados</div>
+                <div>Valor Previsto</div>
+                <div>Data Envio</div>
+                <div style="text-align: right;">Ações</div>
+              </div>
+              <div id="consignacoesListBody">
+                <div class="carrinho-empty">Carregando consignações do banco...</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Botão Sticky Mobile para abrir modal de consignações -->
+          <div class="finance-mobile-sticky-action">
+            <button class="btn btn-primary" onclick="openConsignationModal()" style="width: 100%; justify-content: center; font-size: 1.05rem; padding: 0.85rem; border: none; font-weight: 600;">
+              ➕ Nova Consignação
+            </button>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- 5. ABA DE INTELIGÊNCIA IA & PREVISÃO (GROQ) -->
+      <section id="inteligencia" class="tab-content" role="tabpanel" aria-labelledby="tabBtnInteligencia">
+        <div class="finance-dashboard">
+          
+          <!-- Seção de Setup da Chave API -->
+          <div class="card-panel" style="display: flex; flex-direction: column; gap: 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+              <h2 class="panel-title">
+                <svg class="title-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+                  <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+                </svg>
+                Configuração Segura da API Groq
+              </h2>
+              <span id="groqKeyStatus" class="badge-status inativo">🔓 Sem Chave (Informe abaixo)</span>
+            </div>
+            
+            <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; max-width: 800px;">
+              Sua chave de API é salva <strong>exclusivamente</strong> no seu próprio navegador (localStorage). Nenhuma chave é gravada em bancos de dados remotos ou servidores de terceiros. Obtenha uma chave gratuita no console do <a href="https://console.groq.com" target="_blank" style="color: var(--primary); text-decoration: underline;">Groq Cloud</a>.
+            </p>
+            
+            <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; margin-top: 0.5rem;">
+              <div style="position: relative; flex: 1; min-width: 280px; display: flex; align-items: center;">
+                <span style="position: absolute; left: 12px; font-size: 0.9rem; color: var(--text-muted); pointer-events: none;">🔑</span>
+                <input type="password" id="groq_api_key_input" placeholder="Cole sua API Key do Groq aqui (gsk_...)" style="width: 100%; padding: 0.75rem 1rem 0.75rem 2.2rem; background: rgba(0, 0, 0, 0.2); border: 1px solid #2A2A2A; border-radius: 8px; color: var(--text-main); font-size: 0.9rem;">
+              </div>
+              <button type="button" class="btn btn-primary" onclick="salvarChaveGroq()" style="padding: 0.75rem 1.5rem; border: none; font-weight: 600;">💾 Salvar</button>
+              <button type="button" class="btn btn-danger" onclick="excluirChaveGroq()" style="padding: 0.75rem 1.25rem; font-weight: 600;">🗑️ Limpar</button>
+            </div>
+          </div>
+
+          <!-- Seção Principal de Insights (Chat & Relatórios) -->
+          <div style="display: grid; grid-template-columns: 2fr 1.2fr; gap: 24px; margin-top: 1.5rem; align-items: start;" class="form-group-row">
+            
+            <!-- Coluna Esquerda: Geração de Relatório e Exibição -->
+            <div class="card-panel" style="display: flex; flex-direction: column; gap: 1.25rem; min-height: 500px; position: relative;">
+              <div class="panel-header" style="justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 0;">
+                <h2 class="panel-title">
+                  <svg class="title-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+                    <line x1="18" y1="20" x2="18" y2="10"></line>
+                    <line x1="12" y1="20" x2="12" y2="4"></line>
+                    <line x1="6" y1="20" x2="6" y2="14"></line>
+                  </svg>
+                  Relatório de Saúde Financeira & Previsão de Estoque
+                </h2>
+              </div>
+              
+              <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 0.5rem;">
+                  A IA analisará seu fluxo de caixa consolidado, custos, margens das maquininhas de cartão, descontos praticados e volume de saídas para prever as necessidades exatas de produção da próxima semana.
+                </p>
+                
+                <button type="button" id="btnGerarAnaliseIA" class="btn btn-primary" onclick="gerarRelatorioGroq()" style="justify-content: center; font-size: 1rem; padding: 1rem; border: none; font-weight: 700; box-shadow: 0 4px 20px var(--primary-glow); width: 100%; max-width: 400px; align-self: flex-start;">
+                  ⚡ Gerar Relatório e Planejar Estoque
+                </button>
+              </div>
+
+              <!-- Console de Status Dinâmico de Processamento -->
+              <div id="groqLoadingConsole" style="display: none; background: rgba(0, 0, 0, 0.4); border: 1px dashed var(--border-subtle); padding: 1.25rem; border-radius: 8px; flex-direction: column; gap: 8px; font-size: 0.85rem; font-family: monospace;">
+                <div style="display: flex; align-items: center; gap: 8px; color: var(--primary);">
+                  <div style="width: 8px; height: 8px; background: var(--primary); border-radius: 50%; animation: pulse-red 1s infinite;"></div>
+                  <strong id="groqStatusMsg">Conectando com o Groq Cloud...</strong>
+                </div>
+                <div id="groqConsoleLogs" style="color: var(--text-muted); max-height: 100px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px;">
+                  <!-- Logs dinâmicos inseridos via JS -->
+                </div>
+              </div>
+
+              <!-- Container de Resultado do Relatório (WOW) -->
+              <div id="groqReportContainer" class="ia-report-box" style="display: none; background: rgba(0, 0, 0, 0.2); border: 1px solid var(--border-subtle); padding: 1.5rem; border-radius: 10px; line-height: 1.6; color: var(--text-main); font-size: 0.95rem; overflow-y: auto; max-height: 600px;">
+                <!-- HTML gerado em markdown inserido aqui -->
+              </div>
+              
+              <div id="groqReportPlaceholder" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; padding: 5rem 1rem; opacity: 0.5; text-align: center;">
+                <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="var(--text-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                  <line x1="16" y1="13" x2="8" y2="13"/>
+                  <line x1="16" y1="17" x2="8" y2="17"/>
+                  <polyline points="10 9 9 9 8 9"/>
+                </svg>
+                <span>Nenhum relatório gerado ainda. Salve sua chave API e clique no botão acima para iniciar.</span>
+              </div>
+            </div>
+            
+            <!-- Coluna Direita: Chat de Negócios Interativo -->
+            <div class="card-panel" style="display: flex; flex-direction: column; gap: 1rem; min-height: 500px;">
+              <h3 class="panel-title" style="font-size: 1.1rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.75rem; margin-bottom: 0.25rem;">
+                💬 Perguntar ao Assistente
+              </h3>
+              
+              <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.3;">
+                Tire dúvidas personalizadas sobre o relatório financeiro, formas de aumentar margem de lucro ou estratégias para vendas de consignados.
+              </p>
+
+              <!-- Box do Chat de Mensagens -->
+              <div id="groqChatMessages" style="flex: 1; background: rgba(0, 0, 0, 0.3); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 1rem; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; max-height: 350px; min-height: 250px;">
+                <div class="chat-message system" style="background: rgba(245, 158, 11, 0.06); padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; border: 1px solid rgba(245, 158, 11, 0.1); color: var(--text-muted);">
+                  Olá! Eu sou o assistente IA da Bemavi. Digite sua pergunta e eu analisarei suas métricas de vendas, despesas e lucros do banco Neon para te dar as melhores estratégias!
+                </div>
+              </div>
+
+              <!-- Input de Envio de Pergunta -->
+              <form id="groqChatForm" style="display: flex; gap: 8px;" onsubmit="enviarPerguntaGroq(event)">
+                <input type="text" id="groq_chat_input" placeholder="Faça uma pergunta sobre seus dados..." style="flex: 1; padding: 0.6rem 0.8rem; background: rgba(0, 0, 0, 0.2); border: 1px solid #2A2A2A; border-radius: 6px; color: var(--text-main); font-size: 0.85rem;" disabled>
+                <button type="submit" id="btnGroqChatSend" class="btn btn-primary" style="padding: 0 1rem; font-size: 0.85rem; font-weight: 600;" disabled>Enviar</button>
+              </form>
+            </div>
+            
+          </div>
+        </div>
+      </section>
+
+      <!-- MODAL / BOTTOM SHEET DE NOVO LANÇAMENTO FINANCEIRO -->
+      <div id="financeModal" class="finance-modal" role="dialog" aria-modal="true" aria-labelledby="financeModalTitle">
+        <div class="finance-modal-overlay" onclick="closeFinanceModal()"></div>
+        <div class="finance-modal-content">
+          <div class="finance-modal-header">
+            <h2 id="financeModalTitle" class="panel-title" style="font-size: 1.2rem;">
+              <svg class="title-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+                <rect x="2" y="5" width="20" height="14" rx="2" ry="2"></rect>
+                <line x1="2" y1="10" x2="22" y2="10"></line>
+              </svg>
+              Novo Lançamento de Caixa
+            </h2>
+            <button class="btn-close-modal" onclick="closeFinanceModal()" aria-label="Fechar formulário">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+          <div class="finance-modal-body">
+            <form id="financeCreationForm" class="order-form">
+              <div class="form-group">
+                <label for="fin_tipo">Tipo de Lançamento *</label>
+                <select id="fin_tipo" required>
+                  <option value="Despesa">Despesa / Saída de Caixa</option>
+                  <option value="Receita">Receita / Entrada Avulsa</option>
+                </select>
+              </div>
+              
+              <div class="form-group">
+                <label for="fin_valor">Valor (R$) *</label>
+                <input type="number" id="fin_valor" step="0.01" required min="0.01" placeholder="R$ 0,00">
+              </div>
+
+              <div class="form-group">
+                <label for="fin_descricao">Descrição *</label>
+                <input type="text" id="fin_descricao" required placeholder="Ex: Compra de 25kg de trigo orgânico">
+              </div>
+
+              <div class="form-group">
+                <label for="fin_categoria">Categoria *</label>
+                <select id="fin_categoria" required>
+                  <option value="Insumos">Insumos (Trigo, Fermento, Sal...)</option>
+                  <option value="Embalagens">Embalagens (Sacos de Papel...)</option>
+                  <option value="Utilidades">Utilidades (Gás, Energia, Água)</option>
+                  <option value="Taxa de Entrega">Logística (Combustível, Motoboy)</option>
+                  <option value="Outros">Outros / Diversos</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="fin_data">Data do Lançamento (Opcional)</label>
+                <input type="date" id="fin_data">
+              </div>
+
+              <button type="submit" id="btnSubmitFinance" class="btn btn-primary" style="width: 100%; justify-content: center; margin-top: 0.5rem;">
+                💾 Salvar Lançamento
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODAL / BOTTOM SHEET DE CADASTRO/EDIÇÃO DE PRODUTO -->
+      <div id="productModal" class="finance-modal" role="dialog" aria-modal="true" aria-labelledby="productModalTitle">
+        <div class="finance-modal-overlay" onclick="closeProductModal()"></div>
+        <div class="finance-modal-content">
+          <div class="finance-modal-header">
+            <h2 id="productModalTitle" class="panel-title" style="font-size: 1.2rem;">
+              <svg class="title-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+              </svg>
+              <span id="productModalTitleText">Novo Pão Caseiro</span>
+            </h2>
+            <button class="btn-close-modal" onclick="closeProductModal()" aria-label="Fechar formulário">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+          <div class="finance-modal-body">
+            <form id="productCreationForm" class="order-form">
+              <input type="hidden" id="prod_id">
+              
+              <div class="form-group">
+                <label for="prod_nome">Nome do Pão *</label>
+                <input type="text" id="prod_nome" required placeholder="Ex: Pão de Campanha, Baguette Francesa">
+              </div>
+
+              <div class="form-group-row">
+                <div class="form-group">
+                  <label for="prod_versao">Tipo / Versão *</label>
+                  <select id="prod_versao" required>
+                    <option value="Tradicional">Tradicional</option>
+                    <option value="Integral">Integral</option>
+                    <option value="Especial">Especial</option>
+                    <option value="Recheado">Recheado</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="prod_modelo">Modelo / Peso *</label>
+                  <input type="text" id="prod_modelo" required placeholder="Ex: Forma (Grande - 650g), Baguete (350g)">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="prod_sabor">Sabor / Ingredientes Adicionais *</label>
+                <input type="text" id="prod_sabor" required placeholder="Ex: Fermentação Natural de 24h, Linhaça e Gergelim">
+              </div>
+
+              <div class="form-group-row">
+                <div class="form-group">
+                  <label for="prod_preco">Preço Base (R$) *</label>
+                  <input type="number" id="prod_preco" step="0.01" required min="0" placeholder="R$ 0,00">
+                </div>
+                <div class="form-group" style="flex-direction: row; align-items: center; gap: 0.5rem; margin-top: 1.8rem;">
+                  <input type="checkbox" id="prod_ativo" checked style="width: 18px; height: 18px; cursor: pointer;">
+                  <label for="prod_ativo" style="cursor: pointer; user-select: none; margin-bottom: 0;">Disponível no catálogo</label>
+                </div>
+              </div>
+
+              <button type="submit" id="btnSubmitProduct" class="btn btn-primary" style="width: 100%; justify-content: center; margin-top: 1rem; border: none; font-weight: 600; padding: 0.75rem;">
+                💾 Salvar Pão no Catálogo
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODAL / BOTTOM SHEET DE EDIÇÃO DE PEDIDO -->
+      <div id="orderEditModal" class="finance-modal" role="dialog" aria-modal="true" aria-labelledby="orderEditModalTitle">
+        <div class="finance-modal-overlay" onclick="closeOrderEditModal()"></div>
+        <div class="finance-modal-content" style="max-width: 700px;">
+          <div class="finance-modal-header">
+            <h2 id="orderEditModalTitle" class="panel-title" style="font-size: 1.2rem;">
+              <svg class="title-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+              </svg>
+              Editar Pedido
+            </h2>
+            <button class="btn-close-modal" onclick="closeOrderEditModal()" aria-label="Fechar formulário">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+          <div class="finance-modal-body" style="max-height: 70vh; overflow-y: auto;">
+            <form id="orderEditForm" class="order-form">
+              <input type="hidden" id="edit_order_id">
+              
+              <h3 class="form-section-header" style="margin-top: 0;">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+                Dados do Cliente
+              </h3>
+              
+              <div class="form-group-row">
+                <div class="form-group">
+                  <label for="edit_cli_nome">Nome Completo *</label>
+                  <input type="text" id="edit_cli_nome" required placeholder="Nome do cliente">
+                </div>
+                <div class="form-group">
+                  <label for="edit_cli_telefone">Telefone / WhatsApp *</label>
+                  <input type="tel" id="edit_cli_telefone" required placeholder="(27) 99999-9999">
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label for="edit_cli_email">Email (Opcional)</label>
+                <input type="email" id="edit_cli_email" placeholder="cliente@email.com">
+              </div>
+
+              <h3 class="form-section-header">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="1" y="3" width="15" height="13"></rect>
+                  <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+                  <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                  <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                </svg>
+                Endereço & Agendamento
+              </h3>
+
+              <div class="form-group-row">
+                <div class="form-group" style="position: relative;">
+                  <label for="edit_cli_logradouro">Logradouro / Rua *</label>
+                  <input type="text" id="edit_cli_logradouro" autocomplete="off" required placeholder="Digite a rua para autocompletar...">
+                  <div id="edit_cli_logradouro_suggestions" class="autocomplete-suggestions"></div>
+                </div>
+                <div class="form-group">
+                  <label for="edit_cli_numero">Número *</label>
+                  <input type="text" id="edit_cli_numero" required placeholder="123">
+                </div>
+              </div>
+
+              <div class="form-group-row">
+                <div class="form-group">
+                  <label for="edit_cli_complemento">Complemento</label>
+                  <input type="text" id="edit_cli_complemento" placeholder="Apto, Casa...">
+                </div>
+                <div class="form-group">
+                  <label for="edit_cli_bairro">Bairro *</label>
+                  <input type="text" id="edit_cli_bairro" required placeholder="Bairro do cliente">
+                </div>
+              </div>
+
+              <div class="form-group-row">
+                <div class="form-group">
+                  <label for="edit_municipio_entrega">Município (Grande Vitória) *</label>
+                  <select id="edit_municipio_entrega" required>
+                    <option value="Vitória">Vitória</option>
+                    <option value="Vila Velha">Vila Velha</option>
+                    <option value="Serra">Serra</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="edit_data_agendada">Dia da Entrega *</label>
+                  <input type="date" id="edit_data_agendada" required>
+                </div>
+              </div>
+
+              <div class="form-group-row">
+                <div class="form-group">
+                  <label for="edit_status">Status do Pedido *</label>
+                  <select id="edit_status" required>
+                    <option value="Rascunho">Rascunho</option>
+                    <option value="Pendente">Pendente</option>
+                    <option value="Agendado">Agendado</option>
+                    <option value="Cancelado">Cancelado</option>
+                  </select>
+                </div>
+                <div class="form-group" style="flex-direction: row; align-items: center; gap: 0.5rem; margin-top: 1.8rem;">
+                  <input type="checkbox" id="edit_recorrente_flag" style="width: 18px; height: 18px; cursor: pointer;">
+                  <label for="edit_recorrente_flag" style="cursor: pointer; user-select: none; margin-bottom: 0;">Pedido Recorrente</label>
+                </div>
+              </div>
+
+              <div id="edit_intervaloRecorrenciaBox" class="form-group" style="display: none;">
+                <label for="edit_recorrente_intervalo">Intervalo de Recorrência *</label>
+                <select id="edit_recorrente_intervalo">
+                  <option value="Semanal">Semanal</option>
+                  <option value="Quinzenal">Quinzenal</option>
+                  <option value="Mensal">Mensal</option>
+                </select>
+              </div>
+
+              <!-- Informações de Pagamento Antecipado na Edição -->
+              <div class="form-group-row" style="background: rgba(255,255,255,0.01); border: 1px solid var(--border-subtle); padding: 1rem; border-radius: 8px; margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.75rem;">
+                <div class="form-group" style="flex-direction: row; align-items: center; gap: 0.5rem; margin-bottom: 0;">
+                  <input type="checkbox" id="edit_pago" style="width: 18px; height: 18px; cursor: pointer;" onchange="toggleOrderEditPaymentSelect()">
+                  <label for="edit_pago" style="cursor: pointer; user-select: none; font-size: 0.95rem; font-weight: 600; display: flex; align-items: center; gap: 0.35rem; margin-bottom: 0;">
+                    💵 Pedido já está Pago (Antecipado)
+                  </label>
+                </div>
+                
+                <div id="orderEditPaymentBox" class="form-group" style="display: none; width: 100%;">
+                  <label for="edit_meio_pagamento">Meio de Pagamento Utilizado *</label>
+                  <select id="edit_meio_pagamento" style="padding: 0.6rem; font-size: 0.85rem;">
+                    <option value="PIX">⚡ PIX</option>
+                    <option value="Dinheiro">💵 Dinheiro</option>
+                    <option value="Débito">💳 Débito</option>
+                    <option value="Crédito">🪙 Crédito</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group-row">
+                <div class="form-group" style="flex: 1;">
+                  <label for="edit_desconto">Desconto Aplicado (R$)</label>
+                  <input type="number" id="edit_desconto" step="0.50" min="0" placeholder="0.00" style="padding: 0.6rem; font-size: 0.85rem;" oninput="renderCarrinhoEdicao()">
+                </div>
+                <div class="form-group" style="flex: 2;">
+                  <label for="edit_observacao">Observações Adicionais</label>
+                  <textarea id="edit_observacao" rows="1" placeholder="Ex: Deixar na portaria, fatiado..." style="padding: 0.6rem; font-size: 0.85rem; height: 38px; resize: none;"></textarea>
+                </div>
+              </div>
+
+              <h3 class="form-section-header">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="9" cy="21" r="1"></circle>
+                  <circle cx="20" cy="21" r="1"></circle>
+                  <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                </svg>
+                Itens do Pedido (Editar Carrinho)
+              </h3>
+
+              <div class="carrinho-container">
+                <div id="edit_carrinhoItens">
+                  <!-- Itens de edição carregados por JS -->
+                </div>
+                
+                <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
+                  <select id="edit_addProdutoSelect" style="flex:1; padding: 0.5rem; background:rgba(0,0,0,0.2); border:1px solid var(--border-subtle); color:var(--text-main); border-radius:6px; font-size:0.85rem;">
+                    <!-- Carregados via JS -->
+                  </select>
+                  <button type="button" id="edit_addProdutoBtn" class="btn btn-secondary" style="padding:0 1rem; font-size:0.8rem;">+ Adicionar</button>
+                </div>
+              </div>
+
+              <!-- Resumo dos Totais na Edição -->
+              <div class="receipt-card">
+                <div style="display: flex; justify-content: space-between;">
+                  <span>Subtotal Pães:</span>
+                  <span id="edit_carrinhoTotalProdutos">R$ 0,00</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                  <span>Taxa de Entrega:</span>
+                  <span id="edit_carrinhoTaxaEntrega">R$ 0,00</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-weight: 700; border-top: 1px dashed var(--border-subtle); padding-top: 0.75rem; margin-top: 0.5rem; align-items: center;">
+                  <span style="font-size: 1.1rem; color: var(--text-main);">Total Geral:</span>
+                  <span id="edit_carrinhoTotalGeral" class="receipt-total-value">R$ 0,00</span>
+                </div>
+              </div>
+
+              <div class="form-actions-sticky" style="position: static; margin-top: 1rem;">
+                <button type="submit" id="btnSubmitEditOrder" class="btn btn-primary" style="width: 100%; justify-content: center; font-size: 1.05rem; padding: 0.85rem; border: none; font-weight: 600;">
+                  💾 Salvar Alterações
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODAL DE CADASTRO DE CONSIGNAÇÃO -->
+      <div id="consignationModal" class="finance-modal" role="dialog" aria-modal="true" aria-labelledby="consignationModalTitle">
+        <div class="finance-modal-overlay" onclick="closeConsignationModal()"></div>
+        <div class="finance-modal-content">
+          <div class="finance-modal-header">
+            <h2 id="consignationModalTitle" class="panel-title" style="font-size: 1.2rem;">
+              <svg class="title-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+              </svg>
+              Nova Consignação de Pães
+            </h2>
+            <button class="btn-close-modal" type="button" onclick="closeConsignationModal()" aria-label="Fechar formulário">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+          <div class="finance-modal-body">
+            <form id="consignationCreationForm" class="order-form">
+              <div class="form-group">
+                <label for="cons_amigo">Nome do Amigo (Parceiro) *</label>
+                <input type="text" id="cons_amigo" required placeholder="Ex: Carlos Oliveira">
+              </div>
+              
+              <div class="form-group">
+                <label for="cons_telefone">Telefone / WhatsApp</label>
+                <input type="text" id="cons_telefone" placeholder="Ex: 27 99999-9999">
+              </div>
+
+              <div class="form-group">
+                <label for="cons_data_envio">Data de Envio *</label>
+                <input type="date" id="cons_data_envio" required>
+              </div>
+
+              <div class="form-group">
+                <label for="cons_observacao">Observações</label>
+                <textarea id="cons_observacao" rows="2" placeholder="Ex: Deixado na banquinha dele, acerto no final de semana..."></textarea>
+              </div>
+
+              <h3 class="form-section-header" style="margin-top: 1.5rem; font-size: 1rem;">
+                🥖 Selecionar Pães e Quantidades
+              </h3>
+              
+              <div class="carrinho-container" style="margin-bottom: 1.5rem;">
+                <div id="consignationProductsList" style="display: flex; flex-direction: column; gap: 12px;">
+                  <!-- Lista de pães ativos gerada dinamicamente via JS -->
+                </div>
+              </div>
+
+              <!-- Resumo Previsto -->
+              <div class="receipt-card">
+                <div style="display: flex; justify-content: space-between; font-weight: 700; align-items: center;">
+                  <span style="font-size: 1rem; color: var(--text-main);">Total Geral Previsto:</span>
+                  <span id="consignationTotalPrevisto" class="receipt-total-value">R$ 0,00</span>
+                </div>
+              </div>
+
+              <div class="form-actions-sticky" style="position: static; margin-top: 1.5rem;">
+                <button type="submit" id="btnSubmitConsignation" class="btn btn-primary" style="width: 100%; justify-content: center; font-size: 1.05rem; padding: 0.85rem; border: none; font-weight: 600;">
+                  ✨ Registrar Envio de Lote
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODAL DE ACERTO DE VENDAS DE CONSIGNAÇÃO -->
+      <div id="consignationSalesModal" class="finance-modal" role="dialog" aria-modal="true" aria-labelledby="consignationSalesTitle">
+        <div class="finance-modal-overlay" onclick="closeConsignationSalesModal()"></div>
+        <div class="finance-modal-content">
+          <div class="finance-modal-header">
+            <h2 id="consignationSalesTitle" class="panel-title" style="font-size: 1.2rem;">
+              <svg class="title-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+                <line x1="12" y1="1" x2="12" y2="23"></line>
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+              </svg>
+              Acerto de Vendas de Consignação
+            </h2>
+            <button class="btn-close-modal" type="button" onclick="closeConsignationSalesModal()" aria-label="Fechar formulário">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+          <div class="finance-modal-body">
+            <form id="consignationSalesForm" class="order-form">
+              <input type="hidden" id="acerto_consignacao_id">
+              
+              <div class="receipt-card" style="margin-bottom: 1.5rem; background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.2);">
+                <div style="font-weight: 600; color: #F59E0B; margin-bottom: 4px;">Informações do Parceiro:</div>
+                <div id="acerto_amigo_nome" style="font-size: 1.1rem; font-weight: 700; color: var(--text-main);">Carlos Oliveira</div>
+                <div id="acerto_amigo_detalhes" style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">Envio: 22/05/2026 | Fone: 27 99999-9999</div>
+              </div>
+
+              <h3 class="form-section-header" style="font-size: 1rem;">
+                🥖 Lançar Quantidades Vendidas
+              </h3>
+
+              <div class="carrinho-container" style="margin-bottom: 1.5rem;">
+                <div id="acertoItemsList" style="display: flex; flex-direction: column; gap: 12px;">
+                  <!-- Lista de itens do lote deixados com inputs para acerto, gerada via JS -->
+                </div>
+              </div>
+
+              <!-- Resumo do Acerto -->
+              <div class="receipt-card">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                  <span>Total Deixado Originalmente:</span>
+                  <span id="acertoTotalDeixado" style="color: var(--text-muted);">R$ 0,00</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-weight: 700; border-top: 1px dashed var(--border-subtle); padding-top: 0.75rem; margin-top: 0.5rem; align-items: center;">
+                  <span style="font-size: 1.1rem; color: var(--text-main);">Valor de Receita Real (Vendido):</span>
+                  <span id="acertoTotalVendido" class="receipt-total-value" style="color: #10B981;">R$ 0,00</span>
+                </div>
+              </div>
+
+              <div class="form-actions-sticky" style="position: static; margin-top: 1.5rem;">
+                <button type="submit" id="btnSubmitAcerto" class="btn btn-primary" style="width: 100%; justify-content: center; font-size: 1.05rem; padding: 0.85rem; border: none; font-weight: 600;">
+                  💰 Finalizar & Registrar Entrada no Caixa
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODAL DE CONFIRMAÇÃO DE ENTREGA E SELEÇÃO DE MEIO DE PAGAMENTO -->
+      <div id="orderDeliveryModal" class="finance-modal" role="dialog" aria-modal="true" aria-labelledby="orderDeliveryTitle">
+        <div class="finance-modal-overlay" onclick="closeOrderDeliveryModal()"></div>
+        <div class="finance-modal-content" style="max-width: 450px;">
+          <div class="finance-modal-header">
+            <h2 id="orderDeliveryTitle" class="panel-title" style="font-size: 1.2rem;">
+              <svg class="title-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              Confirmar Entrega do Pedido
+            </h2>
+            <button class="btn-close-modal" type="button" onclick="closeOrderDeliveryModal()" aria-label="Fechar formulário">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+          <div class="finance-modal-body">
+            <form id="orderDeliveryForm" class="order-form">
+              <input type="hidden" id="delivery_pedido_id">
+              <input type="hidden" id="delivery_valor_total">
+              
+              <div class="receipt-card" style="margin-bottom: 1.25rem; background: rgba(245, 158, 11, 0.03); border: 1px solid var(--border-subtle);">
+                <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">Cliente:</div>
+                <div id="delivery_cliente_nome" style="font-size: 1.15rem; font-weight: 700; color: var(--text-main); margin-bottom: 6px;">Wellington Ponce</div>
+                <div id="delivery_detalhes_pedido" style="font-size: 0.85rem; color: var(--text-muted);">Pães: R$ 0,00 | Frete: R$ 0,00</div>
+              </div>
+
+              <div class="form-group">
+                <label style="font-size: 0.95rem; font-weight: 600; color: var(--text-main); margin-bottom: 8px;">💳 Meio de Pagamento da Venda:</label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px;">
+                  <label class="payment-method-option">
+                    <input type="radio" name="delivery_meio_pagamento" value="PIX" checked onchange="updateDeliveryValorLiquido()">
+                    <span class="payment-method-card">
+                      <span class="payment-icon">⚡</span> PIX
+                    </span>
+                  </label>
+                  <label class="payment-method-option">
+                    <input type="radio" name="delivery_meio_pagamento" value="Dinheiro" onchange="updateDeliveryValorLiquido()">
+                    <span class="payment-method-card">
+                      <span class="payment-icon">💵</span> Dinheiro
+                    </span>
+                  </label>
+                  <label class="payment-method-option">
+                    <input type="radio" name="delivery_meio_pagamento" value="Débito" onchange="updateDeliveryValorLiquido()">
+                    <span class="payment-method-card">
+                      <span class="payment-icon">💳</span> Débito
+                    </span>
+                  </label>
+                  <label class="payment-method-option">
+                    <input type="radio" name="delivery_meio_pagamento" value="Crédito" onchange="updateDeliveryValorLiquido()">
+                    <span class="payment-method-card">
+                      <span class="payment-icon">🪙</span> Crédito
+                    </span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Resumo Líquido Automatizado (WOW!) -->
+              <div class="receipt-card" style="margin-top: 1.25rem; border-top: 1px solid var(--border-subtle); background: rgba(16, 185, 129, 0.02); border-color: rgba(16, 185, 129, 0.15);">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.9rem;">
+                  <span>Valor Bruto do Pedido:</span>
+                  <span id="delivery_valor_bruto_txt" style="font-weight: 500;">R$ 0,00</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.9rem; color: var(--text-muted);">
+                  <span>Taxa Aplicada (<span id="delivery_taxa_pct">0.00%</span>):</span>
+                  <span id="delivery_taxa_valor" style="color: #EF4444;">- R$ 0,00</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-weight: 700; border-top: 1px dashed rgba(16, 185, 129, 0.2); padding-top: 0.75rem; margin-top: 0.5rem; align-items: center;">
+                  <span style="font-size: 1.05rem; color: var(--text-main);">Valor Líquido (Caixa):</span>
+                  <span id="delivery_valor_liquido_txt" class="receipt-total-value" style="color: #10B981; font-size: 1.4rem;">R$ 0,00</span>
+                </div>
+              </div>
+
+              <div class="form-actions-sticky" style="position: static; margin-top: 1.5rem; display: flex; gap: 10px;">
+                <button type="button" class="btn btn-secondary" onclick="closeOrderDeliveryModal()" style="flex: 1; justify-content: center; font-weight: 600;">Voltar</button>
+                <button type="submit" id="btnSubmitDelivery" class="btn btn-success" style="flex: 2; justify-content: center; font-size: 1.05rem; padding: 0.85rem; border: none; font-weight: 600;">
+                  Confirmar & Lançar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- NOTIFICAÇÕES TOAST DO SISTEMA (BOTTOM RIGHT) -->
+    <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+  </div>
+
+  <!-- Script da SPA e Controle PWA -->
+  <script src="./assets/js/app.js"></script>
+
+  <!-- Vercel Analytics para Sites Estáticos (Vanilla HTML/JS) -->
+  <script defer src="/_vercel/insights/script.js"></script>
+</body>
+</html>
