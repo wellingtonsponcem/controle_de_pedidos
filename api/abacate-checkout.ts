@@ -302,13 +302,11 @@ export default async function handler(req: any, res: any) {
           expiresIn: 86400,
           description: `Pedido Bemavi - ${pedido.cliente_nome}`,
           externalId: pedido.id,
-          customer: {
-            name: pedido.cliente_nome,
-            cellphone: normalizePhone(pedido.cliente_telefone)
-          },
           metadata: {
             origem: 'catalogo_publico',
             pedido_id: pedido.id,
+            cliente: pedido.cliente_nome,
+            telefone: normalizePhone(pedido.cliente_telefone),
             pedido: productNames.join(', ')
           }
         }
