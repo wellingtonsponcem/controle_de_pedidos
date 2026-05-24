@@ -6,7 +6,8 @@ const ONLINE_CARD_OPTION = 'Quero pagar online por cartao de credito Abacate Pay
 const state = {
   produtos: [],
   carrinho: [],
-  abacateCheckout: null
+  abacateCheckout: null,
+  taxasEntrega: {}
 };
 
 const money = new Intl.NumberFormat('pt-BR', {
@@ -19,8 +20,25 @@ document.addEventListener('DOMContentLoaded', () => {
   setupDeliveryMode();
   setupPhoneMask();
   setMinimumDate();
+  setupMunicipioChange();
+  loadDeliveryFees();
   loadPublicCatalog();
 });
+
+async function loadDeliveryFees() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/taxas`);
+    if (!response.ok) throw new Error('delivery_fees_unavailable');
+    const taxas = await response.json();
+    state.taxasEntrega = taxas.reduce((acc, taxa) => {
+      acc[taxa.municipio] = Number(taxa.valor_taxa) || 0;
+      return acc;
+    }, {});
+    renderCart();
+  } catch (error) {
+    console.error('Falha ao carregar taxas de entrega:', error);
+  }
+}
 
 async function loadPublicCatalog() {
   const grid = document.getElementById('publicCatalogGrid');
@@ -139,7 +157,7 @@ function renderCart() {
   const count = document.getElementById('cartCount');
 
   const totalItens = state.carrinho.reduce((acc, item) => acc + item.quantidade, 0);
-  const totalValor = state.carrinho.reduce((acc, item) => acc + (item.preco * item.quantidade), 0);
+  const totalValor = getOrderTotal();
 
   if (count) count.textContent = `${totalItens} ${totalItens === 1 ? 'item' : 'itens'}`;
   if (total) total.textContent = money.format(totalValor);
@@ -166,6 +184,21 @@ function renderCart() {
   `).join('');
 }
 
+function getProductsTotal() {
+  return state.carrinho.reduce((acc, item) => acc + (item.preco * item.quantidade), 0);
+}
+
+function getSelectedDeliveryFee() {
+  const entrega = document.getElementById('public_entrega')?.value;
+  const municipio = document.getElementById('public_municipio')?.value;
+  if (entrega !== 'Entrega') return 0;
+  return Number(state.taxasEntrega[municipio]) || 0;
+}
+
+function getOrderTotal() {
+  return getProductsTotal() + getSelectedDeliveryFee();
+}
+
 function setupPublicOrderForm() {
   const form = document.getElementById('publicOrderForm');
   if (!form) return;
@@ -180,9 +213,15 @@ function setupPublicOrderForm() {
 
     const entrega = document.getElementById('public_entrega').value;
     const endereco = document.getElementById('public_endereco').value.trim();
+    const municipio = document.getElementById('public_municipio').value;
 
     if (entrega === 'Entrega' && !endereco) {
       showToast('Informe o endereco para entrega.');
+      return;
+    }
+
+    if (!municipio) {
+      showToast('Informe o municipio.');
       return;
     }
 
@@ -247,6 +286,13 @@ async function createAbacateCheckout(metodoPagamento) {
       cliente: {
         nome: document.getElementById('public_nome').value.trim(),
         telefone: document.getElementById('public_telefone').value.trim()
+      },
+      pedido: {
+        entrega: document.getElementById('public_entrega').value,
+        data_agendada: document.getElementById('public_data').value,
+        endereco: document.getElementById('public_endereco').value.trim(),
+        municipio_entrega: document.getElementById('public_municipio').value,
+        observacao: document.getElementById('public_obs').value.trim()
       },
       itens: state.carrinho.map(item => ({
         produto_id: item.id,
@@ -318,9 +364,12 @@ function buildWhatsappMessage(checkout) {
   const entrega = document.getElementById('public_entrega').value;
   const data = document.getElementById('public_data').value;
   const endereco = document.getElementById('public_endereco').value.trim();
+  const municipio = document.getElementById('public_municipio').value;
   const pagamento = document.getElementById('public_pagamento').value;
   const obs = document.getElementById('public_obs').value.trim();
-  const total = state.carrinho.reduce((acc, item) => acc + (item.preco * item.quantidade), 0);
+  const totalProdutos = getProductsTotal();
+  const taxaEntrega = getSelectedDeliveryFee();
+  const total = getOrderTotal();
 
   const itens = state.carrinho
     .map(item => `- ${item.quantidade}x ${item.nome}${item.modelo ? ` (${item.modelo})` : ''} - ${money.format(item.preco * item.quantidade)}`)
@@ -334,13 +383,16 @@ function buildWhatsappMessage(checkout) {
     '*Itens*',
     itens,
     '',
-    `*Total dos paes:* ${money.format(total)}`,
+    `*Total dos paes:* ${money.format(totalProdutos)}`,
+    `*Entrega:* ${money.format(taxaEntrega)}`,
+    `*Total estimado:* ${money.format(total)}`,
     '',
     '*Dados do cliente*',
     `Nome: ${nome}`,
     `WhatsApp: ${telefone}`,
     `Entrega/retirada: ${entrega}`,
     `Data desejada: ${formatDate(data)}`,
+    `Municipio: ${municipio}`,
     entrega === 'Entrega' ? `Endereco: ${endereco}` : null,
     `Pagamento: ${pagamento}`,
     checkout ? `Checkout Abacate Pay: ${checkout.id}` : null,
@@ -362,10 +414,17 @@ function setupDeliveryMode() {
     const isDelivery = select.value === 'Entrega';
     box.style.display = isDelivery ? 'block' : 'none';
     address.required = isDelivery;
+    renderCart();
   };
 
   select.addEventListener('change', update);
   update();
+}
+
+function setupMunicipioChange() {
+  const select = document.getElementById('public_municipio');
+  if (!select) return;
+  select.addEventListener('change', renderCart);
 }
 
 function formatPhoneBR(value) {

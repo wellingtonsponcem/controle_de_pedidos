@@ -1,4 +1,4 @@
-import pool from './_db';
+import pool, { withTransaction } from './_db';
 
 const ABACATEPAY_BASE_URL = 'https://api.abacatepay.com/v2';
 const CARD_INSTALLMENTS_MIN_AMOUNT_IN_CENTS = 10000;
@@ -14,6 +14,14 @@ type ProductWithPrice = {
   quantidade: number;
   nome: string;
   preco_centavos: number;
+};
+
+type PedidoCheckout = {
+  id: string;
+  cliente_nome: string;
+  cliente_telefone: string;
+  valor_total: number;
+  produtos: ProductWithPrice[];
 };
 
 function normalizePhone(value: unknown) {
@@ -70,6 +78,139 @@ async function findOrCreateAbacateProduct(apiKey: string, product: ProductWithPr
   return createResponse.data.id;
 }
 
+async function createPublicPedido(payload: any, normalizedItems: Array<{ produto_id: string; quantidade: number }>) {
+  const { cliente, pedido } = payload;
+  const entrega = pedido?.entrega === 'Retirada' ? 'Retirada' : 'Entrega';
+  const municipioEntrega = pedido?.municipio_entrega;
+
+  if (!cliente?.nome || !cliente?.telefone || !pedido?.data_agendada || !municipioEntrega) {
+    throw Object.assign(new Error('Dados do cliente, data e município são obrigatórios.'), { statusCode: 400 });
+  }
+
+  if (entrega === 'Entrega' && !String(pedido.endereco || '').trim()) {
+    throw Object.assign(new Error('Endereço é obrigatório para entrega.'), { statusCode: 400 });
+  }
+
+  return withTransaction(async (client) => {
+    const taxaQuery = await client.query('SELECT valor_taxa FROM taxas_entrega WHERE municipio = $1', [municipioEntrega]);
+    if (taxaQuery.rows.length === 0) {
+      throw Object.assign(new Error(`Município '${municipioEntrega}' não é atendido pela logística Bemavi.`), { statusCode: 400 });
+    }
+
+    const valorEntrega = entrega === 'Entrega' ? Number(taxaQuery.rows[0].valor_taxa) : 0;
+    let valorProdutos = 0;
+    const produtos: ProductWithPrice[] = [];
+
+    for (const item of normalizedItems) {
+      const prodQuery = await client.query('SELECT nome, preco_base, ativo FROM produtos WHERE id = $1', [item.produto_id]);
+      if (prodQuery.rows.length === 0 || !prodQuery.rows[0].ativo) {
+        throw Object.assign(new Error('Um dos produtos selecionados não está mais disponível.'), { statusCode: 400 });
+      }
+
+      const produto = prodQuery.rows[0];
+      const precoUnitario = Number(produto.preco_base);
+      valorProdutos += precoUnitario * item.quantidade;
+      produtos.push({
+        produto_id: item.produto_id,
+        quantidade: item.quantidade,
+        nome: produto.nome,
+        preco_centavos: Math.round(precoUnitario * 100)
+      });
+    }
+
+    const valorTotal = Math.max(0, valorProdutos + valorEntrega);
+    const endereco = String(pedido.endereco || '').trim();
+    const observacaoParts = [
+      pedido.observacao ? String(pedido.observacao).trim() : null,
+      `Origem: catálogo público`,
+      `Modalidade: ${entrega}`,
+      entrega === 'Entrega' ? `Endereço informado: ${endereco}` : null
+    ].filter(Boolean);
+
+    const clienteCheck = await client.query(
+      'SELECT id FROM clientes WHERE telefone = $1 AND nome = $2',
+      [cliente.telefone, cliente.nome]
+    );
+
+    let clienteId: string;
+    if (clienteCheck.rows.length > 0) {
+      clienteId = clienteCheck.rows[0].id;
+      await client.query(`
+        UPDATE clientes
+        SET logradouro = $1, numero = $2, complemento = $3, bairro = $4, municipio = $5, email = $6, updated_at = NOW()
+        WHERE id = $7
+      `, [
+        entrega === 'Entrega' ? endereco : 'Retirada',
+        'S/N',
+        null,
+        entrega === 'Entrega' ? 'Não informado' : 'Loja',
+        municipioEntrega,
+        null,
+        clienteId
+      ]);
+    } else {
+      const insertClienteRes = await client.query(`
+        INSERT INTO clientes (nome, telefone, email, logradouro, numero, complemento, bairro, municipio)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id
+      `, [
+        String(cliente.nome).trim(),
+        String(cliente.telefone).trim(),
+        null,
+        entrega === 'Entrega' ? endereco : 'Retirada',
+        'S/N',
+        null,
+        entrega === 'Entrega' ? 'Não informado' : 'Loja',
+        municipioEntrega
+      ]);
+      clienteId = insertClienteRes.rows[0].id;
+    }
+
+    const insertPedidoRes = await client.query(`
+      INSERT INTO pedidos (
+        cliente_id, data_agendada, municipio_entrega, valor_produtos, valor_entrega, valor_total,
+        status, recorrente_flag, recorrente_intervalo, observacao, pago, data_pagamento,
+        meio_pagamento, valor_liquido, desconto
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, 'Pendente', FALSE, NULL, $7, FALSE, NULL, NULL, NULL, 0)
+      RETURNING *
+    `, [
+      clienteId,
+      pedido.data_agendada,
+      municipioEntrega,
+      valorProdutos,
+      valorEntrega,
+      valorTotal,
+      observacaoParts.join('\n')
+    ]);
+
+    const pedidoCriado = insertPedidoRes.rows[0];
+    for (const item of produtos) {
+      await client.query(
+        'INSERT INTO itens_pedido (pedido_id, produto_id, quantidade, preco_unitario) VALUES ($1, $2, $3, $4)',
+        [pedidoCriado.id, item.produto_id, item.quantidade, item.preco_centavos / 100]
+      );
+    }
+
+    const checkoutProducts = [...produtos];
+    if (valorEntrega > 0) {
+      checkoutProducts.push({
+        produto_id: `entrega-${municipioEntrega}`,
+        quantidade: 1,
+        nome: `Entrega Bemavi - ${municipioEntrega}`,
+        preco_centavos: Math.round(valorEntrega * 100)
+      });
+    }
+
+    return {
+      id: pedidoCriado.id,
+      cliente_nome: String(cliente.nome).trim(),
+      cliente_telefone: String(cliente.telefone).trim(),
+      valor_total: Number(pedidoCriado.valor_total),
+      produtos: checkoutProducts
+    };
+  });
+}
+
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
@@ -81,10 +222,10 @@ export default async function handler(req: any, res: any) {
     return res.status(500).json({ error: 'Chave da Abacate Pay não configurada no servidor.' });
   }
 
-  const { cliente, itens, metodo_pagamento } = req.body || {};
+  const { itens, metodo_pagamento } = req.body || {};
   const paymentMethod = metodo_pagamento === 'CARD' ? 'CARD' : 'PIX';
-  if (!cliente?.nome || !cliente?.telefone || !Array.isArray(itens) || itens.length === 0) {
-    return res.status(400).json({ error: 'Informe cliente e itens para gerar o pagamento online.' });
+  if (!Array.isArray(itens) || itens.length === 0) {
+    return res.status(400).json({ error: 'Informe itens para gerar o pagamento online.' });
   }
 
   const normalizedItems = (itens as CheckoutItem[])
@@ -99,41 +240,17 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    let amountInCents = 0;
-    const productNames: string[] = [];
-    const productsWithPrice: ProductWithPrice[] = [];
-
-    for (const item of normalizedItems) {
-      const productResult = await pool.query(
-        'SELECT nome, preco_base, ativo FROM produtos WHERE id = $1',
-        [item.produto_id]
-      );
-
-      if (productResult.rows.length === 0 || !productResult.rows[0].ativo) {
-        return res.status(400).json({ error: 'Um dos produtos selecionados não está mais disponível.' });
-      }
-
-      const product = productResult.rows[0];
-      const priceInCents = Math.round(Number(product.preco_base) * 100);
-      amountInCents += priceInCents * item.quantidade;
-      productNames.push(`${item.quantidade}x ${product.nome}`);
-      productsWithPrice.push({
-        produto_id: item.produto_id,
-        quantidade: item.quantidade,
-        nome: product.nome,
-        preco_centavos: priceInCents
-      });
-    }
+    const pedido: PedidoCheckout = await createPublicPedido(req.body, normalizedItems);
+    const amountInCents = Math.round(pedido.valor_total * 100);
+    const productNames = pedido.produtos.map(item => `${item.quantidade}x ${item.nome}`);
 
     if (amountInCents <= 0) {
       return res.status(400).json({ error: 'O valor da cobrança precisa ser maior que zero.' });
     }
 
-    const externalId = `bemavi-${Date.now()}`;
-
     if (paymentMethod === 'CARD') {
       const checkoutItems = [];
-      for (const product of productsWithPrice) {
+      for (const product of pedido.produtos) {
         checkoutItems.push({
           id: await findOrCreateAbacateProduct(apiKey, product),
           quantity: product.quantidade
@@ -146,7 +263,7 @@ export default async function handler(req: any, res: any) {
         body: JSON.stringify({
           items: checkoutItems,
           methods: ['CARD'],
-          externalId,
+          externalId: pedido.id,
           returnUrl: origin,
           completionUrl: origin,
           card: {
@@ -154,17 +271,19 @@ export default async function handler(req: any, res: any) {
           },
           metadata: {
             origem: 'catalogo_publico',
-            cliente: String(cliente.nome).trim(),
-            telefone: normalizePhone(cliente.telefone),
+            pedido_id: pedido.id,
+            cliente: pedido.cliente_nome,
+            telefone: normalizePhone(pedido.cliente_telefone),
             pedido: productNames.join(', ')
           }
         })
       });
 
       return res.status(201).json({
+        pedido_id: pedido.id,
         checkout: {
           ...checkoutResponse.data,
-          externalId,
+          externalId: pedido.id,
           method: 'CARD'
         }
       });
@@ -177,14 +296,15 @@ export default async function handler(req: any, res: any) {
         data: {
           amount: amountInCents,
           expiresIn: 86400,
-          description: `Pedido Bemavi - ${cliente.nome}`,
-          externalId,
+          description: `Pedido Bemavi - ${pedido.cliente_nome}`,
+          externalId: pedido.id,
           customer: {
-            name: String(cliente.nome).trim(),
-            cellphone: normalizePhone(cliente.telefone)
+            name: pedido.cliente_nome,
+            cellphone: normalizePhone(pedido.cliente_telefone)
           },
           metadata: {
             origem: 'catalogo_publico',
+            pedido_id: pedido.id,
             pedido: productNames.join(', ')
           }
         }
@@ -192,9 +312,10 @@ export default async function handler(req: any, res: any) {
     });
 
     return res.status(201).json({
+      pedido_id: pedido.id,
       checkout: {
         ...responseBody.data,
-        externalId,
+        externalId: pedido.id,
         method: 'PIX'
       }
     });
