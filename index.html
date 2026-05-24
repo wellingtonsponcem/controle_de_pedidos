@@ -345,6 +345,13 @@
                   </div>
                 </div>
               </details>
+              <div id="aiInsightDashboard" class="ai-context-card is-loading">
+                <div class="ai-context-header">
+                  <span>Analise operacional</span>
+                  <small>IA</small>
+                </div>
+                <div class="ai-context-body">Analisando fila, rotas e producao...</div>
+              </div>
             </div>
           </div>
         </div>
@@ -365,6 +372,14 @@
             <button id="btnOpenProductModal" class="btn btn-primary" onclick="openProductModal()" style="font-size: 0.85rem; padding: 0.5rem 1.2rem; border: none; font-weight: 600;">
               ➕ Novo Pão
             </button>
+          </div>
+
+          <div id="aiInsightCatalogo" class="ai-context-card is-loading">
+            <div class="ai-context-header">
+              <span>Analise do catalogo</span>
+              <small>IA</small>
+            </div>
+            <div class="ai-context-body">Avaliando produtos, precos e historico de saida...</div>
           </div>
 
           <div class="responsive-table-container">
@@ -444,11 +459,20 @@
                 </svg>
                 Dados do Cliente
               </h3>
-              
+
+              <div id="aiInsightPedidos" class="ai-context-card is-loading">
+                <div class="ai-context-header">
+                  <span>Proxima venda</span>
+                  <small>IA</small>
+                </div>
+                <div class="ai-context-body">Observando historico para sugerir itens e recorrencia...</div>
+              </div>
+               
               <div class="form-group-row">
-                <div class="form-group">
+                <div class="form-group" style="position: relative;">
                   <label for="cli_nome">Nome Completo *</label>
-                  <input type="text" id="cli_nome" required placeholder="Digite o nome do cliente">
+                  <input type="text" id="cli_nome" required placeholder="Digite o nome do cliente" autocomplete="off">
+                  <div id="cli_nome_suggestions" class="autocomplete-suggestions"></div>
                 </div>
                 <div class="form-group">
                   <label for="cli_telefone">Telefone / WhatsApp *</label>

@@ -20,7 +20,13 @@ const state = {
   editClienteCoords: null,
   rotaPartidaCoords: { latitude: -20.3168, longitude: -40.3117 },
   loteRotaCalculada: [],
-  taxasMaquininha: { debito: 2.27, credito: 3.99 }
+  taxasMaquininha: { debito: 2.27, credito: 3.99 },
+  aiInsights: {
+    dashboard: { hash: '', loading: false },
+    catalogo: { hash: '', loading: false },
+    pedidos: { hash: '', loading: false }
+  },
+  clientesHistoricos: []
 };
 
 // Configurações de Frete da Grande Vitória (valores iniciais reduzidos e controle síncrono local)
@@ -391,7 +397,9 @@ async function initApp() {
   setupConsignationSalesForm();
   setupOrderDeliveryForm();
   setupSidebarAccordion();
+  setupClienteHistoricoAutocomplete();
   atualizarStatusChaveGroq();
+  atualizarDicaContextualIA('dashboard');
   
   // Tentar sincronização inicial se estiver online
   if (state.isOnline) {
@@ -429,6 +437,7 @@ function switchTab(tabId) {
   if (tabId === 'catalogo') refreshCatalogManagement();
   if (tabId === 'consignacoes') refreshConsignacoes();
   if (tabId === 'inteligencia') atualizarStatusChaveGroq();
+  if (['dashboard', 'catalogo', 'pedidos'].includes(tabId)) atualizarDicaContextualIA(tabId);
 }
 
 // 4b. Navegação SPA de Sub-abas da Fila de Produção
@@ -622,6 +631,8 @@ function renderCatalogo() {
 
   // Atualizar select de produtos no formulário de pedido
   updateOrderFormSelectors();
+  atualizarDicaContextualIA('catalogo');
+  atualizarDicaContextualIA('pedidos');
 }
 
 // 8. Carrinho de Compras e Agendamento
@@ -744,6 +755,8 @@ async function refreshDashboard() {
   }
 
   renderPedidos();
+  atualizarClientesHistoricos();
+  atualizarDicaContextualIA('dashboard');
 
   if (btn) {
     setTimeout(() => {
@@ -1005,6 +1018,8 @@ function limparFormularioPedido() {
   if (paymentBox) paymentBox.style.display = 'none';
   const descontoInput = document.getElementById('order_desconto');
   if (descontoInput) descontoInput.value = '';
+  const nomeInput = document.getElementById('cli_nome');
+  if (nomeInput) delete nomeInput.dataset.lastClienteHistorico;
 }
 
 // 11. Módulo Financeiro (Caixa & Dashboard de Fluxo de Caixa)
@@ -1278,6 +1293,8 @@ function renderCatalogAdmin() {
       </tr>
     `;
   }).join('');
+
+  atualizarDicaContextualIA('catalogo');
 }
 
 window.openProductModal = function(prodId) {
@@ -2739,6 +2756,345 @@ function obterDadosConsolidadosNegocio() {
   };
 }
 
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function normalizarBusca(value) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+}
+
+function formatarMoeda(valor) {
+  return `R$ ${Number(valor || 0).toFixed(2)}`;
+}
+
+function getProdutoMaisVendido() {
+  const ranking = {};
+  state.pedidos.forEach(pedido => {
+    if ((pedido.status || '').toLowerCase() === 'cancelado') return;
+    (pedido.itens || []).forEach(item => {
+      const key = item.produto_id || `${item.nome}-${item.modelo}`;
+      if (!ranking[key]) {
+        ranking[key] = {
+          nome: item.nome,
+          modelo: item.modelo,
+          quantidade: 0,
+          receita: 0
+        };
+      }
+      ranking[key].quantidade += Number(item.quantidade) || 0;
+      ranking[key].receita += (Number(item.quantidade) || 0) * (Number(item.preco_unitario) || 0);
+    });
+  });
+
+  return Object.values(ranking).sort((a, b) => b.quantidade - a.quantidade)[0] || null;
+}
+
+function getClientesRecorrentes() {
+  const clientes = {};
+  state.pedidos.forEach(pedido => {
+    const cliente = pedido.cliente || {};
+    const key = normalizarBusca(cliente.telefone || cliente.nome);
+    if (!key) return;
+    if (!clientes[key]) {
+      clientes[key] = { nome: cliente.nome, quantidade: 0 };
+    }
+    clientes[key].quantidade += 1;
+  });
+
+  return Object.values(clientes)
+    .filter(c => c.quantidade >= 2)
+    .sort((a, b) => b.quantidade - a.quantidade);
+}
+
+function montarDicaLocalIA(tabId) {
+  const pedidos = state.pedidos || [];
+  const produtos = state.produtos || [];
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+  const produtoTop = getProdutoMaisVendido();
+
+  if (tabId === 'dashboard') {
+    const pendentes = pedidos.filter(p => ['rascunho', 'pendente'].includes((p.status || '').toLowerCase())).length;
+    const emRota = pedidos.filter(p => (p.status || '').toLowerCase() === 'agendado').length;
+    const atrasados = pedidos.filter(p => {
+      const status = (p.status || '').toLowerCase();
+      const data = p.data_agendada ? new Date(p.data_agendada) : null;
+      return data && data < hoje && !['entregue', 'cancelado'].includes(status);
+    }).length;
+
+    const itens = [];
+    if (atrasados > 0) itens.push(`Priorize ${atrasados} pedido(s) com data anterior a hoje antes de aceitar novas entregas.`);
+    if (pendentes > 0) itens.push(`Ha ${pendentes} pedido(s) esperando producao; separe a lista por bairro antes de roteirizar.`);
+    if (emRota > 0) itens.push(`${emRota} pedido(s) ja estao em rota; confirme pagamento na entrega para manter o caixa correto.`);
+    if (produtoTop) itens.push(`${produtoTop.nome} (${produtoTop.modelo}) lidera o historico com ${produtoTop.quantidade} unidade(s); deixe insumos prontos.`);
+    if (itens.length === 0) itens.push('Fila limpa no momento. Use este intervalo para revisar fretes, taxas e estoque da semana.');
+    return itens;
+  }
+
+  if (tabId === 'catalogo') {
+    const ativos = produtos.filter(p => p.ativo !== false).length;
+    const inativos = produtos.length - ativos;
+    const itens = [];
+    if (produtoTop) itens.push(`${produtoTop.nome} (${produtoTop.modelo}) e o item com maior saida: ${produtoTop.quantidade} unidade(s) e ${formatarMoeda(produtoTop.receita)} em vendas brutas.`);
+    if (inativos > 0) itens.push(`${inativos} produto(s) inativo(s). Reative apenas os que ainda tem margem e capacidade de producao.`);
+    if (ativos < 3) itens.push('Catalogo ativo esta enxuto; considere manter pelo menos uma opcao de entrada, uma premium e uma recorrente.');
+    if (produtos.length === 0) itens.push('Cadastre os paes principais antes de abrir pedidos para evitar vendas sem preco padronizado.');
+    if (itens.length === 0) itens.push('Catalogo consistente. Revise precos quando despesas de ingredientes subirem ou a taxa de entrega mudar.');
+    return itens;
+  }
+
+  const recorrentes = getClientesRecorrentes();
+  const itens = [];
+  if (produtoTop) itens.push(`Sugestao inicial: ofereca ${produtoTop.nome} (${produtoTop.modelo}), hoje e o produto com melhor historico.`);
+  if (recorrentes.length > 0) itens.push(`${recorrentes[0].nome} ja aparece ${recorrentes[0].quantidade} vezes no historico; vale sugerir recorrencia quando esse cliente comprar novamente.`);
+  if (!freteConfig.gratis) itens.push(`Fretes atuais: Vitoria ${formatarMoeda(freteConfig.vitoria)}, Vila Velha ${formatarMoeda(freteConfig.vilaVelha)}, Serra ${formatarMoeda(freteConfig.serra)}. Confira o municipio antes de fechar.`);
+  if (itens.length === 0) itens.push('Monte o carrinho e preencha o cliente. Se ele ja comprou antes, os dados serao sugeridos automaticamente.');
+  return itens;
+}
+
+function renderDicaContextual(tabId, itens, origem = 'local') {
+  const card = document.getElementById(`aiInsight${tabId.charAt(0).toUpperCase()}${tabId.slice(1)}`);
+  if (!card) return;
+
+  card.classList.remove('is-loading');
+  card.classList.toggle('is-ai-refined', origem === 'groq');
+  const body = card.querySelector('.ai-context-body');
+  const badge = card.querySelector('.ai-context-header small');
+  if (badge) badge.textContent = origem === 'groq' ? 'Groq' : 'Local';
+  if (body) {
+    body.innerHTML = `<ul>${itens.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`;
+  }
+}
+
+function setDicaContextualLoading(tabId) {
+  const card = document.getElementById(`aiInsight${tabId.charAt(0).toUpperCase()}${tabId.slice(1)}`);
+  if (!card) return;
+  card.classList.add('is-loading');
+  const body = card.querySelector('.ai-context-body');
+  if (body) body.textContent = 'Atualizando analise em segundo plano...';
+}
+
+async function atualizarDicaContextualIA(tabId) {
+  if (!['dashboard', 'catalogo', 'pedidos'].includes(tabId)) return;
+
+  const locais = montarDicaLocalIA(tabId);
+  renderDicaContextual(tabId, locais, 'local');
+
+  const savedKey = localStorage.getItem('bemavi_groq_api_key');
+  if (!savedKey || !state.isOnline || state.activeTab !== tabId) return;
+
+  const dados = obterDadosConsolidadosNegocio();
+  const hash = JSON.stringify({
+    tabId,
+    pedidos: state.pedidos.length,
+    produtos: state.produtos.length,
+    financeiro: state.financeiro.resumo,
+    locais
+  });
+
+  const slot = state.aiInsights[tabId];
+  if (!slot || slot.loading || slot.hash === hash) return;
+
+  slot.loading = true;
+  slot.hash = hash;
+  setDicaContextualLoading(tabId);
+
+  const nomes = {
+    dashboard: 'Dashboard de producao e entregas',
+    catalogo: 'Catalogo de produtos',
+    pedidos: 'Criacao de novo pedido'
+  };
+
+  const prompt = `Voce e um consultor operacional da Bemavi Pao Artesanal. Gere exatamente 3 dicas curtas, acionaveis e contextuais para a tela "${nomes[tabId]}". Nao use titulo, nao use introducao, nao mencione que e IA. Cada dica deve caber em uma linha e comecar com "- ". Use apenas os dados abaixo.\n\n${JSON.stringify(dados, null, 2)}`;
+
+  try {
+    const payload = {
+      model: 'llama-3.3-70b-versatile',
+      messages: [
+        { role: 'system', content: 'Responda em portugues do Brasil, com frases diretas para uma interface operacional.' },
+        { role: 'user', content: prompt }
+      ],
+      temperature: 0.2,
+      max_tokens: 360
+    };
+
+    let response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${savedKey}`
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok && response.status === 404) {
+      payload.model = 'llama3-8b-8192';
+      response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${savedKey}`
+        },
+        body: JSON.stringify(payload)
+      });
+    }
+
+    if (response.ok) {
+      const data = await response.json();
+      const content = data.choices?.[0]?.message?.content || '';
+      const dicas = content
+        .split('\n')
+        .map(line => line.replace(/^[-*]\s*/, '').trim())
+        .filter(Boolean)
+        .slice(0, 3);
+      if (dicas.length > 0) renderDicaContextual(tabId, dicas, 'groq');
+    } else {
+      renderDicaContextual(tabId, locais, 'local');
+    }
+  } catch (error) {
+    console.error('Falha ao atualizar dica contextual da IA:', error);
+    renderDicaContextual(tabId, locais, 'local');
+  } finally {
+    slot.loading = false;
+  }
+}
+
+function atualizarClientesHistoricos() {
+  const porCliente = new Map();
+  state.pedidos.forEach(pedido => {
+    const cliente = pedido.cliente || {};
+    const key = normalizarBusca(cliente.telefone || cliente.nome);
+    if (!key || !cliente.nome) return;
+
+    const atual = porCliente.get(key);
+    const dataAtual = atual?.ultimaData ? new Date(atual.ultimaData) : null;
+    const dataPedido = pedido.data_agendada ? new Date(pedido.data_agendada) : null;
+    const deveAtualizar = !atual || (dataPedido && (!dataAtual || dataPedido >= dataAtual));
+
+    if (deveAtualizar) {
+      porCliente.set(key, {
+        nome: cliente.nome,
+        telefone: cliente.telefone || '',
+        email: cliente.email || '',
+        logradouro: cliente.logradouro || '',
+        numero: cliente.numero || '',
+        complemento: cliente.complemento || '',
+        bairro: cliente.bairro || '',
+        municipio: cliente.municipio || '',
+        latitude: cliente.latitude || null,
+        longitude: cliente.longitude || null,
+        ultimaData: pedido.data_agendada,
+        totalPedidos: (atual?.totalPedidos || 0) + 1
+      });
+    } else if (atual) {
+      atual.totalPedidos += 1;
+    }
+  });
+
+  state.clientesHistoricos = Array.from(porCliente.values())
+    .sort((a, b) => normalizarBusca(a.nome).localeCompare(normalizarBusca(b.nome)));
+}
+
+function preencherClienteHistorico(cliente) {
+  const nomeInput = document.getElementById('cli_nome');
+  const clienteKey = normalizarBusca(cliente.telefone || cliente.nome);
+  const jaPreenchido = nomeInput && nomeInput.dataset.lastClienteHistorico === clienteKey;
+
+  const campos = {
+    cli_nome: cliente.nome,
+    cli_telefone: cliente.telefone,
+    cli_email: cliente.email,
+    cli_logradouro: cliente.logradouro,
+    cli_numero: cliente.numero,
+    cli_complemento: cliente.complemento,
+    cli_bairro: cliente.bairro
+  };
+
+  Object.entries(campos).forEach(([id, value]) => {
+    const el = document.getElementById(id);
+    if (el && value) el.value = value;
+  });
+
+  const municipio = document.getElementById('municipio_entrega');
+  if (municipio && cliente.municipio) municipio.value = cliente.municipio;
+  state.novoClienteCoords = cliente.latitude && cliente.longitude
+    ? { latitude: cliente.latitude, longitude: cliente.longitude }
+    : null;
+
+  if (nomeInput) nomeInput.dataset.lastClienteHistorico = clienteKey;
+  renderCarrinho();
+  if (!jaPreenchido) showToast(`Dados de ${cliente.nome} preenchidos pelo historico.`, 'success');
+}
+
+function renderClienteHistoricoSuggestions(query) {
+  const box = document.getElementById('cli_nome_suggestions');
+  if (!box) return;
+
+  const termo = normalizarBusca(query);
+  if (termo.length < 2) {
+    box.innerHTML = '';
+    box.style.display = 'none';
+    return;
+  }
+
+  const matches = state.clientesHistoricos
+    .filter(cliente => normalizarBusca(cliente.nome).includes(termo) || normalizarBusca(cliente.telefone).includes(termo))
+    .slice(0, 6);
+
+  if (matches.length === 0) {
+    box.innerHTML = '';
+    box.style.display = 'none';
+    return;
+  }
+
+  box.innerHTML = matches.map((cliente, index) => `
+    <div class="autocomplete-suggestion-item" data-cliente-index="${index}">
+      <strong>${escapeHtml(cliente.nome)}</strong>
+      <span>${escapeHtml(cliente.telefone || 'Sem telefone')} - ${escapeHtml(cliente.bairro || 'Bairro nao informado')}</span>
+    </div>
+  `).join('');
+  box.style.display = 'block';
+
+  box.querySelectorAll('.autocomplete-suggestion-item').forEach((el, index) => {
+    el.addEventListener('click', () => {
+      preencherClienteHistorico(matches[index]);
+      box.innerHTML = '';
+      box.style.display = 'none';
+    });
+  });
+}
+
+function setupClienteHistoricoAutocomplete() {
+  const input = document.getElementById('cli_nome');
+  const box = document.getElementById('cli_nome_suggestions');
+  if (!input || !box) return;
+
+  atualizarClientesHistoricos();
+
+  input.addEventListener('input', () => {
+    renderClienteHistoricoSuggestions(input.value);
+  });
+
+  input.addEventListener('blur', () => {
+    setTimeout(() => {
+      const typed = normalizarBusca(input.value);
+      const exact = state.clientesHistoricos.find(cliente => normalizarBusca(cliente.nome) === typed);
+      if (exact) preencherClienteHistorico(exact);
+      box.style.display = 'none';
+    }, 180);
+  });
+}
+
 // Parser Premium de Markdown para HTML responsivo Bemavi
 function parserMarkdownBemavi(md) {
   if (!md) return '';
@@ -3083,5 +3439,3 @@ ${JSON.stringify(dadosNegocio, null, 2)}
     chatMessages.scrollTop = chatMessages.scrollHeight;
   }
 };
-
-
