@@ -227,18 +227,18 @@ function setupPublicOrderForm() {
 
     const pagamento = document.getElementById('public_pagamento').value;
     const button = form.querySelector('.submit-order');
-    const whatsappWindow = window.open('about:blank', '_blank');
-    if (whatsappWindow) whatsappWindow.opener = null;
 
     if (button) {
       button.disabled = true;
-      button.textContent = isOnlinePayment(pagamento) ? 'Preparando pagamento...' : 'Abrindo WhatsApp...';
+      button.textContent = isOnlinePayment(pagamento) ? 'Gerando pagamento...' : 'Abrindo WhatsApp...';
     }
 
     try {
       if (isOnlinePayment(pagamento)) {
         state.abacateCheckout = await createAbacateCheckout(getAbacatePaymentMethod(pagamento));
         renderAbacateCheckout(state.abacateCheckout);
+        showToast(pagamento === ONLINE_CARD_OPTION ? 'Link de cartão gerado.' : 'PIX gerado no checkout.');
+        return;
       } else {
         state.abacateCheckout = null;
         clearAbacateCheckout();
@@ -246,18 +246,9 @@ function setupPublicOrderForm() {
 
       const message = buildWhatsappMessage(state.abacateCheckout);
       const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
-      if (whatsappWindow) {
-        whatsappWindow.location.href = whatsappUrl;
-      } else {
-        window.open(whatsappUrl, '_blank', 'noopener');
-      }
-
-      if (state.abacateCheckout?.method === 'CARD' && state.abacateCheckout.url) {
-        window.location.href = state.abacateCheckout.url;
-      }
+      window.location.href = whatsappUrl;
     } catch (error) {
       console.error('Falha ao preparar pedido publico:', error);
-      if (whatsappWindow) whatsappWindow.close();
       showToast(error.message || 'Nao foi possivel preparar o pedido agora.');
     } finally {
       if (button) {
@@ -304,7 +295,7 @@ async function createAbacateCheckout(metodoPagamento) {
 
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(data.error || 'Nao foi possivel gerar o PIX online.');
+    throw new Error(data.details || data.error || 'Nao foi possivel gerar o pagamento online.');
   }
 
   return data.checkout;
@@ -324,7 +315,7 @@ function renderAbacateCheckout(checkout) {
       <strong>Checkout Abacate Pay gerado</strong>
       <span>${money.format((Number(checkout.amount) || 0) / 100)}</span>
     </div>
-    <a class="abacate-pay-link" href="${escapeHtml(checkout.url || '#')}" target="_blank" rel="noopener">Pagar com cartao de credito</a>
+    <a class="abacate-pay-link" href="${escapeHtml(checkout.url || '#')}" rel="noopener">Pagar com cartao de credito</a>
   ` : `
     <div class="abacate-checkout-header">
       <strong>PIX Abacate Pay gerado</strong>

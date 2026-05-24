@@ -366,18 +366,28 @@ function renderConfiguracoesSistema(configuracoes) {
   const abacateStatus = document.getElementById('configAbacateStatus');
   const webhookStatus = document.getElementById('configWebhookStatus');
   const groqStatus = document.getElementById('configGroqStatus');
+  const abacateInput = document.getElementById('config_abacate_api_key');
+  const webhookInput = document.getElementById('config_abacate_webhook_secret');
+  const groqInput = document.getElementById('config_groq_api_key');
 
   const hasAbacate = Boolean(configuracoes.ABACATEPAY_API_KEY?.configured);
   const hasWebhook = Boolean(configuracoes.ABACATEPAY_WEBHOOK_SECRET?.configured);
   const hasGroq = Boolean(configuracoes.GROQ_API_KEY?.configured);
+  const abacateMask = configuracoes.ABACATEPAY_API_KEY?.value;
+  const webhookMask = configuracoes.ABACATEPAY_WEBHOOK_SECRET?.value;
+  const groqMask = configuracoes.GROQ_API_KEY?.value;
 
   if (badge) {
     badge.textContent = hasAbacate ? 'Abacate configurado' : 'Abacate pendente';
     badge.className = `badge-status ${hasAbacate ? 'ativo' : 'inativo'}`;
   }
-  if (abacateStatus) abacateStatus.textContent = hasAbacate ? `Configurada (${configuracoes.ABACATEPAY_API_KEY.value})` : 'Não configurada';
-  if (webhookStatus) webhookStatus.textContent = hasWebhook ? `Configurado (${configuracoes.ABACATEPAY_WEBHOOK_SECRET.value})` : 'Não configurado';
-  if (groqStatus) groqStatus.textContent = hasGroq ? `Configurada (${configuracoes.GROQ_API_KEY.value})` : 'Não configurada';
+  if (abacateStatus) abacateStatus.textContent = hasAbacate ? `Salva no banco: ${abacateMask}` : 'Não configurada';
+  if (webhookStatus) webhookStatus.textContent = hasWebhook ? `Salvo no banco: ${webhookMask}` : 'Não configurado';
+  if (groqStatus) groqStatus.textContent = hasGroq ? `Salva no banco: ${groqMask}` : 'Não configurada';
+
+  if (abacateInput) abacateInput.placeholder = hasAbacate ? `Salva: ${abacateMask}` : 'abc_dev_...';
+  if (webhookInput) webhookInput.placeholder = hasWebhook ? `Salvo: ${webhookMask}` : 'bemavi_abacate_webhook_...';
+  if (groqInput) groqInput.placeholder = hasGroq ? `Salva: ${groqMask}` : 'gsk_...';
 }
 
 function renderUsuariosSistema(usuarios) {
