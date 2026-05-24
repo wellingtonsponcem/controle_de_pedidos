@@ -7,7 +7,9 @@ const state = {
   produtos: [],
   carrinho: [],
   abacateCheckout: null,
-  taxasEntrega: {}
+  taxasEntrega: {},
+  checkoutStep: 'cart',
+  calendarMonth: new Date(new Date().getFullYear(), new Date().getMonth(), 1)
 };
 
 const money = new Intl.NumberFormat('pt-BR', {
@@ -19,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupPublicOrderForm();
   setupDeliveryMode();
   setupPhoneMask();
-  setMinimumDate();
+  setupCustomDatepicker();
   setupMunicipioChange();
   loadDeliveryFees();
   loadPublicCatalog();
@@ -77,7 +79,9 @@ function renderCatalog() {
     return;
   }
 
-  grid.innerHTML = state.produtos.map(prod => `
+  grid.innerHTML = state.produtos.map(prod => {
+    const quantidade = getCartQuantity(prod.id);
+    return `
     <article class="product-card">
       <div class="product-photo">
         <img src="${getProductImage(prod)}" alt="${escapeHtml(prod.nome)}" loading="lazy">
@@ -88,10 +92,15 @@ function renderCatalog() {
       <p class="product-details">${escapeHtml(prod.modelo || '')}</p>
       <div class="product-footer">
         <span class="price">${money.format(Number(prod.preco_base) || 0)}</span>
-        <button type="button" class="add-btn" onclick="addToCart('${prod.id}')">Adicionar</button>
+        <div class="product-counter" aria-label="Quantidade de ${escapeHtml(prod.nome)}">
+          <button type="button" class="qty-btn" onclick="changeCartQty('${prod.id}', -1)" ${quantidade === 0 ? 'disabled' : ''}>-</button>
+          <strong>${quantidade}</strong>
+          <button type="button" class="qty-btn" onclick="changeCartQty('${prod.id}', 1)">+</button>
+        </div>
       </div>
     </article>
-  `).join('');
+  `;
+  }).join('');
 }
 
 function getProductImage(prod) {
@@ -118,14 +127,20 @@ function getProductImage(prod) {
   return 'https://images.unsplash.com/photo-1534620808146-d33bb39128b2?auto=format&fit=crop&w=900&q=80';
 }
 
+function getCartQuantity(productId) {
+  return state.carrinho.find(item => item.id === productId)?.quantidade || 0;
+}
+
 window.addToCart = function(productId) {
+  changeCartQty(productId, 1);
+};
+
+window.changeCartQty = function(productId, delta) {
   const produto = state.produtos.find(item => item.id === productId);
   if (!produto) return;
 
   const item = state.carrinho.find(cartItem => cartItem.id === productId);
-  if (item) {
-    item.quantidade += 1;
-  } else {
+  if (!item && delta > 0) {
     state.carrinho.push({
       id: produto.id,
       nome: produto.nome,
@@ -133,39 +148,39 @@ window.addToCart = function(productId) {
       preco: Number(produto.preco_base) || 0,
       quantidade: 1
     });
+  } else if (item) {
+    item.quantidade += delta;
+    if (item.quantidade <= 0) {
+      state.carrinho = state.carrinho.filter(cartItem => cartItem.id !== productId);
+    }
   }
 
+  if (state.carrinho.length === 0) closeCheckoutIdentification();
+  state.abacateCheckout = null;
+  clearAbacateCheckout();
   renderCart();
-  showToast(`${produto.nome} adicionado ao pedido.`);
-};
-
-window.changeCartQty = function(productId, delta) {
-  const item = state.carrinho.find(cartItem => cartItem.id === productId);
-  if (!item) return;
-
-  item.quantidade += delta;
-  if (item.quantidade <= 0) {
-    state.carrinho = state.carrinho.filter(cartItem => cartItem.id !== productId);
-  }
-
-  renderCart();
+  renderCatalog();
 };
 
 function renderCart() {
   const list = document.getElementById('publicCartItems');
   const total = document.getElementById('publicCartTotal');
   const count = document.getElementById('cartCount');
+  const continueButton = document.getElementById('continueCheckoutBtn');
+  const form = document.getElementById('publicOrderForm');
 
   const totalItens = state.carrinho.reduce((acc, item) => acc + item.quantidade, 0);
   const totalValor = getOrderTotal();
 
   if (count) count.textContent = `${totalItens} ${totalItens === 1 ? 'item' : 'itens'}`;
   if (total) total.textContent = money.format(totalValor);
+  if (continueButton) continueButton.disabled = state.carrinho.length === 0;
+  if (form) form.hidden = state.carrinho.length === 0 || state.checkoutStep !== 'identification';
 
   if (!list) return;
 
   if (state.carrinho.length === 0) {
-    list.innerHTML = '<div class="empty-cart">Seu carrinho esta vazio.</div>';
+    list.innerHTML = '<div class="empty-cart">Seu carrinho está vazio. Adicione pães artesanais para começar!</div>';
     return;
   }
 
@@ -182,6 +197,20 @@ function renderCart() {
       </div>
     </div>
   `).join('');
+}
+
+window.openCheckoutIdentification = function() {
+  if (state.carrinho.length === 0) {
+    showToast('Adicione pelo menos um item ao pedido.');
+    return;
+  }
+  state.checkoutStep = 'identification';
+  renderCart();
+  document.getElementById('public_nome')?.focus();
+};
+
+function closeCheckoutIdentification() {
+  state.checkoutStep = 'cart';
 }
 
 function getProductsTotal() {
@@ -230,7 +259,7 @@ function setupPublicOrderForm() {
 
     if (button) {
       button.disabled = true;
-      button.textContent = isOnlinePayment(pagamento) ? 'Gerando pagamento...' : 'Abrindo WhatsApp...';
+        button.textContent = isOnlinePayment(pagamento) ? 'Gerando pagamento...' : 'Finalizando...';
     }
 
     try {
@@ -253,7 +282,7 @@ function setupPublicOrderForm() {
     } finally {
       if (button) {
         button.disabled = false;
-        button.textContent = 'Enviar pedido pelo WhatsApp';
+        button.textContent = 'Finalizar pedido';
       }
     }
   });
@@ -439,13 +468,94 @@ function setupPhoneMask() {
   });
 }
 
-function setMinimumDate() {
-  const input = document.getElementById('public_data');
-  if (!input) return;
+function setupCustomDatepicker() {
+  const displayInput = document.getElementById('public_data_display');
+  const picker = document.getElementById('publicDatepicker');
+  if (!displayInput || !picker) return;
 
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  input.min = tomorrow.toISOString().slice(0, 10);
+  displayInput.addEventListener('click', () => {
+    picker.hidden = !picker.hidden;
+    renderDatepicker();
+  });
+
+  document.addEventListener('click', event => {
+    if (!picker.hidden && !picker.contains(event.target) && event.target !== displayInput) {
+      picker.hidden = true;
+    }
+  });
+
+  renderDatepicker();
+}
+
+function renderDatepicker() {
+  const picker = document.getElementById('publicDatepicker');
+  if (!picker) return;
+
+  const month = state.calendarMonth;
+  const year = month.getFullYear();
+  const monthIndex = month.getMonth();
+  const firstDay = new Date(year, monthIndex, 1);
+  const startOffset = firstDay.getDay();
+  const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+  const monthLabel = month.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+  const cells = [];
+
+  for (let i = 0; i < startOffset; i += 1) cells.push('<span></span>');
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const selectedValue = document.getElementById('public_data')?.value;
+
+  for (let day = 1; day <= daysInMonth; day += 1) {
+    const date = new Date(year, monthIndex, day);
+    date.setHours(0, 0, 0, 0);
+    const value = toDateInputValue(date);
+    const disabled = date <= today;
+    const selected = value === selectedValue;
+    cells.push(`
+      <button type="button" class="${selected ? 'selected' : ''}" ${disabled ? 'disabled' : ''} onclick="selectPublicDate('${value}')">
+        ${day}
+      </button>
+    `);
+  }
+
+  picker.innerHTML = `
+    <div class="datepicker-header">
+      <button type="button" onclick="changeCalendarMonth(-1)" aria-label="Mês anterior">‹</button>
+      <strong>${escapeHtml(monthLabel)}</strong>
+      <button type="button" onclick="changeCalendarMonth(1)" aria-label="Próximo mês">›</button>
+    </div>
+    <div class="datepicker-weekdays">
+      <span>D</span><span>S</span><span>T</span><span>Q</span><span>Q</span><span>S</span><span>S</span>
+    </div>
+    <div class="datepicker-days">${cells.join('')}</div>
+  `;
+}
+
+window.changeCalendarMonth = function(delta) {
+  state.calendarMonth = new Date(
+    state.calendarMonth.getFullYear(),
+    state.calendarMonth.getMonth() + delta,
+    1
+  );
+  renderDatepicker();
+};
+
+window.selectPublicDate = function(value) {
+  const hiddenInput = document.getElementById('public_data');
+  const displayInput = document.getElementById('public_data_display');
+  const picker = document.getElementById('publicDatepicker');
+  if (hiddenInput) hiddenInput.value = value;
+  if (displayInput) displayInput.value = formatDate(value);
+  if (picker) picker.hidden = true;
+  renderDatepicker();
+};
+
+function toDateInputValue(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 function formatDate(value) {

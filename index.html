@@ -57,7 +57,9 @@
             <strong id="publicCartTotal">R$ 0,00</strong>
           </div>
 
-          <form id="publicOrderForm" class="public-form">
+          <button type="button" id="continueCheckoutBtn" class="submit-order checkout-continue" onclick="openCheckoutIdentification()" disabled>Continuar para Identificação</button>
+
+          <form id="publicOrderForm" class="public-form checkout-identification" hidden>
             <div class="field-group">
               <label for="public_nome">Nome *</label>
               <input id="public_nome" type="text" autocomplete="name" required placeholder="Seu nome completo">
@@ -78,7 +80,11 @@
               </div>
               <div class="field-group">
                 <label for="public_data">Data desejada *</label>
-                <input id="public_data" type="date" required>
+                <div class="datepicker-wrapper">
+                  <input id="public_data_display" type="text" readonly required placeholder="Selecione a data">
+                  <input id="public_data" type="hidden" required>
+                  <div id="publicDatepicker" class="custom-datepicker" hidden></div>
+                </div>
               </div>
             </div>
 
@@ -112,7 +118,7 @@
               <textarea id="public_obs" rows="3" placeholder="Ex: pao fatiado, horario preferido, referencia"></textarea>
             </div>
 
-            <button type="submit" class="submit-order">Enviar pedido pelo WhatsApp</button>
+            <button type="submit" class="submit-order">Finalizar pedido</button>
           </form>
 
           <div id="abacateCheckout" class="abacate-checkout" hidden></div>
