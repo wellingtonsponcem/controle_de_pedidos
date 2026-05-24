@@ -1377,6 +1377,75 @@ function updateProductImagePreview(url) {
   preview.style.display = 'block';
 }
 
+function compressProductImage(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('Falha ao ler a imagem.'));
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('Falha ao carregar a imagem.'));
+      img.onload = () => {
+        const maxSide = 1100;
+        const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(img.width * scale));
+        canvas.height = Math.max(1, Math.round(img.height * scale));
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', 0.78));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+document.addEventListener('change', async (event) => {
+  if (!event.target || event.target.id !== 'prod_imagem_file') return;
+
+  event.stopImmediatePropagation();
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const statusText = document.getElementById('uploadStatusText');
+  if (statusText) {
+    statusText.textContent = 'Preparando foto...';
+    statusText.style.color = 'var(--primary)';
+  }
+
+  if (!file.type.startsWith('image/')) {
+    if (statusText) {
+      statusText.textContent = 'Arquivo invalido';
+      statusText.style.color = '#EF4444';
+    }
+    showToast('Escolha um arquivo de imagem valido.', 'error');
+    return;
+  }
+
+  try {
+    const dataUrl = await compressProductImage(file);
+    if (dataUrl.length > 1.5 * 1024 * 1024) {
+      throw new Error('Imagem comprimida ainda ficou grande demais.');
+    }
+
+    document.getElementById('prod_imagem_url').value = dataUrl;
+    updateProductImagePreview(dataUrl);
+
+    if (statusText) {
+      statusText.textContent = 'Foto pronta para salvar';
+      statusText.style.color = '#10B981';
+    }
+    showToast('Foto preparada. Clique em salvar para gravar no catalogo.', 'success');
+  } catch (error) {
+    console.error('Erro ao preparar imagem:', error);
+    if (statusText) {
+      statusText.textContent = 'Falha ao preparar foto';
+      statusText.style.color = '#EF4444';
+    }
+    showToast('Nao foi possivel preparar essa imagem. Tente uma foto menor.', 'error');
+  }
+}, true);
+
 document.addEventListener('input', (event) => {
   if (event.target && event.target.id === 'prod_imagem_url') {
     updateProductImagePreview(event.target.value);

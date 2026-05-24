@@ -1,4 +1,5 @@
 const WHATSAPP_NUMBER = '5527992760190';
+const API_BASE_URL = window.location.protocol === 'file:' ? 'https://bemavi.vercel.app' : '';
 
 const state = {
   produtos: [],
@@ -23,7 +24,7 @@ async function loadPublicCatalog() {
   const count = document.getElementById('catalogCount');
 
   try {
-    const response = await fetch('/api/produtos');
+    const response = await fetch(`${API_BASE_URL}/api/produtos`);
     if (!response.ok) throw new Error('catalog_unavailable');
 
     state.produtos = await response.json();
