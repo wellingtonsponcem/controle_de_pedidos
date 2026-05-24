@@ -13,6 +13,7 @@ const money = new Intl.NumberFormat('pt-BR', {
 document.addEventListener('DOMContentLoaded', () => {
   setupPublicOrderForm();
   setupDeliveryMode();
+  setupPhoneMask();
   setMinimumDate();
   loadPublicCatalog();
 });
@@ -208,6 +209,27 @@ function setupDeliveryMode() {
 
   select.addEventListener('change', update);
   update();
+}
+
+function formatPhoneBR(value) {
+  const digits = String(value || '').replace(/\D/g, '').slice(0, 11);
+  if (digits.length === 0) return '';
+  if (digits.length <= 2) return `(${digits}`;
+  if (digits.length <= 3) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+  if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2, 3)} ${digits.slice(3)}`;
+  return `(${digits.slice(0, 2)}) ${digits.slice(2, 3)} ${digits.slice(3, 7)}-${digits.slice(7)}`;
+}
+
+function setupPhoneMask() {
+  const input = document.getElementById('public_telefone');
+  if (!input) return;
+
+  input.inputMode = 'numeric';
+  input.maxLength = 16;
+
+  input.addEventListener('input', () => {
+    input.value = formatPhoneBR(input.value);
+  });
 }
 
 function setMinimumDate() {
