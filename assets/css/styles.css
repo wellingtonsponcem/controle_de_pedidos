@@ -1847,4 +1847,85 @@ main {
   50% { transform: translateY(-4px); }
 }
 
+/* ============================================================================
+   10. ESTILOS DE SUB-ABAS DA FILA E SIDEBAR ACCORDION GROUP
+   ============================================================================ */
+
+/* Container de Sub-Abas da Fila de Produção */
+.sub-tabs-container {
+  display: flex;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  padding: 0.25rem;
+  border: 1px solid var(--border-subtle);
+  gap: 0.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.sub-tab-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 0.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  transition: var(--transition-smooth);
+}
+
+.sub-tab-btn:hover {
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.sub-tab-btn.active {
+  color: var(--text-dark);
+  background: var(--primary);
+  box-shadow: 0 4px 10px var(--primary-glow);
+}
+
+/* Accordion Group da Sidebar */
+.sidebar-accordion {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.sidebar-accordion details summary {
+  list-style: none; /* Esconde o marker */
+  outline: none;
+}
+
+.sidebar-accordion details summary::-webkit-details-marker {
+  display: none; /* Esconde marker no WebKit (Safari/Chrome) */
+}
+
+.sidebar-accordion details .chevron-icon {
+  transition: transform 0.3s ease, color 0.3s ease;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.sidebar-accordion details[open] .chevron-icon {
+  transform: rotate(180deg);
+  color: var(--primary);
+}
+
+.sidebar-accordion details {
+  transition: var(--transition-smooth);
+}
+
+/* Estilos extras quando expandido */
+.sidebar-accordion details[open] {
+  border-color: rgba(245, 158, 11, 0.25);
+  background: rgba(26, 26, 26, 0.95);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
 

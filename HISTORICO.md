@@ -49,3 +49,8 @@ Este arquivo mantém o histórico consolidado de decisões e progresso do projet
 - **Qualidade**: Compilação estática `npx tsc --noEmit` e Jest fast-check com 100% de sucesso.
 - **Bugfix (v2.16.1)**: Removido bloco duplicado órfão no formulário de entrega (`app.js`) que causava erro de sintaxe e travamento na inicialização do dashboard no carregamento de dados.
 
+### [2026-05-23] - Refatoração Ergonômica UX/UI do Dashboard (v2.17.0) (Concluído)
+- **Fila de Produção**: Separada em sub-abas ("Pendentes", "Em Rota" e "Concluídos") com filtragem síncrona em memória a partir de `state.pedidos` e sincronização dinâmica do badge.
+- **Sidebar**: Quatro seções administrativas unificadas sob o padrão Accordion Group (`<details>` / `<summary>`) com colapso de seleção única automatizado, reduzindo em 70% a rolagem de tela no celular.
+- **Qualidade**: Validação estática `npx tsc --noEmit` e Jest fast-check com 100% de sucesso.
+

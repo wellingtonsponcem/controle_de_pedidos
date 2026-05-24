@@ -6,6 +6,7 @@
 // 1. Estado Global da Aplicação
 const state = {
   activeTab: 'dashboard',
+  activeSubTab: 'pendentes',
   produtos: [],
   pedidos: [],
   consignacoes: [],
@@ -389,6 +390,7 @@ async function initApp() {
   setupConsignationForm();
   setupConsignationSalesForm();
   setupOrderDeliveryForm();
+  setupSidebarAccordion();
   atualizarStatusChaveGroq();
   
   // Tentar sincronização inicial se estiver online
@@ -427,6 +429,43 @@ function switchTab(tabId) {
   if (tabId === 'catalogo') refreshCatalogManagement();
   if (tabId === 'consignacoes') refreshConsignacoes();
   if (tabId === 'inteligencia') atualizarStatusChaveGroq();
+}
+
+// 4b. Navegação SPA de Sub-abas da Fila de Produção
+window.switchSubTab = function(subTabId) {
+  state.activeSubTab = subTabId;
+  
+  const subTabBtnIds = {
+    pendentes: 'subTabPendentes',
+    rota: 'subTabRota',
+    concluidos: 'subTabConcluidos'
+  };
+
+  Object.entries(subTabBtnIds).forEach(([key, id]) => {
+    const btn = document.getElementById(id);
+    if (btn) {
+      btn.classList.toggle('active', key === subTabId);
+    }
+  });
+
+  // Re-renderizar síncronamente com o novo filtro aplicado
+  renderPedidos();
+};
+
+// 4c. Setup de comportamento do Accordion Group da Sidebar (Seleção Única)
+function setupSidebarAccordion() {
+  const details = document.querySelectorAll('.sidebar-accordion details');
+  details.forEach(targetDetail => {
+    targetDetail.addEventListener('toggle', () => {
+      if (targetDetail.open) {
+        details.forEach(detail => {
+          if (detail !== targetDetail) {
+            detail.open = false;
+          }
+        });
+      }
+    });
+  });
 }
 
 // 5. Monitoramento de Rede e Badge Visual
@@ -717,7 +756,28 @@ function renderPedidos() {
   const listEl = document.getElementById('ordersList');
   const countEl = document.getElementById('pedidosTotalCount');
 
-  if (state.pedidos.length === 0) {
+  // Filtrar os pedidos com base no filtro síncrono da sub-aba operacional ativa
+  const subTab = state.activeSubTab || 'pendentes';
+  const pedidosFiltrados = state.pedidos.filter(pedido => {
+    const status = (pedido.status || '').toLowerCase();
+    if (subTab === 'pendentes') {
+      return status === 'rascunho' || status === 'pendente';
+    } else if (subTab === 'rota') {
+      return status === 'agendado';
+    } else if (subTab === 'concluidos') {
+      return status === 'entregue' || status === 'cancelado';
+    }
+    return false;
+  });
+
+  // Atualizar a contagem no badge dourado dinâmico refletindo a sub-aba ativa
+  countEl.textContent = pedidosFiltrados.length;
+
+  if (pedidosFiltrados.length === 0) {
+    let emptyText = 'Nenhum pedido agendado ou pendente de produção.';
+    if (subTab === 'rota') emptyText = 'Nenhum pedido atualmente em rota de entrega.';
+    if (subTab === 'concluidos') emptyText = 'Nenhum pedido concluído ou cancelado.';
+
     listEl.innerHTML = `
       <div class="carrinho-empty" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.25rem; padding: 3rem 1.5rem; text-align: center;">
         <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="var(--text-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.6; margin-bottom: 0.5rem;">
@@ -725,7 +785,8 @@ function renderPedidos() {
           <line x1="12" y1="8" x2="12" y2="12"></line>
           <line x1="12" y1="16" x2="12.01" y2="16"></line>
         </svg>
-        <span style="font-size: 1rem; font-weight: 500; color: var(--text-muted);">Nenhum pedido agendado ou pendente de produção.</span>
+        <span style="font-size: 1rem; font-weight: 500; color: var(--text-muted);">${emptyText}</span>
+        ${subTab === 'pendentes' ? `
         <button class="btn btn-primary" onclick="switchTab('pedidos')" style="font-size: 0.95rem; padding: 0.65rem 1.5rem; display: flex; align-items: center; gap: 0.5rem; justify-content: center; border-radius: 8px; box-shadow: 0 4px 15px var(--primary-glow); border: none; font-weight: 600; cursor: pointer;">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -733,15 +794,13 @@ function renderPedidos() {
           </svg>
           Criar Pedido
         </button>
+        ` : ''}
       </div>
     `;
-    countEl.textContent = '0';
     return;
   }
 
-  countEl.textContent = state.pedidos.length;
-
-  listEl.innerHTML = state.pedidos.map(pedido => {
+  listEl.innerHTML = pedidosFiltrados.map(pedido => {
     // Formatar data agendada
     const dataObj = new Date(pedido.data_agendada);
     const dataFormatada = dataObj.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
