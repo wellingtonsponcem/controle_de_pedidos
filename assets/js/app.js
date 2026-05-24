@@ -1045,7 +1045,8 @@ function renderFinanceiro() {
   const salCard = document.getElementById('saldoCard');
   const listBody = document.getElementById('financeListBody');
 
-  const { total_receitas, total_despesas, lucro_liquido } = state.financeiro.resumo;
+  const resumo = state.financeiro?.resumo || { total_receitas: 0, total_despesas: 0, lucro_liquido: 0 };
+  const { total_receitas, total_despesas, lucro_liquido } = resumo;
 
   recEl.textContent = `R$ ${Number(total_receitas).toFixed(2)}`;
   desEl.textContent = `R$ ${Number(total_despesas).toFixed(2)}`;
@@ -1060,12 +1061,13 @@ function renderFinanceiro() {
 
   if (!listBody) return;
 
-  if (state.financeiro.transacoes.length === 0) {
+  const transacoes = state.financeiro?.transacoes || [];
+  if (transacoes.length === 0) {
     listBody.innerHTML = '<div class="carrinho-empty" style="text-align:center;">Nenhum lançamento financeiro registrado.</div>';
     return;
   }
 
-  listBody.innerHTML = state.financeiro.transacoes.map(t => {
+  listBody.innerHTML = transacoes.map(t => {
     return `
       <div class="transacao-row">
         <div class="transacao-info">
@@ -2834,7 +2836,8 @@ function obterDadosConsolidadosNegocio() {
   const despesasPorCategoria = {};
   let totalDespesasGeral = 0;
   
-  state.financeiro.transacoes.forEach(t => {
+  const transacoesFin = state.financeiro?.transacoes || [];
+  transacoesFin.forEach(t => {
     if (t.tipo === 'Despesa') {
       const cat = t.categoria || 'Outros';
       const val = Number(t.valor) || 0;
