@@ -88,6 +88,13 @@
           </svg>
           Assistente IA
         </button>
+        <button id="tabBtnConfiguracoes" class="tab-btn" data-tab="configuracoes" aria-controls="configuracoes" aria-selected="false">
+          <svg class="tab-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.14.31.22.65.22 1H21a2 2 0 0 1 0 4h-1.38c0 .35-.08.69-.22 1z"></path>
+          </svg>
+          Configurações
+        </button>
       </nav>
       
       <!-- BADGE DE REDE ONLINE/OFFLINE -->
@@ -864,6 +871,79 @@
               </form>
             </div>
             
+          </div>
+        </div>
+      </section>
+
+      <!-- 6. ABA DE CONFIGURAÇÕES DO SISTEMA -->
+      <section id="configuracoes" class="tab-content" role="tabpanel" aria-labelledby="tabBtnConfiguracoes">
+        <div class="finance-dashboard">
+          <div class="card-panel" style="display: flex; flex-direction: column; gap: 1rem;">
+            <div class="panel-header" style="justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 0;">
+              <h2 class="panel-title">Configurações</h2>
+              <span id="configStatusBadge" class="badge-status inativo">Carregando...</span>
+            </div>
+
+            <div class="form-group-row" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem;">
+              <div class="form-group">
+                <label for="config_abacate_api_key">Chave API Abacate Pay</label>
+                <input type="password" id="config_abacate_api_key" placeholder="abc_dev_..." autocomplete="off">
+                <small id="configAbacateStatus" style="color: var(--text-muted);">Não configurada</small>
+              </div>
+              <div class="form-group">
+                <label for="config_abacate_webhook_secret">Secret do Webhook Abacate</label>
+                <input type="password" id="config_abacate_webhook_secret" placeholder="bemavi_abacate_webhook_..." autocomplete="off">
+                <small id="configWebhookStatus" style="color: var(--text-muted);">Não configurado</small>
+              </div>
+              <div class="form-group">
+                <label for="config_groq_api_key">Chave API Groq</label>
+                <input type="password" id="config_groq_api_key" placeholder="gsk_..." autocomplete="off">
+                <small id="configGroqStatus" style="color: var(--text-muted);">Não configurada</small>
+              </div>
+            </div>
+
+            <button type="button" class="btn btn-primary" onclick="salvarConfiguracoesSistema()" style="align-self: flex-start; border: none; font-weight: 700;">Salvar configurações</button>
+          </div>
+
+          <div class="card-panel" style="display: flex; flex-direction: column; gap: 1rem; margin-top: 1.5rem;">
+            <div class="panel-header" style="justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 0;">
+              <h2 class="panel-title">Usuários</h2>
+            </div>
+
+            <div class="form-group-row" style="display: grid; grid-template-columns: 1.2fr 1.4fr 0.8fr auto; gap: 1rem; align-items: end;">
+              <div class="form-group">
+                <label for="config_user_nome">Nome</label>
+                <input type="text" id="config_user_nome" placeholder="Nome do usuário">
+              </div>
+              <div class="form-group">
+                <label for="config_user_email">Email</label>
+                <input type="email" id="config_user_email" placeholder="email@empresa.com">
+              </div>
+              <div class="form-group">
+                <label for="config_user_perfil">Perfil</label>
+                <select id="config_user_perfil">
+                  <option value="Administrador">Administrador</option>
+                  <option value="Operador">Operador</option>
+                </select>
+              </div>
+              <button type="button" class="btn btn-secondary" onclick="salvarUsuarioConfiguracao()" style="font-weight: 700;">Adicionar</button>
+            </div>
+
+            <div class="responsive-table-container">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Nome</th>
+                    <th>Email</th>
+                    <th>Perfil</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="configUsersTableBody">
+                  <tr><td colspan="4">Nenhum usuário cadastrado.</td></tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </section>

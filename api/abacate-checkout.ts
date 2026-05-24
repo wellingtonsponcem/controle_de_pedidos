@@ -1,4 +1,5 @@
 import pool, { withTransaction } from './_db';
+import { getSystemConfigValue } from './configuracoes';
 
 const ABACATEPAY_BASE_URL = 'https://api.abacatepay.com/v2';
 const CARD_INSTALLMENTS_MIN_AMOUNT_IN_CENTS = 10000;
@@ -217,7 +218,10 @@ export default async function handler(req: any, res: any) {
     return res.status(405).json({ error: 'Método não permitido.' });
   }
 
-  const apiKey = process.env.ABACATEPAY_API_KEY;
+  const apiKey = process.env.ABACATEPAY_API_KEY
+    || process.env.ABACATE_PAY_API_KEY
+    || process.env.ABACATE_API_KEY
+    || await getSystemConfigValue('ABACATEPAY_API_KEY');
   if (!apiKey) {
     return res.status(500).json({ error: 'Chave da Abacate Pay não configurada no servidor.' });
   }

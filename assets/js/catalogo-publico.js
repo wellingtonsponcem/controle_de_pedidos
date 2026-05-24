@@ -1,7 +1,7 @@
 const WHATSAPP_NUMBER = '5527992760190';
 const API_BASE_URL = window.location.protocol === 'file:' ? 'https://bemavi.vercel.app' : '';
-const ONLINE_PIX_OPTION = 'Quero pagar online por PIX Abacate Pay';
-const ONLINE_CARD_OPTION = 'Quero pagar online por cartao de credito Abacate Pay';
+const ONLINE_PIX_OPTION = 'Pix';
+const ONLINE_CARD_OPTION = 'Cartão';
 
 const state = {
   produtos: [],

@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import pool, { withTransaction } from './_db';
 import { calcularValorLiquido } from './_financeiro_utils';
+import { getSystemConfigValue } from './configuracoes';
 
 const ABACATEPAY_PUBLIC_KEY = 't9dXRhHHo3yDEj5pVDYz0frf7q6bMKyMRmxxCPIPp3RCplBfXRxqlC6ZpiWmOqj4L63qEaeUOtrCI8P0VMUgo6iIga2ri9ogaHFs0WIIywSMg0q7RmBfybe1E5XJcfC4IW3alNqym0tXoAKkzvfEjZxV6bE0oG2zJrNNYmUCKZyV0KZ3JS8Votf9EAWWYdiDkMkpbMdPggfh1EqHlVkMiTady6jOR3hyzGEHrIz2Ret0xHKMbiqkr9HS1JhNHDX9';
 
@@ -146,7 +147,7 @@ export default async function handler(req: any, res: any) {
     return res.status(405).json({ error: 'Método não permitido.' });
   }
 
-  const webhookSecret = process.env.ABACATEPAY_WEBHOOK_SECRET;
+  const webhookSecret = process.env.ABACATEPAY_WEBHOOK_SECRET || await getSystemConfigValue('ABACATEPAY_WEBHOOK_SECRET');
   if (!webhookSecret) {
     return res.status(500).json({ error: 'Secret do webhook Abacate Pay não configurado.' });
   }

@@ -340,6 +340,140 @@ window.updateConfigTaxasMaquininha = function() {
   syncTaxasMaquininhaToBackend();
 };
 
+// Configurações globais do sistema (chaves de API e usuários)
+async function carregarConfiguracoesSistema() {
+  if (!state.isOnline) return;
+
+  try {
+    const response = await fetch('/api/configuracoes');
+    if (!response.ok) throw new Error('config_unavailable');
+    const data = await response.json();
+
+    renderConfiguracoesSistema(data.configuracoes || {});
+    renderUsuariosSistema(data.usuarios || []);
+  } catch (error) {
+    console.error('Falha ao carregar configurações do sistema:', error);
+    const badge = document.getElementById('configStatusBadge');
+    if (badge) {
+      badge.textContent = 'Indisponível';
+      badge.className = 'badge-status inativo';
+    }
+  }
+}
+
+function renderConfiguracoesSistema(configuracoes) {
+  const badge = document.getElementById('configStatusBadge');
+  const abacateStatus = document.getElementById('configAbacateStatus');
+  const webhookStatus = document.getElementById('configWebhookStatus');
+  const groqStatus = document.getElementById('configGroqStatus');
+
+  const hasAbacate = Boolean(configuracoes.ABACATEPAY_API_KEY?.configured);
+  const hasWebhook = Boolean(configuracoes.ABACATEPAY_WEBHOOK_SECRET?.configured);
+  const hasGroq = Boolean(configuracoes.GROQ_API_KEY?.configured);
+
+  if (badge) {
+    badge.textContent = hasAbacate ? 'Abacate configurado' : 'Abacate pendente';
+    badge.className = `badge-status ${hasAbacate ? 'ativo' : 'inativo'}`;
+  }
+  if (abacateStatus) abacateStatus.textContent = hasAbacate ? `Configurada (${configuracoes.ABACATEPAY_API_KEY.value})` : 'Não configurada';
+  if (webhookStatus) webhookStatus.textContent = hasWebhook ? `Configurado (${configuracoes.ABACATEPAY_WEBHOOK_SECRET.value})` : 'Não configurado';
+  if (groqStatus) groqStatus.textContent = hasGroq ? `Configurada (${configuracoes.GROQ_API_KEY.value})` : 'Não configurada';
+}
+
+function renderUsuariosSistema(usuarios) {
+  const tbody = document.getElementById('configUsersTableBody');
+  if (!tbody) return;
+
+  if (!usuarios.length) {
+    tbody.innerHTML = '<tr><td colspan="4">Nenhum usuário cadastrado.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = usuarios.map(usuario => `
+    <tr>
+      <td>${escapeHtml(usuario.nome)}</td>
+      <td>${escapeHtml(usuario.email)}</td>
+      <td>${escapeHtml(usuario.perfil)}</td>
+      <td>${usuario.ativo ? 'Ativo' : 'Inativo'}</td>
+    </tr>
+  `).join('');
+}
+
+window.salvarConfiguracoesSistema = async function() {
+  const abacateInput = document.getElementById('config_abacate_api_key');
+  const webhookInput = document.getElementById('config_abacate_webhook_secret');
+  const groqInput = document.getElementById('config_groq_api_key');
+
+  const configuracoes = {
+    ABACATEPAY_API_KEY: abacateInput?.value.trim() || '',
+    ABACATEPAY_WEBHOOK_SECRET: webhookInput?.value.trim() || '',
+    GROQ_API_KEY: groqInput?.value.trim() || ''
+  };
+
+  if (!configuracoes.ABACATEPAY_API_KEY && !configuracoes.ABACATEPAY_WEBHOOK_SECRET && !configuracoes.GROQ_API_KEY) {
+    showToast('Preencha pelo menos uma configuração para salvar.', 'warning');
+    return;
+  }
+
+  try {
+    const response = await fetch('/api/configuracoes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ configuracoes })
+    });
+
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || 'Erro ao salvar configurações.');
+
+    if (abacateInput) abacateInput.value = '';
+    if (webhookInput) webhookInput.value = '';
+    if (groqInput) groqInput.value = '';
+
+    showToast('Configurações salvas no banco de dados.', 'success');
+    await carregarConfiguracoesSistema();
+  } catch (error) {
+    console.error('Erro ao salvar configurações:', error);
+    showToast(error.message || 'Erro ao salvar configurações.', 'error');
+  }
+};
+
+window.salvarUsuarioConfiguracao = async function() {
+  const nomeInput = document.getElementById('config_user_nome');
+  const emailInput = document.getElementById('config_user_email');
+  const perfilInput = document.getElementById('config_user_perfil');
+
+  const usuario = {
+    nome: nomeInput?.value.trim() || '',
+    email: emailInput?.value.trim() || '',
+    perfil: perfilInput?.value || 'Operador'
+  };
+
+  if (!usuario.nome || !usuario.email) {
+    showToast('Informe nome e email do usuário.', 'warning');
+    return;
+  }
+
+  try {
+    const response = await fetch('/api/configuracoes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ usuario })
+    });
+
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || 'Erro ao salvar usuário.');
+
+    if (nomeInput) nomeInput.value = '';
+    if (emailInput) emailInput.value = '';
+
+    showToast('Usuário salvo.', 'success');
+    await carregarConfiguracoesSistema();
+  } catch (error) {
+    console.error('Erro ao salvar usuário:', error);
+    showToast(error.message || 'Erro ao salvar usuário.', 'error');
+  }
+};
+
 window.toggleOrderCreationPaymentSelect = function() {
   const checkbox = document.getElementById('order_pago');
   const box = document.getElementById('orderCreationPaymentBox');
@@ -381,6 +515,7 @@ async function initApp() {
   // Tentar carregar taxas atualizadas do banco de dados se estiver online
   fetchFreteConfigFromBackend();
   fetchTaxasMaquininhaFromBackend();
+  carregarConfiguracoesSistema();
   
   // Carregar dados iniciais de produtos centralizados
   await loadProdutos();
@@ -437,6 +572,7 @@ function switchTab(tabId) {
   if (tabId === 'catalogo') refreshCatalogManagement();
   if (tabId === 'consignacoes') refreshConsignacoes();
   if (tabId === 'inteligencia') atualizarStatusChaveGroq();
+  if (tabId === 'configuracoes') carregarConfiguracoesSistema();
   if (['dashboard', 'catalogo', 'pedidos'].includes(tabId)) atualizarDicaContextualIA(tabId);
 }
 
