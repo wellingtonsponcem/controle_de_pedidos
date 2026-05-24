@@ -331,44 +331,19 @@ async function createAbacateCheckout(metodoPagamento) {
 }
 
 function renderAbacateCheckout(checkout) {
-  const box = document.getElementById('abacateCheckout');
-  if (!box || !checkout) return;
+  if (!checkout) return;
 
   const pixCode = checkout.brCode || checkout.pix?.brCode || '';
   const qrCode = checkout.brCodeBase64 || checkout.pix?.brCodeBase64 || '';
   const isCard = checkout.method === 'CARD';
 
-  box.hidden = false;
-  box.innerHTML = isCard ? `
-    <div class="abacate-checkout-header">
-      <strong>Checkout Abacate Pay gerado</strong>
-      <span>${money.format((Number(checkout.amount) || 0) / 100)}</span>
-    </div>
-    <a class="abacate-pay-link" href="${escapeHtml(checkout.url || '#')}" rel="noopener">Pagar com cartao de credito</a>
-  ` : `
-    <div class="abacate-checkout-header">
-      <strong>PIX Abacate Pay gerado</strong>
-      <span>${money.format((Number(checkout.amount) || 0) / 100)}</span>
-    </div>
-    ${qrCode ? `<img src="${qrCode}" alt="QR Code PIX Abacate Pay">` : ''}
-    <label for="abacatePixCode">PIX copia e cola</label>
-    <textarea id="abacatePixCode" rows="4" readonly>${escapeHtml(pixCode)}</textarea>
-    <button type="button" class="copy-pix" id="copyAbacatePix">Copiar PIX</button>
-  `;
-
-  if (isCard) return;
-
-  const copyButton = document.getElementById('copyAbacatePix');
-  if (copyButton) {
-    copyButton.addEventListener('click', async () => {
-      try {
-        await navigator.clipboard.writeText(pixCode);
-        showToast('Codigo PIX copiado.');
-      } catch (error) {
-        showToast('Selecione e copie o codigo PIX.');
-      }
-    });
-  }
+  openPaymentModal({
+    isCard,
+    amount: Number(checkout.amount) || 0,
+    qrCode,
+    pixCode,
+    url: checkout.url || ''
+  });
 }
 
 function clearAbacateCheckout() {
@@ -377,6 +352,49 @@ function clearAbacateCheckout() {
   box.hidden = true;
   box.innerHTML = '';
 }
+
+function openPaymentModal({ isCard, amount, qrCode, pixCode, url }) {
+  const modal = document.getElementById('paymentModal');
+  const text = document.getElementById('paymentModalText');
+  const body = document.getElementById('paymentModalBody');
+  const copyButton = document.getElementById('copyPixModalBtn');
+  if (!modal || !text || !body || !copyButton) return;
+
+  modal.dataset.pixCode = pixCode || '';
+  text.textContent = isCard
+    ? 'Use o link abaixo para concluir o pagamento com cartão.'
+    : 'Escaneie o QR Code ou copie o código PIX para pagar.';
+  body.innerHTML = isCard ? `
+    <div class="modal-amount">${money.format(amount / 100)}</div>
+    <a class="abacate-pay-link" href="${escapeHtml(url || '#')}" rel="noopener">Pagar com cartão</a>
+  ` : `
+    <div class="modal-amount">${money.format(amount / 100)}</div>
+    ${qrCode ? `<img class="modal-qr" src="${qrCode}" alt="QR Code PIX">` : ''}
+  `;
+  copyButton.hidden = isCard || !pixCode;
+  modal.hidden = false;
+  document.body.classList.add('modal-open');
+}
+
+window.closePaymentModal = function() {
+  const modal = document.getElementById('paymentModal');
+  if (!modal) return;
+  modal.hidden = true;
+  document.body.classList.remove('modal-open');
+};
+
+window.copyModalPixCode = async function() {
+  const modal = document.getElementById('paymentModal');
+  const pixCode = modal?.dataset.pixCode || '';
+  if (!pixCode) return;
+
+  try {
+    await navigator.clipboard.writeText(pixCode);
+    showToast('Código PIX copiado.');
+  } catch (error) {
+    showToast('Não foi possível copiar automaticamente.');
+  }
+};
 
 function buildWhatsappMessage(checkout) {
   const nome = document.getElementById('public_nome').value.trim();

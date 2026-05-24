@@ -127,6 +127,17 @@
     </section>
   </main>
 
+  <div id="paymentModal" class="payment-modal" hidden>
+    <div class="payment-modal-overlay" onclick="closePaymentModal()"></div>
+    <div class="payment-modal-content" role="dialog" aria-modal="true" aria-labelledby="paymentModalTitle">
+      <h2 id="paymentModalTitle">Pedido Realizado!</h2>
+      <p id="paymentModalText">Finalize o pagamento para confirmar seu pedido.</p>
+      <div id="paymentModalBody"></div>
+      <button type="button" id="copyPixModalBtn" class="copy-pix" onclick="copyModalPixCode()" hidden>Copiar código PIX</button>
+      <button type="button" class="modal-secondary-btn" onclick="closePaymentModal()">Voltar ao Catálogo</button>
+    </div>
+  </div>
+
   <div id="publicToast" class="public-toast" role="status" aria-live="polite"></div>
   <script src="./assets/js/catalogo-publico.js"></script>
 </body>
