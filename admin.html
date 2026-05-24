@@ -386,6 +386,7 @@
             <table class="admin-table">
               <thead>
                 <tr>
+                  <th>Foto</th>
                   <th>Nome do Pão</th>
                   <th>Tipo / Versão</th>
                   <th>Modelo / Peso</th>
@@ -397,7 +398,7 @@
               </thead>
               <tbody id="catalogAdminListBody">
                 <tr>
-                  <td colspan="7" class="carrinho-empty">Carregando catálogo de produtos...</td>
+                  <td colspan="8" class="carrinho-empty">Carregando catálogo de produtos...</td>
                 </tr>
               </tbody>
             </table>
@@ -977,6 +978,28 @@
                 <label for="prod_sabor">Sabor / Ingredientes Adicionais *</label>
                 <input type="text" id="prod_sabor" required placeholder="Ex: Fermentação Natural de 24h, Linhaça e Gergelim">
               </div>
+
+              <div class="form-group">
+                <label for="prod_imagem_url" style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);">Foto do Pão</label>
+                <div style="display: flex; gap: 0.75rem; align-items: center; margin-bottom: 0.5rem; flex-wrap: wrap;">
+                  <!-- Botão de Upload Customizado Premium -->
+                  <label for="prod_imagem_file" class="btn btn-secondary" style="margin-bottom: 0; cursor: pointer; display: flex; align-items: center; gap: 6px; padding: 0.6rem 1rem; font-size: 0.85rem; border: 1px solid var(--border-subtle); border-radius: 6px;">
+                    📁 Escolher Foto do Computador...
+                  </label>
+                  <input type="file" id="prod_imagem_file" accept="image/*" style="display: none;">
+                  
+                  <!-- Indicador de Status/Progresso do Upload -->
+                  <span id="uploadStatusText" style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;">Nenhum arquivo selecionado</span>
+                </div>
+                
+                <input type="url" id="prod_imagem_url" placeholder="Ou cole o link direto da imagem aqui..." style="font-size: 0.85rem; padding: 0.6rem;">
+                
+                <div id="prodImagePreview" class="product-image-preview" style="display: none; margin-top: 0.75rem; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-subtle); position: relative;">
+                  <img id="prodImagePreviewImg" src="" alt="Prévia da foto do pão" style="width: 100%; height: 200px; object-fit: cover; display: block;">
+                  <button type="button" onclick="removerImagemProduto()" style="position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.6); color: #fff; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold; border: 1px solid rgba(255,255,255,0.2);" title="Remover Imagem">❌</button>
+                </div>
+              </div>
+
 
               <div class="form-group-row">
                 <div class="form-group">

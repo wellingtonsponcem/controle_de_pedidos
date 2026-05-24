@@ -29,6 +29,7 @@ CREATE TABLE produtos (
     sabor VARCHAR(100) NOT NULL, -- ex: Trigo, Calabresa com Catupiry, Coco
     modelo VARCHAR(50) NOT NULL,  -- ex: Mini, Médio, Grande
     preco_base DECIMAL(10, 2) NOT NULL CHECK (preco_base >= 0),
+    imagem_url TEXT,
     ativo BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP

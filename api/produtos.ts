@@ -22,14 +22,14 @@ export default async function handler(req: any, res: any) {
       if (fetchAll) {
         // Traz todos os produtos (ativos e inativos) para o painel de gerenciamento
         queryText = `
-          SELECT id, nome, versao, sabor, modelo, preco_base, ativo, created_at, updated_at 
+          SELECT id, nome, versao, sabor, modelo, preco_base, imagem_url, ativo, created_at, updated_at 
           FROM produtos 
           ORDER BY ativo DESC, versao ASC, nome ASC, preco_base ASC
         `;
       } else {
         // Traz apenas os pães ativos para exibição no catálogo de compras
         queryText = `
-          SELECT id, nome, versao, sabor, modelo, preco_base 
+          SELECT id, nome, versao, sabor, modelo, preco_base, imagem_url 
           FROM produtos 
           WHERE ativo = true 
           ORDER BY versao ASC, nome ASC, preco_base ASC
@@ -54,7 +54,7 @@ export default async function handler(req: any, res: any) {
   // MÉTODO POST: Cadastrar novo pão no catálogo
   // ============================================================================
   else if (method === 'POST') {
-    const { nome, versao, sabor, modelo, preco_base, ativo } = req.body;
+    const { nome, versao, sabor, modelo, preco_base, imagem_url, ativo } = req.body;
 
     // Validações básicas
     if (!nome || typeof nome !== 'string' || nome.trim().length === 0) {
@@ -79,9 +79,9 @@ export default async function handler(req: any, res: any) {
 
     try {
       const queryText = `
-        INSERT INTO produtos (nome, versao, sabor, modelo, preco_base, ativo, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
-        RETURNING id, nome, versao, sabor, modelo, preco_base, ativo
+        INSERT INTO produtos (nome, versao, sabor, modelo, preco_base, imagem_url, ativo, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
+        RETURNING id, nome, versao, sabor, modelo, preco_base, imagem_url, ativo
       `;
       const result = await pool.query(queryText, [
         nome.trim(),
@@ -89,6 +89,7 @@ export default async function handler(req: any, res: any) {
         sabor.trim(),
         modelo.trim(),
         precoNum,
+        imagem_url ? String(imagem_url).trim() : null,
         isAtivo
       ]);
 
@@ -110,7 +111,7 @@ export default async function handler(req: any, res: any) {
   // MÉTODO PUT: Editar produto existente
   // ============================================================================
   else if (method === 'PUT') {
-    const { id, nome, versao, sabor, modelo, preco_base, ativo } = req.body;
+    const { id, nome, versao, sabor, modelo, preco_base, imagem_url, ativo } = req.body;
 
     if (!id || typeof id !== 'string') {
       return res.status(400).json({ error: 'ID do produto é obrigatório para atualização.' });
@@ -138,9 +139,9 @@ export default async function handler(req: any, res: any) {
     try {
       const queryText = `
         UPDATE produtos 
-        SET nome = $1, versao = $2, sabor = $3, modelo = $4, preco_base = $5, ativo = $6, updated_at = NOW() 
-        WHERE id = $7
-        RETURNING id, nome, versao, sabor, modelo, preco_base, ativo
+        SET nome = $1, versao = $2, sabor = $3, modelo = $4, preco_base = $5, imagem_url = $6, ativo = $7, updated_at = NOW() 
+        WHERE id = $8
+        RETURNING id, nome, versao, sabor, modelo, preco_base, imagem_url, ativo
       `;
       const result = await pool.query(queryText, [
         nome.trim(),
@@ -148,6 +149,7 @@ export default async function handler(req: any, res: any) {
         sabor.trim(),
         modelo.trim(),
         precoNum,
+        imagem_url ? String(imagem_url).trim() : null,
         isAtivo,
         id
       ]);
@@ -176,4 +178,3 @@ export default async function handler(req: any, res: any) {
     return res.status(405).json({ error: `Método ${method} não suportado.` });
   }
 }
-

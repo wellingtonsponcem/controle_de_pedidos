@@ -1263,7 +1263,7 @@ function renderCatalogAdmin() {
   if (!listBody) return;
 
   if (state.produtos.length === 0) {
-    listBody.innerHTML = '<tr><td colspan="7" class="carrinho-empty">Nenhum produto cadastrado no catálogo.</td></tr>';
+    listBody.innerHTML = '<tr><td colspan="8" class="carrinho-empty">Nenhum produto cadastrado no catálogo.</td></tr>';
     return;
   }
 
@@ -1276,6 +1276,11 @@ function renderCatalogAdmin() {
 
     return `
       <tr>
+        <td data-label="Foto">
+          <div class="admin-product-thumb">
+            ${prod.imagem_url ? `<img src="${prod.imagem_url}" alt="${prod.nome}">` : '<span>Sem foto</span>'}
+          </div>
+        </td>
         <td data-label="Nome do Pão" style="font-weight: 600; color: var(--text-main);">${prod.nome}</td>
         <td data-label="Tipo / Versão">${prod.versao}</td>
         <td data-label="Modelo / Peso">${prod.modelo}</td>
@@ -1306,6 +1311,12 @@ window.openProductModal = function(prodId) {
 
   form.reset();
   document.getElementById('prod_id').value = '';
+  updateProductImagePreview('');
+  
+  const fileInput = document.getElementById('prod_imagem_file');
+  if (fileInput) fileInput.value = '';
+  
+  const statusText = document.getElementById('uploadStatusText');
 
   if (prodId) {
     titleText.textContent = 'Editar Pão Caseiro';
@@ -1317,11 +1328,23 @@ window.openProductModal = function(prodId) {
       document.getElementById('prod_modelo').value = prod.modelo;
       document.getElementById('prod_sabor').value = prod.sabor;
       document.getElementById('prod_preco').value = Number(prod.preco_base).toFixed(2);
+      document.getElementById('prod_imagem_url').value = prod.imagem_url || '';
       document.getElementById('prod_ativo').checked = prod.ativo !== false;
+      updateProductImagePreview(prod.imagem_url || '');
+      
+      if (statusText) {
+        statusText.textContent = prod.imagem_url ? 'Foto existente carregada' : 'Nenhuma foto selecionada';
+        statusText.style.color = 'var(--text-muted)';
+      }
     }
   } else {
     titleText.textContent = 'Novo Pão Caseiro';
     document.getElementById('prod_ativo').checked = true;
+    
+    if (statusText) {
+      statusText.textContent = 'Nenhuma foto selecionada';
+      statusText.style.color = 'var(--text-muted)';
+    }
   }
 
   modal.classList.add('active');
@@ -1335,6 +1358,28 @@ window.closeProductModal = function() {
     document.body.style.overflow = '';
   }
 };
+
+function updateProductImagePreview(url) {
+  const preview = document.getElementById('prodImagePreview');
+  const img = document.getElementById('prodImagePreviewImg');
+  if (!preview || !img) return;
+
+  const cleanUrl = (url || '').trim();
+  if (!cleanUrl) {
+    preview.style.display = 'none';
+    img.src = '';
+    return;
+  }
+
+  img.src = cleanUrl;
+  preview.style.display = 'block';
+}
+
+document.addEventListener('input', (event) => {
+  if (event.target && event.target.id === 'prod_imagem_url') {
+    updateProductImagePreview(event.target.value);
+  }
+});
 
 window.toggleProductActive = async function(prodId, currentStatus) {
   if (!state.isOnline) {
@@ -1352,6 +1397,7 @@ window.toggleProductActive = async function(prodId, currentStatus) {
     sabor: prod.sabor,
     modelo: prod.modelo,
     preco_base: Number(prod.preco_base),
+    imagem_url: prod.imagem_url || null,
     ativo: !currentStatus
   };
 
@@ -1385,6 +1431,94 @@ function setupProductForm() {
   const form = document.getElementById('productCreationForm');
   if (!form) return;
 
+  // Lógica do botão de upload de arquivo para o Cloudinary (via API do backend)
+  const fileInput = document.getElementById('prod_imagem_file');
+  if (fileInput) {
+    fileInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const statusText = document.getElementById('uploadStatusText');
+      if (statusText) {
+        statusText.textContent = '⏳ Carregando foto no Cloudinary...';
+        statusText.style.color = 'var(--primary)';
+      }
+
+      // Validar tamanho da imagem (limite máximo de 4.5MB para Vercel Serverless JSON payload)
+      if (file.size > 4.5 * 1024 * 1024) {
+        if (statusText) {
+          statusText.textContent = '⚠️ Foto muito grande (máx 4.5MB)';
+          statusText.style.color = '#EF4444';
+        }
+        showToast('A imagem selecionada é muito pesada! Escolha uma imagem de até 4.5MB.', 'error');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const base64 = reader.result;
+        try {
+          const response = await fetch('/api/upload', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ file: base64 })
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            document.getElementById('prod_imagem_url').value = data.url;
+            updateProductImagePreview(data.url);
+            
+            if (statusText) {
+              statusText.textContent = '✅ Upload concluído!';
+              statusText.style.color = '#10B981'; // Verde de sucesso
+            }
+            showToast('Foto do pão carregada com sucesso!', 'success');
+          } else {
+            const err = await response.json();
+            if (statusText) {
+              statusText.textContent = '❌ Falha no upload';
+              statusText.style.color = '#EF4444';
+            }
+            showToast(err.error || 'Erro ao fazer upload da imagem.', 'error');
+          }
+        } catch (error) {
+          console.error('Erro de rede ao enviar imagem para a API:', error);
+          if (statusText) {
+            statusText.textContent = '❌ Falha de conexão';
+            statusText.style.color = '#EF4444';
+          }
+          showToast('Erro de conexão ao carregar a imagem.', 'error');
+        }
+      };
+
+      reader.onerror = () => {
+        if (statusText) {
+          statusText.textContent = '❌ Erro ao ler arquivo';
+          statusText.style.color = '#EF4444';
+        }
+        showToast('Não foi possível ler a imagem selecionada.', 'error');
+      };
+
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // Função global para limpar a imagem do formulário
+  window.removerImagemProduto = function() {
+    document.getElementById('prod_imagem_url').value = '';
+    const fileInput = document.getElementById('prod_imagem_file');
+    if (fileInput) fileInput.value = '';
+    updateProductImagePreview('');
+    
+    const statusText = document.getElementById('uploadStatusText');
+    if (statusText) {
+      statusText.textContent = 'Nenhuma foto selecionada';
+      statusText.style.color = 'var(--text-muted)';
+    }
+    showToast('Foto removida.', 'info');
+  };
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
@@ -1395,6 +1529,7 @@ function setupProductForm() {
       modelo: document.getElementById('prod_modelo').value,
       sabor: document.getElementById('prod_sabor').value,
       preco_base: parseFloat(document.getElementById('prod_preco').value),
+      imagem_url: document.getElementById('prod_imagem_url').value.trim() || null,
       ativo: document.getElementById('prod_ativo').checked
     };
 
