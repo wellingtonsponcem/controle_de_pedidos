@@ -1,9 +1,12 @@
 const WHATSAPP_NUMBER = '5527992760190';
 const API_BASE_URL = window.location.protocol === 'file:' ? 'https://bemavi.vercel.app' : '';
+const ONLINE_PIX_OPTION = 'Quero pagar online por PIX Abacate Pay';
+const ONLINE_CARD_OPTION = 'Quero pagar online por cartao de credito Abacate Pay';
 
 const state = {
   produtos: [],
-  carrinho: []
+  carrinho: [],
+  abacateCheckout: null
 };
 
 const money = new Intl.NumberFormat('pt-BR', {
@@ -167,7 +170,7 @@ function setupPublicOrderForm() {
   const form = document.getElementById('publicOrderForm');
   if (!form) return;
 
-  form.addEventListener('submit', event => {
+  form.addEventListener('submit', async event => {
     event.preventDefault();
 
     if (state.carrinho.length === 0) {
@@ -183,12 +186,133 @@ function setupPublicOrderForm() {
       return;
     }
 
-    const message = buildWhatsappMessage();
-    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, '_blank', 'noopener');
+    const pagamento = document.getElementById('public_pagamento').value;
+    const button = form.querySelector('.submit-order');
+    const whatsappWindow = window.open('about:blank', '_blank');
+    if (whatsappWindow) whatsappWindow.opener = null;
+
+    if (button) {
+      button.disabled = true;
+      button.textContent = isOnlinePayment(pagamento) ? 'Preparando pagamento...' : 'Abrindo WhatsApp...';
+    }
+
+    try {
+      if (isOnlinePayment(pagamento)) {
+        state.abacateCheckout = await createAbacateCheckout(getAbacatePaymentMethod(pagamento));
+        renderAbacateCheckout(state.abacateCheckout);
+      } else {
+        state.abacateCheckout = null;
+        clearAbacateCheckout();
+      }
+
+      const message = buildWhatsappMessage(state.abacateCheckout);
+      const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+      if (whatsappWindow) {
+        whatsappWindow.location.href = whatsappUrl;
+      } else {
+        window.open(whatsappUrl, '_blank', 'noopener');
+      }
+
+      if (state.abacateCheckout?.method === 'CARD' && state.abacateCheckout.url) {
+        window.location.href = state.abacateCheckout.url;
+      }
+    } catch (error) {
+      console.error('Falha ao preparar pedido publico:', error);
+      if (whatsappWindow) whatsappWindow.close();
+      showToast(error.message || 'Nao foi possivel preparar o pedido agora.');
+    } finally {
+      if (button) {
+        button.disabled = false;
+        button.textContent = 'Enviar pedido pelo WhatsApp';
+      }
+    }
   });
 }
 
-function buildWhatsappMessage() {
+function isOnlinePayment(pagamento) {
+  return pagamento === ONLINE_PIX_OPTION || pagamento === ONLINE_CARD_OPTION;
+}
+
+function getAbacatePaymentMethod(pagamento) {
+  return pagamento === ONLINE_CARD_OPTION ? 'CARD' : 'PIX';
+}
+
+async function createAbacateCheckout(metodoPagamento) {
+  const response = await fetch(`${API_BASE_URL}/api/abacate-checkout`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      cliente: {
+        nome: document.getElementById('public_nome').value.trim(),
+        telefone: document.getElementById('public_telefone').value.trim()
+      },
+      itens: state.carrinho.map(item => ({
+        produto_id: item.id,
+        quantidade: item.quantidade
+      })),
+      metodo_pagamento: metodoPagamento
+    })
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data.error || 'Nao foi possivel gerar o PIX online.');
+  }
+
+  return data.checkout;
+}
+
+function renderAbacateCheckout(checkout) {
+  const box = document.getElementById('abacateCheckout');
+  if (!box || !checkout) return;
+
+  const pixCode = checkout.brCode || checkout.pix?.brCode || '';
+  const qrCode = checkout.brCodeBase64 || checkout.pix?.brCodeBase64 || '';
+  const isCard = checkout.method === 'CARD';
+
+  box.hidden = false;
+  box.innerHTML = isCard ? `
+    <div class="abacate-checkout-header">
+      <strong>Checkout Abacate Pay gerado</strong>
+      <span>${money.format((Number(checkout.amount) || 0) / 100)}</span>
+    </div>
+    <a class="abacate-pay-link" href="${escapeHtml(checkout.url || '#')}" target="_blank" rel="noopener">Pagar com cartao de credito</a>
+  ` : `
+    <div class="abacate-checkout-header">
+      <strong>PIX Abacate Pay gerado</strong>
+      <span>${money.format((Number(checkout.amount) || 0) / 100)}</span>
+    </div>
+    ${qrCode ? `<img src="${qrCode}" alt="QR Code PIX Abacate Pay">` : ''}
+    <label for="abacatePixCode">PIX copia e cola</label>
+    <textarea id="abacatePixCode" rows="4" readonly>${escapeHtml(pixCode)}</textarea>
+    <button type="button" class="copy-pix" id="copyAbacatePix">Copiar PIX</button>
+  `;
+
+  if (isCard) return;
+
+  const copyButton = document.getElementById('copyAbacatePix');
+  if (copyButton) {
+    copyButton.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(pixCode);
+        showToast('Codigo PIX copiado.');
+      } catch (error) {
+        showToast('Selecione e copie o codigo PIX.');
+      }
+    });
+  }
+}
+
+function clearAbacateCheckout() {
+  const box = document.getElementById('abacateCheckout');
+  if (!box) return;
+  box.hidden = true;
+  box.innerHTML = '';
+}
+
+function buildWhatsappMessage(checkout) {
   const nome = document.getElementById('public_nome').value.trim();
   const telefone = document.getElementById('public_telefone').value.trim();
   const entrega = document.getElementById('public_entrega').value;
@@ -201,6 +325,8 @@ function buildWhatsappMessage() {
   const itens = state.carrinho
     .map(item => `- ${item.quantidade}x ${item.nome}${item.modelo ? ` (${item.modelo})` : ''} - ${money.format(item.preco * item.quantidade)}`)
     .join('\n');
+  const pixCode = checkout?.brCode || checkout?.pix?.brCode || '';
+  const checkoutUrl = checkout?.url || '';
 
   return [
     'Ola, Bemavi! Quero fazer um pedido:',
@@ -217,6 +343,9 @@ function buildWhatsappMessage() {
     `Data desejada: ${formatDate(data)}`,
     entrega === 'Entrega' ? `Endereco: ${endereco}` : null,
     `Pagamento: ${pagamento}`,
+    checkout ? `Checkout Abacate Pay: ${checkout.id}` : null,
+    checkoutUrl ? `Link do checkout: ${checkoutUrl}` : null,
+    pixCode ? `PIX copia e cola: ${pixCode}` : null,
     obs ? `Observacoes: ${obs}` : null,
     '',
     'Pode confirmar disponibilidade, frete e horario?'
