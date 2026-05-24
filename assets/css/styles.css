@@ -1729,4 +1729,122 @@ main {
   color: var(--text-main);
 }
 
+/* ============================================================================
+   9. ESTILOS DE INTELIGÊNCIA IA & RELATÓRIOS (GROQ COMPATIBLE)
+   ============================================================================ */
+
+/* Relatório de IA Glassmorphism Premium */
+.ia-report-box {
+  background: rgba(30, 24, 20, 0.45) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(245, 158, 11, 0.15) !important;
+  box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.01), 0 8px 32px rgba(0, 0, 0, 0.4);
+  transition: var(--transition-smooth);
+}
+
+.ia-report-box h3 {
+  font-size: 1.15rem;
+  color: var(--primary);
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  font-family: 'Playfair Display', serif;
+  border-bottom: 1px dashed rgba(245, 158, 11, 0.2);
+  padding-bottom: 0.25rem;
+}
+
+.ia-report-box h3:first-of-type {
+  margin-top: 0;
+}
+
+.ia-report-box p {
+  margin-bottom: 1rem;
+  line-height: 1.6;
+  font-size: 0.95rem;
+  color: var(--text-main);
+}
+
+.ia-report-box ul, .ia-report-box ol {
+  margin-bottom: 1rem;
+  padding-left: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.ia-report-box li {
+  font-size: 0.9rem;
+  color: var(--text-main);
+}
+
+.ia-report-box li strong {
+  color: var(--primary);
+}
+
+.ia-report-box blockquote {
+  border-left: 4px solid var(--primary);
+  background: rgba(245, 158, 11, 0.05);
+  padding: 0.75rem 1rem;
+  margin: 1rem 0;
+  border-radius: 0 8px 8px 0;
+  font-style: italic;
+  color: var(--text-muted);
+}
+
+/* Chat de IA de Negócios */
+.chat-message {
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  max-width: 85%;
+  line-height: 1.45;
+  animation: fadeIn 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  word-break: break-word;
+}
+
+.chat-message.user {
+  background: var(--primary);
+  color: var(--text-dark);
+  align-self: flex-end;
+  border-bottom-right-radius: 2px;
+  font-weight: 600;
+  box-shadow: 0 4px 10px var(--primary-glow);
+}
+
+.chat-message.assistant {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-main);
+  align-self: flex-start;
+  border-bottom-left-radius: 2px;
+  border: 1px solid var(--border-subtle);
+}
+
+.chat-message.loading-dots {
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--text-muted);
+  align-self: flex-start;
+  border-bottom-left-radius: 2px;
+  border: 1px dashed var(--border-subtle);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+}
+
+.chat-message.loading-dots span {
+  width: 6px;
+  height: 6px;
+  background: var(--text-muted);
+  border-radius: 50%;
+  animation: typing-dot 1.2s infinite ease-in-out;
+}
+
+.chat-message.loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+.chat-message.loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typing-dot {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
 

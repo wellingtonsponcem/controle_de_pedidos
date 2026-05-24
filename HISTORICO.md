@@ -39,4 +39,12 @@ Este arquivo mantém o histórico consolidado de decisões e progresso do projet
 - **Arquitetura**: Centralizada carga de catálogo em `/api/produtos?all=true` via `loadProdutos()`.
 - **Reatividade**: Renderizações administrativa e pública tornadas síncronas a partir de `state.produtos` local.
 - **Logística**: Injetada a função `updateMunicipioSelectLabels()` atualizando selects de frete de forma dinâmica pós-configuração de taxas.
+- **Visual & UX**: Adicionado botão premium "➕ Novo Pedido" no cabeçalho da Fila de Produção do Dashboard para navegação ergonômica direta.
 - **Qualidade**: Validação estática `npx tsc --noEmit` e Jest fast-check com 100% de sucesso.
+
+### [2026-05-23] - Assistente IA de Finanças e Produção com Groq (v2.16.0) (Concluído)
+- **Segurança**: Chave API coletada pelo frontend mascarada e salva exclusivamente no navegador (`localStorage`), sem exposição na nuvem.
+- **Inteligência**: Integração com Groq (`llama-3.3-70b-versatile`) analisando fluxo de caixa consolidado, despesas por categoria e ranking de vendas de pães.
+- **UX & Relatório**: Console de status dinâmico em PWA, renderizador markdown luxuoso e chat interativo de estratégias financeiras baseadas em dados reais.
+- **Qualidade**: Compilação estática `npx tsc --noEmit` e Jest fast-check com 100% de sucesso.
+

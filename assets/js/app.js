@@ -389,6 +389,7 @@ async function initApp() {
   setupConsignationForm();
   setupConsignationSalesForm();
   setupOrderDeliveryForm();
+  atualizarStatusChaveGroq();
   
   // Tentar sincronização inicial se estiver online
   if (state.isOnline) {
@@ -425,6 +426,7 @@ function switchTab(tabId) {
   if (tabId === 'financeiro') refreshFinanceiro();
   if (tabId === 'catalogo') refreshCatalogManagement();
   if (tabId === 'consignacoes') refreshConsignacoes();
+  if (tabId === 'inteligencia') atualizarStatusChaveGroq();
 }
 
 // 5. Monitoramento de Rede e Badge Visual
@@ -2522,5 +2524,510 @@ function setupOrderDeliveryForm() {
       showToast('Falha de rede ao concluir o pedido.', 'error');
     }
   });
+    } catch (error) {
+      console.error('Falha crítica ao enviar conclusão de entrega:', error);
+      showToast('Falha de rede ao concluir o pedido.', 'error');
+    }
+  });
 }
+
+// ============================================================================
+// 21. MÓDULO DE INTELIGÊNCIA IA & PREVISÃO DE ESTOQUE (INTEGRAÇÃO GROQ)
+// ============================================================================
+
+window.salvarChaveGroq = function() {
+  const input = document.getElementById('groq_api_key_input');
+  if (!input) return;
+
+  const key = input.value.trim();
+  if (!key) {
+    showToast('Por favor, digite ou cole uma chave API válida.', 'error');
+    return;
+  }
+
+  if (!key.startsWith('gsk_')) {
+    showToast('Essa não parece ser uma chave válida do Groq (deve começar com gsk_).', 'warning');
+  }
+
+  try {
+    localStorage.setItem('bemavi_groq_api_key', key);
+    showToast('Chave de API do Groq salva com sucesso no navegador!', 'success');
+    input.value = '';
+    atualizarStatusChaveGroq();
+  } catch (e) {
+    console.error('Erro ao salvar chave Groq no localStorage:', e);
+    showToast('Falha ao gravar chave no navegador.', 'error');
+  }
+};
+
+window.excluirChaveGroq = function() {
+  try {
+    localStorage.removeItem('bemavi_groq_api_key');
+    showToast('Chave de API do Groq removida do navegador.', 'info');
+    const input = document.getElementById('groq_api_key_input');
+    if (input) input.value = '';
+    atualizarStatusChaveGroq();
+    
+    // Limpar visualizações
+    const reportContainer = document.getElementById('groqReportContainer');
+    if (reportContainer) {
+      reportContainer.innerHTML = '';
+      reportContainer.style.display = 'none';
+    }
+    const placeholder = document.getElementById('groqReportPlaceholder');
+    if (placeholder) placeholder.style.display = 'flex';
+  } catch (e) {
+    console.error('Erro ao remover chave Groq:', e);
+  }
+};
+
+window.atualizarStatusChaveGroq = function() {
+  const badge = document.getElementById('groqKeyStatus');
+  const input = document.getElementById('groq_api_key_input');
+  const chatInput = document.getElementById('groq_chat_input');
+  const chatSendBtn = document.getElementById('btnGroqChatSend');
+
+  if (!badge) return;
+
+  const savedKey = localStorage.getItem('bemavi_groq_api_key');
+
+  if (savedKey) {
+    badge.className = 'badge-status ativo';
+    badge.textContent = '🔒 Chave Configurada';
+    if (input) input.placeholder = 'Chave configurada localmente (••••••••••••••••)';
+    if (chatInput) chatInput.disabled = false;
+    if (chatSendBtn) chatSendBtn.disabled = false;
+  } else {
+    badge.className = 'badge-status inativo';
+    badge.textContent = '🔓 Sem Chave (Informe abaixo)';
+    if (input) input.placeholder = 'Cole sua API Key do Groq aqui (gsk_...)';
+    if (chatInput) chatInput.disabled = true;
+    if (chatSendBtn) chatSendBtn.disabled = true;
+  }
+};
+
+// Consolida todas as métricas financeiras, despesas e pedidos de state em um JSON estruturado
+function obterDadosConsolidadosNegocio() {
+  const vendasProdutos = {};
+  
+  // Agregar vendas físicas a partir dos pedidos que não foram cancelados
+  state.pedidos.forEach(p => {
+    if (p.status !== 'Cancelado') {
+      p.itens.forEach(it => {
+        const key = `${it.nome} (${it.modelo})`;
+        if (!vendasProdutos[key]) {
+          vendasProdutos[key] = { quantidade_vendida: 0, faturamento_bruto: 0 };
+        }
+        vendasProdutos[key].quantidade_vendida += it.quantidade;
+        vendasProdutos[key].faturamento_bruto += it.quantidade * Number(it.preco_unitario);
+      });
+    }
+  });
+
+  // Agregar despesas por categoria
+  const despesasPorCategoria = {};
+  let totalDespesasGeral = 0;
+  
+  state.financeiro.transacoes.forEach(t => {
+    if (t.tipo === 'Despesa') {
+      const cat = t.categoria || 'Outros';
+      const val = Number(t.valor) || 0;
+      if (!despesasPorCategoria[cat]) despesasPorCategoria[cat] = 0;
+      despesasPorCategoria[cat] += val;
+      totalDespesasGeral += val;
+    }
+  });
+
+  // Sabor e detalhes dos produtos
+  const catálogoAtivo = state.produtos.map(p => ({
+    id: p.id,
+    nome: p.nome,
+    modelo: p.modelo,
+    preco_base: Number(p.preco_base),
+    ativo: p.ativo !== false
+  }));
+
+  // Resumo de consignações
+  const resumoConsignacoes = state.consignacoes.map(c => {
+    const valorLote = c.itens.reduce((acc, it) => acc + (it.quantidade_deixada * it.preco_unitario), 0);
+    const valorVendido = c.itens.reduce((acc, it) => acc + (it.quantidade_vendida * it.preco_unitario), 0);
+    return {
+      amigo: c.amigo_nome,
+      status: c.status,
+      valor_lote: valorLote,
+      valor_vendido: valorVendido,
+      pães_deixados: c.itens.reduce((acc, it) => acc + it.quantidade_deixada, 0),
+      data: c.data_envio
+    };
+  });
+
+  return {
+    periodo_analise: 'Geral acumulado no banco',
+    catalogo_produtos: catálogoAtivo,
+    desempenho_vendas_paes: vendasProdutos,
+    resumo_financeiro: {
+      total_receitas_vendas: Number(state.financeiro.resumo.total_receitas),
+      total_despesas_compras: Number(state.financeiro.resumo.total_despesas),
+      lucro_liquido_caixa: Number(state.financeiro.resumo.lucro_liquido)
+    },
+    despesas_detalhadas_por_categoria: despesasPorCategoria,
+    consignações_amigos: resumoConsignacoes,
+    taxas_maquininha_configuradas: {
+      debito_pct: state.taxasMaquininha.debito,
+      credito_pct: state.taxasMaquininha.credito
+    },
+    taxas_frete_configuradas: {
+      vitoria: freteConfig.gratis ? 0 : freteConfig.vitoria,
+      vila_velha: freteConfig.gratis ? 0 : freteConfig.vilaVelha,
+      serra: freteConfig.gratis ? 0 : freteConfig.serra,
+      frete_gratis_global: freteConfig.gratis
+    }
+  };
+}
+
+// Parser Premium de Markdown para HTML responsivo Bemavi
+function parserMarkdownBemavi(md) {
+  if (!md) return '';
+  
+  // Normalização e limpeza
+  let html = md.trim().replace(/\r\n/g, '\n');
+  
+  // Negrito
+  html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  
+  // Itálico
+  html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+  
+  // Blockquotes
+  html = html.replace(/^\>\s+(.*)$/gim, '<blockquote>$1</blockquote>');
+  
+  // Títulos (h3)
+  html = html.replace(/^###\s+(.*)$/gim, '<h3>$1</h3>');
+  html = html.replace(/^##\s+(.*)$/gim, '<h3>$1</h3>');
+  html = html.replace(/^#\s+(.*)$/gim, '<h3>$1</h3>');
+  
+  // Linhas horizontais
+  html = html.replace(/^---$/gim, '<hr style="border: 0; border-top: 1px dashed var(--border-subtle); margin: 1.5rem 0;">');
+  
+  const lines = html.split('\n');
+  let inTable = false;
+  let tableHtml = '';
+  
+  const processedLines = lines.map(line => {
+    const trimmed = line.trim();
+    
+    // Tabelas markdown: | Col1 | Col2 |
+    if (trimmed.startsWith('|') && trimmed.endsWith('|')) {
+      const cols = trimmed.split('|').filter(c => c.trim() !== '').map(c => c.trim());
+      
+      // Ignorar linhas de separação |---|---|
+      if (cols.every(c => /^:-*|-*:-*|-*:$/.test(c))) {
+        return '';
+      }
+      
+      if (!inTable) {
+        inTable = true;
+        tableHtml = '<div class="responsive-table-container"><table class="admin-table"><thead><tr>' + 
+          cols.map(c => `<th>${c}</th>`).join('') + '</tr></thead><tbody>';
+        return 'TABLE_START';
+      } else {
+        return '<tr>' + cols.map(c => `<td>${c}</td>`).join('') + '</tr>';
+      }
+    } else {
+      if (inTable) {
+        inTable = false;
+        return 'TABLE_END\n' + '<p>' + line + '</p>';
+      }
+    }
+    
+    // Listas
+    if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+      return `<li>${trimmed.substring(2)}</li>`;
+    }
+    
+    if (trimmed === '') return '';
+    
+    // Parágrafos normais se não forem tags
+    if (!trimmed.startsWith('<h') && !trimmed.startsWith('<b') && !trimmed.startsWith('<l') && !trimmed.startsWith('<hr') && !trimmed.startsWith('<div') && !trimmed.startsWith('<p>')) {
+      return `<p>${trimmed}</p>`;
+    }
+    
+    return trimmed;
+  });
+  
+  // Consolidar tabela
+  let finalHtml = '';
+  processedLines.forEach(line => {
+    if (line === 'TABLE_START') {
+      finalHtml += tableHtml;
+    } else if (line.startsWith('TABLE_END')) {
+      finalHtml += '</tbody></table></div>' + line.substring(9);
+    } else {
+      finalHtml += line + '\n';
+    }
+  });
+  
+  if (inTable) {
+    finalHtml += '</tbody></table></div>';
+  }
+  
+  // Agrupar <li> soltos em <ul>
+  finalHtml = finalHtml.replace(/(<li>.*?<\/li>)+/gs, (match) => `<ul>${match}</ul>`);
+  
+  return finalHtml;
+}
+
+// Conectar e gerar Relatório com a API do Groq Cloud
+window.gerarRelatorioGroq = async function() {
+  const savedKey = localStorage.getItem('bemavi_groq_api_key');
+  if (!savedKey) {
+    showToast('Chave de API do Groq não configurada. Por favor, insira e salve sua chave acima.', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('btnGerarAnaliseIA');
+  const consolePanel = document.getElementById('groqLoadingConsole');
+  const consoleLogs = document.getElementById('groqConsoleLogs');
+  const statusMsg = document.getElementById('groqStatusMsg');
+  const reportContainer = document.getElementById('groqReportContainer');
+  const placeholder = document.getElementById('groqReportPlaceholder');
+
+  if (btn) btn.disabled = true;
+  if (placeholder) placeholder.style.display = 'none';
+  if (reportContainer) reportContainer.style.display = 'none';
+  if (consolePanel) consolePanel.style.display = 'flex';
+  if (consoleLogs) consoleLogs.innerHTML = '';
+
+  const addLog = (text, type = 'info') => {
+    const log = document.createElement('div');
+    log.style.padding = '2px 0';
+    log.innerHTML = `<span style="color: ${type === 'success' ? '#10B981' : type === 'warning' ? '#F59E0B' : 'var(--text-muted)'}">[${new Date().toLocaleTimeString()}]</span> ${text}`;
+    consoleLogs.appendChild(log);
+    consoleLogs.scrollTop = consoleLogs.scrollHeight;
+  };
+
+  addLog('Iniciando agregação analítica local do banco Neon...', 'info');
+  statusMsg.textContent = 'Consolidando dados do caixa e de pedidos...';
+  
+  const dadosNegocio = obterDadosConsolidadosNegocio();
+  
+  await new Promise(r => setTimeout(r, 600)); // Simula tempo sutil de UX premium
+  
+  addLog(`Dados agregados! ${dadosNegocio.catalogo_produtos.length} produtos em catálogo, faturamento de receitas de R$ ${dadosNegocio.resumo_financeiro.total_receitas_vendas.toFixed(2)}.`, 'success');
+  addLog('Conectando ao barramento de inteligência da nuvem Groq Cloud...', 'info');
+  statusMsg.textContent = 'Enviando dados estruturados para a IA Groq...';
+
+  const systemPrompt = `Você é o Diretor Financeiro e Especialista em Produção e Logística da Bemavi Pão Artesanal. 
+Sua missão é ler o arquivo JSON com os dados consolidados do negócio (vendas de pães, fluxo financeiro, despesas, consignações e configurações de taxas) e fornecer um Relatório Executivo Analítico de altíssimo impacto profissional e visual.
+
+Diretrizes obrigatórias de formatação e conteúdo:
+1. Apresente um resumo executivo da saúde financeira: onde o dinheiro está indo (vazamentos de caixa, despesas desproporcionais) e de onde vem.
+2. Identifique os produtos com a melhor saída de vendas, criando um ranking claro.
+3. Forneça uma tabela simples com a Previsão de Produção Semanal recomendada para cada pão ativo da Bemavi com base no volume de vendas recente. Adicione uma margem de segurança de +10% para evitar falta de estoque, e arredonde para números inteiros de pães.
+4. Inclua sugestões práticas de como melhorar a margem operacional (ex: taxas de frete vs custos de deslocamento, taxas de maquininhas Débito/Crédito).
+5. Use exclusivamente o idioma Português do Brasil com tom inspirador, motivacional, pragmático e extremamente premium.
+6. Formate a resposta rigorosamente em Markdown limpo (use títulos h3 '###', tabelas markdown, listas e negritos) para que o parser local consiga exibir a interface visual dourada perfeitamente.`;
+
+  const userMessage = `Aqui estão os dados consolidados em tempo real da Bemavi:
+\`\`\`json
+${JSON.stringify(dadosNegocio, null, 2)}
+\`\`\`
+Por favor, gere o relatório completo de análise financeira e plano de estoque/produção semanal.`;
+
+  try {
+    const payload = {
+      model: 'llama-3.3-70b-versatile',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userMessage }
+      ],
+      temperature: 0.2,
+      max_tokens: 2048
+    };
+
+    let response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${savedKey}`
+      },
+      body: JSON.stringify(payload)
+    });
+
+    // Fallback de modelo se o llama 70b versátil falhar ou não estiver disponível
+    if (!response.ok && response.status === 404) {
+      addLog('Modelo llama-3.3-70b não encontrado. Fazendo fallback para llama3-8b...', 'warning');
+      payload.model = 'llama3-8b-8192';
+      response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${savedKey}`
+        },
+        body: JSON.stringify(payload)
+      });
+    }
+
+    if (response.ok) {
+      const resData = await response.json();
+      const content = resData.choices[0].message.content;
+      
+      addLog('Relatório financeiro e previsão de estoque gerados com sucesso!', 'success');
+      statusMsg.textContent = 'Formatando interface visual...';
+      await new Promise(r => setTimeout(r, 400));
+
+      const parsedHtml = parserMarkdownBemavi(content);
+
+      if (reportContainer) {
+        reportContainer.innerHTML = parsedHtml;
+        reportContainer.style.display = 'block';
+      }
+      if (consolePanel) consolePanel.style.display = 'none';
+      showToast('Relatório IA da Bemavi gerado com sucesso!', 'success');
+    } else {
+      const err = await response.json();
+      console.error('Erro de API do Groq:', err);
+      addLog(`Erro da API do Groq: ${err.error?.message || response.statusText}`, 'warning');
+      statusMsg.textContent = 'Falha ao processar relatório.';
+      showToast('Falha ao conectar na API do Groq Cloud.', 'error');
+    }
+  } catch (error) {
+    console.error('Falha de rede ao consultar Groq:', error);
+    addLog('Falha crítica de rede. Verifique sua chave e a conexão com a internet.', 'warning');
+    statusMsg.textContent = 'Falha de rede.';
+    showToast('Falha de rede ao consultar Groq.', 'error');
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+};
+
+// Histórico de mensagens do chat interativo de IA
+const chatHistory = [];
+
+window.enviarPerguntaGroq = async function(event) {
+  if (event) event.preventDefault();
+
+  const savedKey = localStorage.getItem('bemavi_groq_api_key');
+  if (!savedKey) {
+    showToast('Configure sua chave Groq antes de enviar perguntas.', 'error');
+    return;
+  }
+
+  const input = document.getElementById('groq_chat_input');
+  const chatMessages = document.getElementById('groqChatMessages');
+  
+  if (!input || !chatMessages) return;
+
+  const query = input.value.trim();
+  if (!query) return;
+
+  // Limpar input
+  input.value = '';
+
+  // Injetar mensagem do usuário na tela
+  const userMsgEl = document.createElement('div');
+  userMsgEl.className = 'chat-message user';
+  userMsgEl.textContent = query;
+  chatMessages.appendChild(userMsgEl);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+
+  // Injetar loading dots
+  const loadingEl = document.createElement('div');
+  loadingEl.className = 'chat-message loading-dots';
+  loadingEl.innerHTML = 'Analisando dados<span></span><span></span><span></span>';
+  chatMessages.appendChild(loadingEl);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+
+  // Adicionar ao histórico de chat na sessão
+  chatHistory.push({ role: 'user', content: query });
+
+  // Consolidar contexto de dados de negócios atualizados em tempo real do banco
+  const dadosNegocio = obterDadosConsolidadosNegocio();
+
+  const systemPrompt = `Você é o Diretor Financeiro e Especialista de Estoque Inteligente da Bemavi Pão Artesanal.
+Você está conversando de forma interativa e amigável com o panificador sobre suas finanças, produção de pães e gestão de consignações.
+Sempre fundamente suas respostas de forma direta, clara e precisa nos dados reais fornecidos em JSON abaixo.
+Seja muito prestativo, profissional e encorajador. Forneça respostas em português do Brasil curtas e diretas com markdown simples.
+
+Dados de Negócios da Bemavi em tempo real:
+\`\`\`json
+${JSON.stringify(dadosNegocio, null, 2)}
+\`\`\``;
+
+  const payload = {
+    model: 'llama-3.3-70b-versatile',
+    messages: [
+      { role: 'system', content: systemPrompt },
+      ...chatHistory.slice(-6) // Enviar apenas as últimas 6 interações para evitar estouro de tokens
+    ],
+    temperature: 0.5,
+    max_tokens: 800
+  };
+
+  try {
+    let response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${savedKey}`
+      },
+      body: JSON.stringify(payload)
+    });
+
+    // Fallback de modelo se necessário
+    if (!response.ok && response.status === 404) {
+      payload.model = 'llama3-8b-8192';
+      response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${savedKey}`
+        },
+        body: JSON.stringify(payload)
+      });
+    }
+
+    // Remover loading dots
+    loadingEl.remove();
+
+    if (response.ok) {
+      const resData = await response.json();
+      const answer = resData.choices[0].message.content;
+
+      // Adicionar resposta ao histórico
+      chatHistory.push({ role: 'assistant', content: answer });
+
+      // Injetar resposta do assistente na tela
+      const assistantMsgEl = document.createElement('div');
+      assistantMsgEl.className = 'chat-message assistant';
+      
+      // Um parser de markdown simplificado para o chat (só blockquotes, negritos e parágrafos)
+      assistantMsgEl.innerHTML = parserMarkdownBemavi(answer);
+      chatMessages.appendChild(assistantMsgEl);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    } else {
+      const err = await response.json();
+      const errMsg = err.error?.message || 'Erro desconhecido ao consultar a IA.';
+      
+      const errorMsgEl = document.createElement('div');
+      errorMsgEl.className = 'chat-message assistant';
+      errorMsgEl.style.color = '#EF4444';
+      errorMsgEl.style.border = '1px solid rgba(239, 68, 68, 0.2)';
+      errorMsgEl.textContent = `Desculpe, ocorreu uma falha de conexão: ${errMsg}`;
+      chatMessages.appendChild(errorMsgEl);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+  } catch (error) {
+    console.error('Falha de rede no chat IA:', error);
+    loadingEl.remove();
+    const errorMsgEl = document.createElement('div');
+    errorMsgEl.className = 'chat-message assistant';
+    errorMsgEl.style.color = '#EF4444';
+    errorMsgEl.style.border = '1px solid rgba(239, 68, 68, 0.2)';
+    errorMsgEl.textContent = 'Erro de rede! Verifique sua chave API e a internet.';
+    chatMessages.appendChild(errorMsgEl);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+};
+
 
