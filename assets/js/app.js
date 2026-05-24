@@ -54,6 +54,7 @@ function loadFreteConfig() {
 
   toggleInputsFreteState(freteConfig.gratis);
   updateTipsFrete();
+  updateMunicipioSelectLabels();
 }
 
 function toggleInputsFreteState(isDisabled) {
@@ -80,6 +81,29 @@ function updateTipsFrete() {
   if (labelSerra) {
     labelSerra.textContent = freteConfig.gratis ? 'R$ 0,00 (Grátis)' : `R$ ${freteConfig.serra.toFixed(2)}`;
   }
+}
+
+function updateMunicipioSelectLabels() {
+  const selects = [
+    document.getElementById('municipio_entrega'),
+    document.getElementById('edit_municipio_entrega')
+  ];
+
+  selects.forEach(select => {
+    if (!select) return;
+
+    // Salvar valor selecionado anteriormente
+    const val = select.value;
+
+    select.innerHTML = `
+      <option value="Vitória">Vitória (${freteConfig.gratis ? 'Grátis' : `Taxa: R$ ${freteConfig.vitoria.toFixed(2)}`})</option>
+      <option value="Vila Velha">Vila Velha (${freteConfig.gratis ? 'Grátis' : `Taxa: R$ ${freteConfig.vilaVelha.toFixed(2)}`})</option>
+      <option value="Serra">Serra (${freteConfig.gratis ? 'Grátis' : `Taxa: R$ ${freteConfig.serra.toFixed(2)}`})</option>
+    `;
+
+    // Restaurar seleção
+    select.value = val;
+  });
 }
 
 function saveFreteConfig() {
@@ -162,6 +186,7 @@ async function fetchFreteConfigFromBackend() {
 
         toggleInputsFreteState(freteConfig.gratis);
         updateTipsFrete();
+        updateMunicipioSelectLabels();
         
         if (typeof renderCarrinho === 'function') {
           renderCarrinho();
@@ -184,6 +209,7 @@ window.updateConfigFrete = function() {
 
   saveFreteConfig();
   updateTipsFrete();
+  updateMunicipioSelectLabels();
   
   if (typeof renderCarrinho === 'function') {
     renderCarrinho();
@@ -202,6 +228,7 @@ window.toggleFreteGratis = function() {
   toggleInputsFreteState(freteConfig.gratis);
   saveFreteConfig();
   updateTipsFrete();
+  updateMunicipioSelectLabels();
   
   if (typeof renderCarrinho === 'function') {
     renderCarrinho();
@@ -348,8 +375,10 @@ async function initApp() {
   fetchFreteConfigFromBackend();
   fetchTaxasMaquininhaFromBackend();
   
-  // Carregar dados iniciais
-  await renderCatalogo();
+  // Carregar dados iniciais de produtos centralizados
+  await loadProdutos();
+  renderCatalogAdmin();
+  renderCatalogo();
   await refreshDashboard();
   await refreshFinanceiro();
   
@@ -497,22 +526,23 @@ function clearIndexedDBStore(storeName) {
   });
 }
 
-// 7. Catálogo de Produtos (Renderização & Offline Fallback)
-async function renderCatalogo() {
+// 7. Catálogo de Produtos (Centralização de Estado, Renderização & Offline Fallback)
+async function loadProdutos() {
   try {
     if (state.isOnline) {
-      // Buscar do backend Neon
-      const response = await fetch('/api/produtos');
+      // Buscar todos os produtos (ativos e inativos) do backend Neon
+      const response = await fetch('/api/produtos?all=true');
       if (response.ok) {
-        state.produtos = await response.json();
+        const prods = await response.json();
         // Atualizar cache IndexedDB
         await clearIndexedDBStore('produtos');
-        for (const prod of state.produtos) {
+        for (const prod of prods) {
           await writeIndexedDB('produtos', prod);
         }
+        state.produtos = prods;
       }
     } else {
-      // Offline: Buscar do cache IndexedDB
+      // Offline: Buscar todos do cache IndexedDB
       state.produtos = await readAllIndexedDB('produtos');
     }
   } catch (error) {
@@ -520,9 +550,13 @@ async function renderCatalogo() {
     // Tentar fallback do cache de qualquer forma
     state.produtos = await readAllIndexedDB('produtos');
   }
+}
 
-  // Renderizar o catálogo HTML
+function renderCatalogo() {
+  // Renderizar o catálogo HTML a partir de state.produtos local filtrando apenas ativos
   const catalogGrid = document.getElementById('catalogGrid');
+  if (!catalogGrid) return;
+
   const ativos = state.produtos.filter(p => p.ativo !== false);
   if (ativos.length === 0) {
     catalogGrid.innerHTML = '<div class="carrinho-empty">Nenhum produto cadastrado no catálogo offline.</div>';
@@ -1144,25 +1178,7 @@ window.closeFinanceModal = function() {
 
 // 15. Catálogo Administrativo (CRUD, Ativação & Modais de Produto)
 async function refreshCatalogManagement() {
-  try {
-    if (state.isOnline) {
-      const response = await fetch('/api/produtos?all=true');
-      if (response.ok) {
-        const prods = await response.json();
-        await clearIndexedDBStore('produtos');
-        for (const prod of prods) {
-          await writeIndexedDB('produtos', prod);
-        }
-        state.produtos = prods;
-      }
-    } else {
-      state.produtos = await readAllIndexedDB('produtos');
-    }
-  } catch (error) {
-    console.error('Falha ao carregar catálogo administrativo de produtos:', error);
-    state.produtos = await readAllIndexedDB('produtos');
-  }
-
+  await loadProdutos();
   renderCatalogAdmin();
 }
 
