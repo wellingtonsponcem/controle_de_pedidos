@@ -2524,11 +2524,6 @@ function setupOrderDeliveryForm() {
       showToast('Falha de rede ao concluir o pedido.', 'error');
     }
   });
-    } catch (error) {
-      console.error('Falha crítica ao enviar conclusão de entrega:', error);
-      showToast('Falha de rede ao concluir o pedido.', 'error');
-    }
-  });
 }
 
 // ============================================================================

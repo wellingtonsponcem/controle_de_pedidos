@@ -47,4 +47,5 @@ Este arquivo mantém o histórico consolidado de decisões e progresso do projet
 - **Inteligência**: Integração com Groq (`llama-3.3-70b-versatile`) analisando fluxo de caixa consolidado, despesas por categoria e ranking de vendas de pães.
 - **UX & Relatório**: Console de status dinâmico em PWA, renderizador markdown luxuoso e chat interativo de estratégias financeiras baseadas em dados reais.
 - **Qualidade**: Compilação estática `npx tsc --noEmit` e Jest fast-check com 100% de sucesso.
+- **Bugfix (v2.16.1)**: Removido bloco duplicado órfão no formulário de entrega (`app.js`) que causava erro de sintaxe e travamento na inicialização do dashboard no carregamento de dados.
 
