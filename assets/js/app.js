@@ -366,28 +366,46 @@ function renderConfiguracoesSistema(configuracoes) {
   const abacateStatus = document.getElementById('configAbacateStatus');
   const webhookStatus = document.getElementById('configWebhookStatus');
   const groqStatus = document.getElementById('configGroqStatus');
+  const mpAccessStatus = document.getElementById('configMpAccessStatus');
+  const mpPublicStatus = document.getElementById('configMpPublicStatus');
+  const mpWebhookStatus = document.getElementById('configMpWebhookStatus');
   const abacateInput = document.getElementById('config_abacate_api_key');
   const webhookInput = document.getElementById('config_abacate_webhook_secret');
   const groqInput = document.getElementById('config_groq_api_key');
+  const mpAccessInput = document.getElementById('config_mp_access_token');
+  const mpPublicInput = document.getElementById('config_mp_public_key');
+  const mpWebhookInput = document.getElementById('config_mp_webhook_secret');
 
   const hasAbacate = Boolean(configuracoes.ABACATEPAY_API_KEY?.configured);
   const hasWebhook = Boolean(configuracoes.ABACATEPAY_WEBHOOK_SECRET?.configured);
   const hasGroq = Boolean(configuracoes.GROQ_API_KEY?.configured);
+  const hasMpAccess = Boolean(configuracoes.MERCADOPAGO_ACCESS_TOKEN?.configured);
+  const hasMpPublic = Boolean(configuracoes.MERCADOPAGO_PUBLIC_KEY?.configured);
+  const hasMpWebhook = Boolean(configuracoes.MERCADOPAGO_WEBHOOK_SECRET?.configured);
   const abacateMask = configuracoes.ABACATEPAY_API_KEY?.value;
   const webhookMask = configuracoes.ABACATEPAY_WEBHOOK_SECRET?.value;
   const groqMask = configuracoes.GROQ_API_KEY?.value;
+  const mpAccessMask = configuracoes.MERCADOPAGO_ACCESS_TOKEN?.value;
+  const mpPublicMask = configuracoes.MERCADOPAGO_PUBLIC_KEY?.value;
+  const mpWebhookMask = configuracoes.MERCADOPAGO_WEBHOOK_SECRET?.value;
 
   if (badge) {
-    badge.textContent = hasAbacate ? 'Abacate configurado' : 'Abacate pendente';
-    badge.className = `badge-status ${hasAbacate ? 'ativo' : 'inativo'}`;
+    badge.textContent = hasMpAccess ? 'Mercado Pago configurado' : 'Mercado Pago pendente';
+    badge.className = `badge-status ${hasMpAccess ? 'ativo' : 'inativo'}`;
   }
   if (abacateStatus) abacateStatus.textContent = hasAbacate ? `Salva no banco: ${abacateMask}` : 'Não configurada';
   if (webhookStatus) webhookStatus.textContent = hasWebhook ? `Salvo no banco: ${webhookMask}` : 'Não configurado';
   if (groqStatus) groqStatus.textContent = hasGroq ? `Salva no banco: ${groqMask}` : 'Não configurada';
+  if (mpAccessStatus) mpAccessStatus.textContent = hasMpAccess ? `Salvo no banco: ${mpAccessMask}` : 'Não configurado';
+  if (mpPublicStatus) mpPublicStatus.textContent = hasMpPublic ? `Salva no banco: ${mpPublicMask}` : 'Não configurada';
+  if (mpWebhookStatus) mpWebhookStatus.textContent = hasMpWebhook ? `Salvo no banco: ${mpWebhookMask}` : 'Não configurado';
 
   if (abacateInput) abacateInput.placeholder = hasAbacate ? `Salva: ${abacateMask}` : 'abc_dev_...';
   if (webhookInput) webhookInput.placeholder = hasWebhook ? `Salvo: ${webhookMask}` : 'bemavi_abacate_webhook_...';
   if (groqInput) groqInput.placeholder = hasGroq ? `Salva: ${groqMask}` : 'gsk_...';
+  if (mpAccessInput) mpAccessInput.placeholder = hasMpAccess ? `Salvo: ${mpAccessMask}` : 'APP_USR-...';
+  if (mpPublicInput) mpPublicInput.placeholder = hasMpPublic ? `Salva: ${mpPublicMask}` : 'APP_USR-...';
+  if (mpWebhookInput) mpWebhookInput.placeholder = hasMpWebhook ? `Salvo: ${mpWebhookMask}` : 'bemavi_mercadopago_webhook_...';
 }
 
 function renderUsuariosSistema(usuarios) {
@@ -413,14 +431,20 @@ window.salvarConfiguracoesSistema = async function() {
   const abacateInput = document.getElementById('config_abacate_api_key');
   const webhookInput = document.getElementById('config_abacate_webhook_secret');
   const groqInput = document.getElementById('config_groq_api_key');
+  const mpAccessInput = document.getElementById('config_mp_access_token');
+  const mpPublicInput = document.getElementById('config_mp_public_key');
+  const mpWebhookInput = document.getElementById('config_mp_webhook_secret');
 
   const configuracoes = {
     ABACATEPAY_API_KEY: abacateInput?.value.trim() || '',
     ABACATEPAY_WEBHOOK_SECRET: webhookInput?.value.trim() || '',
-    GROQ_API_KEY: groqInput?.value.trim() || ''
+    GROQ_API_KEY: groqInput?.value.trim() || '',
+    MERCADOPAGO_ACCESS_TOKEN: mpAccessInput?.value.trim() || '',
+    MERCADOPAGO_PUBLIC_KEY: mpPublicInput?.value.trim() || '',
+    MERCADOPAGO_WEBHOOK_SECRET: mpWebhookInput?.value.trim() || ''
   };
 
-  if (!configuracoes.ABACATEPAY_API_KEY && !configuracoes.ABACATEPAY_WEBHOOK_SECRET && !configuracoes.GROQ_API_KEY) {
+  if (!Object.values(configuracoes).some(Boolean)) {
     showToast('Preencha pelo menos uma configuração para salvar.', 'warning');
     return;
   }
@@ -438,6 +462,9 @@ window.salvarConfiguracoesSistema = async function() {
     if (abacateInput) abacateInput.value = '';
     if (webhookInput) webhookInput.value = '';
     if (groqInput) groqInput.value = '';
+    if (mpAccessInput) mpAccessInput.value = '';
+    if (mpPublicInput) mpPublicInput.value = '';
+    if (mpWebhookInput) mpWebhookInput.value = '';
 
     showToast('Configurações salvas no banco de dados.', 'success');
     await carregarConfiguracoesSistema();

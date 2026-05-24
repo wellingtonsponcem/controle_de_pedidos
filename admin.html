@@ -900,6 +900,21 @@
                 <input type="password" id="config_groq_api_key" placeholder="gsk_..." autocomplete="off">
                 <small id="configGroqStatus" style="color: var(--text-muted);">Não configurada</small>
               </div>
+              <div class="form-group">
+                <label for="config_mp_access_token">Access Token Mercado Pago</label>
+                <input type="password" id="config_mp_access_token" placeholder="APP_USR-..." autocomplete="off">
+                <small id="configMpAccessStatus" style="color: var(--text-muted);">Não configurado</small>
+              </div>
+              <div class="form-group">
+                <label for="config_mp_public_key">Public Key Mercado Pago</label>
+                <input type="password" id="config_mp_public_key" placeholder="APP_USR-..." autocomplete="off">
+                <small id="configMpPublicStatus" style="color: var(--text-muted);">Não configurada</small>
+              </div>
+              <div class="form-group">
+                <label for="config_mp_webhook_secret">Secret Webhook Mercado Pago</label>
+                <input type="password" id="config_mp_webhook_secret" placeholder="bemavi_mercadopago_webhook_..." autocomplete="off">
+                <small id="configMpWebhookStatus" style="color: var(--text-muted);">Não configurado</small>
+              </div>
             </div>
 
             <button type="button" class="btn btn-primary" onclick="salvarConfiguracoesSistema()" style="align-self: flex-start; border: none; font-weight: 700;">Salvar configurações</button>

@@ -1,6 +1,13 @@
 import pool, { withTransaction } from './_db';
 
-const SECRET_KEYS = ['ABACATEPAY_API_KEY', 'ABACATEPAY_WEBHOOK_SECRET', 'GROQ_API_KEY'];
+const SECRET_KEYS = [
+  'ABACATEPAY_API_KEY',
+  'ABACATEPAY_WEBHOOK_SECRET',
+  'MERCADOPAGO_ACCESS_TOKEN',
+  'MERCADOPAGO_PUBLIC_KEY',
+  'MERCADOPAGO_WEBHOOK_SECRET',
+  'GROQ_API_KEY'
+];
 
 async function ensureConfigTables() {
   await pool.query('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"');

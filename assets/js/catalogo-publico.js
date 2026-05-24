@@ -264,8 +264,8 @@ function setupPublicOrderForm() {
 
     try {
       if (isOnlinePayment(pagamento)) {
-        state.abacateCheckout = await createAbacateCheckout(getAbacatePaymentMethod(pagamento));
-        renderAbacateCheckout(state.abacateCheckout);
+        state.abacateCheckout = await createMercadoPagoCheckout(getMercadoPagoPaymentMethod(pagamento));
+        renderMercadoPagoCheckout(state.abacateCheckout);
         showToast(pagamento === ONLINE_CARD_OPTION ? 'Link de cartão gerado.' : 'PIX gerado no checkout.');
         return;
       } else {
@@ -292,12 +292,12 @@ function isOnlinePayment(pagamento) {
   return pagamento === ONLINE_PIX_OPTION || pagamento === ONLINE_CARD_OPTION;
 }
 
-function getAbacatePaymentMethod(pagamento) {
+function getMercadoPagoPaymentMethod(pagamento) {
   return pagamento === ONLINE_CARD_OPTION ? 'CARD' : 'PIX';
 }
 
-async function createAbacateCheckout(metodoPagamento) {
-  const response = await fetch(`${API_BASE_URL}/api/abacate-checkout`, {
+async function createMercadoPagoCheckout(metodoPagamento) {
+  const response = await fetch(`${API_BASE_URL}/api/mercado-pago-checkout`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -330,7 +330,7 @@ async function createAbacateCheckout(metodoPagamento) {
   return data.checkout;
 }
 
-function renderAbacateCheckout(checkout) {
+function renderMercadoPagoCheckout(checkout) {
   if (!checkout) return;
 
   const pixCode = checkout.brCode || checkout.pix?.brCode || '';
@@ -433,7 +433,7 @@ function buildWhatsappMessage(checkout) {
     `Municipio: ${municipio}`,
     entrega === 'Entrega' ? `Endereco: ${endereco}` : null,
     `Pagamento: ${pagamento}`,
-    checkout ? `Checkout Abacate Pay: ${checkout.id}` : null,
+    checkout ? `Pagamento Mercado Pago: ${checkout.id}` : null,
     checkoutUrl ? `Link do checkout: ${checkoutUrl}` : null,
     pixCode ? `PIX copia e cola: ${pixCode}` : null,
     obs ? `Observacoes: ${obs}` : null,
