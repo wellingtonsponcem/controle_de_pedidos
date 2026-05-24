@@ -1,0 +1,394 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg: #15100d;
+  --panel: #201812;
+  --panel-soft: #2a1f17;
+  --line: rgba(255, 255, 255, 0.08);
+  --text: #fff8ef;
+  --muted: #c8b8a6;
+  --gold: #f59e0b;
+  --gold-dark: #b86a05;
+  --green: #22c55e;
+  --danger: #ef4444;
+}
+
+body {
+  min-height: 100vh;
+  background:
+    linear-gradient(180deg, rgba(245, 158, 11, 0.08), transparent 360px),
+    radial-gradient(circle at 82% 8%, rgba(34, 197, 94, 0.08), transparent 260px),
+    var(--bg);
+  color: var(--text);
+  font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+.public-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px clamp(16px, 4vw, 48px);
+  background: rgba(21, 16, 13, 0.88);
+  border-bottom: 1px solid var(--line);
+  backdrop-filter: blur(14px);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-icon {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+}
+
+.brand strong {
+  display: block;
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: 1.35rem;
+}
+
+.brand span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.whatsapp-link,
+.submit-order {
+  border: 0;
+  border-radius: 8px;
+  background: var(--green);
+  color: #07130b;
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.whatsapp-link {
+  padding: 0.62rem 0.9rem;
+}
+
+.public-shell {
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 28px 0 54px;
+}
+
+.hero {
+  min-height: 240px;
+  display: flex;
+  align-items: end;
+  padding: clamp(28px, 6vw, 54px);
+  margin-bottom: 24px;
+  border-radius: 8px;
+  overflow: hidden;
+  background:
+    linear-gradient(90deg, rgba(21, 16, 13, 0.95), rgba(21, 16, 13, 0.45)),
+    url("https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=1600&q=80") center/cover;
+  border: 1px solid var(--line);
+}
+
+.hero-copy {
+  max-width: 580px;
+}
+
+.hero h1 {
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: clamp(2.4rem, 8vw, 5rem);
+  line-height: 0.95;
+  margin-bottom: 12px;
+}
+
+.hero p {
+  max-width: 520px;
+  color: var(--muted);
+  font-size: 1.08rem;
+  line-height: 1.45;
+}
+
+.content-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  gap: 24px;
+  align-items: start;
+}
+
+.catalog-panel,
+.checkout-panel {
+  min-width: 0;
+}
+
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.section-heading h2 {
+  font-size: 1.1rem;
+}
+
+.section-heading span {
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.product-card,
+.checkout-sticky,
+.loading-card {
+  background: rgba(32, 24, 18, 0.92);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.product-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 228px;
+  padding: 16px;
+}
+
+.product-type {
+  color: var(--gold);
+  font-size: 0.73rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.product-card h3 {
+  margin: 8px 0 4px;
+  font-size: 1.08rem;
+  line-height: 1.2;
+}
+
+.product-details {
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.38;
+}
+
+.product-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 16px;
+}
+
+.price {
+  font-weight: 900;
+  font-size: 1.2rem;
+}
+
+.add-btn,
+.qty-btn {
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: 7px;
+  background: rgba(245, 158, 11, 0.12);
+  color: var(--gold);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.add-btn {
+  padding: 0.58rem 0.75rem;
+}
+
+.checkout-sticky {
+  position: sticky;
+  top: 86px;
+  padding: 18px;
+}
+
+.cart-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 260px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.empty-cart,
+.loading-card {
+  color: var(--muted);
+  text-align: center;
+  padding: 22px;
+}
+
+.cart-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.cart-item strong {
+  display: block;
+  font-size: 0.92rem;
+  line-height: 1.25;
+}
+
+.cart-item span {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.qty-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.qty-btn {
+  width: 30px;
+  height: 30px;
+}
+
+.cart-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 0;
+  margin: 14px 0;
+  border-top: 1px dashed var(--line);
+  border-bottom: 1px dashed var(--line);
+}
+
+.cart-total span {
+  color: var(--muted);
+}
+
+.cart-total strong {
+  color: var(--gold);
+  font-size: 1.45rem;
+}
+
+.public-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field-group label {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.field-group input,
+.field-group select,
+.field-group textarea {
+  width: 100%;
+  border: 1px solid #35291f;
+  border-radius: 7px;
+  background: rgba(0, 0, 0, 0.22);
+  color: var(--text);
+  padding: 0.72rem 0.78rem;
+  outline: none;
+}
+
+.field-group input:focus,
+.field-group select:focus,
+.field-group textarea:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.16);
+}
+
+.submit-order {
+  width: 100%;
+  padding: 0.92rem 1rem;
+  margin-top: 4px;
+  font-size: 0.98rem;
+}
+
+.public-toast {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  max-width: 320px;
+  display: none;
+  padding: 0.85rem 1rem;
+  border-radius: 8px;
+  background: var(--panel-soft);
+  color: var(--text);
+  border: 1px solid var(--line);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.45);
+}
+
+.public-toast.active {
+  display: block;
+}
+
+@media (max-width: 920px) {
+  .content-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .checkout-sticky {
+    position: static;
+  }
+}
+
+@media (max-width: 560px) {
+  .public-header {
+    align-items: flex-start;
+  }
+
+  .brand span {
+    max-width: 180px;
+  }
+
+  .hero {
+    min-height: 210px;
+    padding: 24px;
+  }
+
+  .field-row {
+    grid-template-columns: 1fr;
+  }
+}
