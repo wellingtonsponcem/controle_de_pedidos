@@ -57,6 +57,9 @@ function renderCatalog() {
 
   grid.innerHTML = state.produtos.map(prod => `
     <article class="product-card">
+      <div class="product-photo">
+        <img src="${getProductImage(prod)}" alt="${escapeHtml(prod.nome)}" loading="lazy">
+      </div>
       <span class="product-type">${escapeHtml(prod.versao || 'Artesanal')}</span>
       <h3>${escapeHtml(prod.nome)}</h3>
       <p class="product-details">${escapeHtml(prod.sabor || 'Pao artesanal Bemavi')}</p>
@@ -67,6 +70,30 @@ function renderCatalog() {
       </div>
     </article>
   `).join('');
+}
+
+function getProductImage(prod) {
+  if (prod.imagem_url) return prod.imagem_url;
+
+  const text = `${prod.nome || ''} ${prod.versao || ''} ${prod.sabor || ''} ${prod.modelo || ''}`.toLowerCase();
+
+  if (text.includes('integral') || text.includes('grao') || text.includes('grão') || text.includes('sement')) {
+    return 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=900&q=80';
+  }
+
+  if (text.includes('doce') || text.includes('chocolate') || text.includes('canela') || text.includes('reche')) {
+    return 'https://images.unsplash.com/photo-1608198093002-ad4e005484ec?auto=format&fit=crop&w=900&q=80';
+  }
+
+  if (text.includes('baguete') || text.includes('frances') || text.includes('francês')) {
+    return 'https://images.unsplash.com/photo-1549931319-a545dcf3bc73?auto=format&fit=crop&w=900&q=80';
+  }
+
+  if (text.includes('forma') || text.includes('sanduiche') || text.includes('sanduíche')) {
+    return 'https://images.unsplash.com/photo-1586444248902-2f64eddc13df?auto=format&fit=crop&w=900&q=80';
+  }
+
+  return 'https://images.unsplash.com/photo-1534620808146-d33bb39128b2?auto=format&fit=crop&w=900&q=80';
 }
 
 window.addToCart = function(productId) {
