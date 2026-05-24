@@ -54,3 +54,7 @@ Este arquivo mantém o histórico consolidado de decisões e progresso do projet
 - **Sidebar**: Quatro seções administrativas unificadas sob o padrão Accordion Group (`<details>` / `<summary>`) com colapso de seleção única automatizado, reduzindo em 70% a rolagem de tela no celular.
 - **Qualidade**: Validação estática `npx tsc --noEmit` e Jest fast-check com 100% de sucesso.
 
+### [2026-05-24] - Atualização de Endereço Padrão de Roteirização (v2.17.1) (Concluído)
+- **Configuração**: Atualizado o endereço padrão de partida da roteirização de entregas no input `rota_partida` para "Rua Pedro Carlos de Souza, 222, Ilha de Santa Maria, Vitória - ES".
+
+
