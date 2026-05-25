@@ -336,9 +336,11 @@ function renderMercadoPagoCheckout(checkout) {
   const pixCode = checkout.brCode || checkout.pix?.brCode || '';
   const qrCode = checkout.brCodeBase64 || checkout.pix?.brCodeBase64 || '';
   const isCard = checkout.method === 'CARD';
+  const isPro = checkout.method === 'PRO' || !!checkout.url;
 
   openPaymentModal({
     isCard,
+    isPro,
     amount: Number(checkout.amount) || 0,
     qrCode,
     pixCode,
@@ -353,7 +355,7 @@ function clearAbacateCheckout() {
   box.innerHTML = '';
 }
 
-function openPaymentModal({ isCard, amount, qrCode, pixCode, url }) {
+function openPaymentModal({ isCard, isPro, amount, qrCode, pixCode, url }) {
   const modal = document.getElementById('paymentModal');
   const text = document.getElementById('paymentModalText');
   const body = document.getElementById('paymentModalBody');
@@ -361,17 +363,34 @@ function openPaymentModal({ isCard, amount, qrCode, pixCode, url }) {
   if (!modal || !text || !body || !copyButton) return;
 
   modal.dataset.pixCode = pixCode || '';
-  text.textContent = isCard
-    ? 'Use o link abaixo para concluir o pagamento com cartão.'
-    : 'Escaneie o QR Code ou copie o código PIX para pagar.';
-  body.innerHTML = isCard ? `
-    <div class="modal-amount">${money.format(amount / 100)}</div>
-    <a class="abacate-pay-link" href="${escapeHtml(url || '#')}" rel="noopener">Pagar com cartão</a>
-  ` : `
-    <div class="modal-amount">${money.format(amount / 100)}</div>
-    ${qrCode ? `<img class="modal-qr" src="${qrCode}" alt="QR Code PIX">` : ''}
-  `;
-  copyButton.hidden = isCard || !pixCode;
+
+  if (isPro) {
+    text.textContent = 'Clique no botão abaixo para realizar o pagamento seguro no Mercado Pago (PIX, Cartão ou Boleto).';
+    body.innerHTML = `
+      <div class="modal-amount">${money.format(amount / 100)}</div>
+      <a class="abacate-pay-link" href="${escapeHtml(url || '#')}" target="_blank" rel="noopener" style="background: linear-gradient(135deg, #009EE3 0%, #007CA8 100%); color: white; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: bold; border-radius: 8px; padding: 0.85rem; text-decoration: none; box-shadow: 0 4px 15px rgba(0, 158, 227, 0.4); border: none; font-size: 1rem; transition: transform 0.2s ease, box-shadow 0.2s ease; outline: none; margin: 1rem 0;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle;">
+          <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+          <line x1="1" y1="10" x2="23" y2="10"></line>
+        </svg>
+        Pagar com Mercado Pago
+      </a>
+    `;
+    copyButton.hidden = true;
+  } else {
+    text.textContent = isCard
+      ? 'Use o link abaixo para concluir o pagamento com cartão.'
+      : 'Escaneie o QR Code ou copie o código PIX para pagar.';
+    body.innerHTML = isCard ? `
+      <div class="modal-amount">${money.format(amount / 100)}</div>
+      <a class="abacate-pay-link" href="${escapeHtml(url || '#')}" rel="noopener">Pagar com cartão</a>
+    ` : `
+      <div class="modal-amount">${money.format(amount / 100)}</div>
+      ${qrCode ? `<img class="modal-qr" src="${qrCode}" alt="QR Code PIX">` : ''}
+    `;
+    copyButton.hidden = isCard || !pixCode;
+  }
+
   modal.hidden = false;
   document.body.classList.add('modal-open');
 }

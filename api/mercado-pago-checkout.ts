@@ -15,17 +15,17 @@ type PedidoCheckout = {
   produtos: Array<{ nome: string; quantidade: number; preco_unitario: number }>;
 };
 
-function toPositiveQuantity(value: unknown) {
+export function toPositiveQuantity(value: unknown) {
   const quantity = Number(value);
   if (!Number.isFinite(quantity)) return 0;
   return Math.max(0, Math.floor(quantity));
 }
 
-function normalizePhone(value: unknown) {
+export function normalizePhone(value: unknown) {
   return String(value || '').replace(/\D/g, '');
 }
 
-function emailFromPhone(phone: string) {
+export function emailFromPhone(phone: string) {
   const digits = normalizePhone(phone) || 'cliente';
   return `${digits}@bemavi.local`;
 }
@@ -175,12 +175,7 @@ export default async function handler(req: any, res: any) {
     return res.status(500).json({ error: 'Access Token do Mercado Pago não configurado.' });
   }
 
-  const { itens, metodo_pagamento } = req.body || {};
-  if (metodo_pagamento === 'CARD') {
-    return res.status(400).json({
-      error: 'Cartão Mercado Pago ainda precisa da Public Key e formulário de tokenização no checkout transparente.'
-    });
-  }
+  const { itens } = req.body || {};
 
   if (!Array.isArray(itens) || itens.length === 0) {
     return res.status(400).json({ error: 'Informe itens para gerar o pagamento online.' });
@@ -205,57 +200,73 @@ export default async function handler(req: any, res: any) {
       || await getSystemConfigValue('MERCADOPAGO_WEBHOOK_SECRET')
       || await getSystemConfigValue('ABACATEPAY_WEBHOOK_SECRET');
 
-    const mercadoResponse = await fetch('https://api.mercadopago.com/v1/payments', {
+    // Montando itens detalhados para exibição elegante no checkout oficial
+    const mpItems = pedido.produtos.map(item => ({
+      title: item.nome,
+      quantity: Number(item.quantidade),
+      unit_price: Number(item.preco_unitario),
+      currency_id: 'BRL'
+    }));
+
+    // Se houver valor de entrega, insere como item adicional
+    const taxaQuery = await pool.query('SELECT valor_entrega FROM pedidos WHERE id = $1', [pedido.id]);
+    const valorEntrega = taxaQuery.rows.length > 0 ? Number(taxaQuery.rows[0].valor_entrega) : 0;
+    if (valorEntrega > 0) {
+      mpItems.push({
+        title: 'Taxa de Entrega (Logística Bemavi)',
+        quantity: 1,
+        unit_price: valorEntrega,
+        currency_id: 'BRL'
+      });
+    }
+
+    const backUrls = {
+      success: `${origin}/catalogo.html?status=success&pedidoId=${pedido.id}`,
+      failure: `${origin}/catalogo.html?status=failure&pedidoId=${pedido.id}`,
+      pending: `${origin}/catalogo.html?status=pending&pedidoId=${pedido.id}`
+    };
+
+    const mercadoResponse = await fetch('https://api.mercadopago.com/v1/preferences', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-        'X-Idempotency-Key': randomUUID()
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        transaction_amount: pedido.valor_total,
-        description: `Pedido Bemavi - ${pedido.cliente_nome}`,
-        payment_method_id: 'pix',
-        external_reference: pedido.id,
+        items: mpItems,
+        payer: {
+          name: pedido.cliente_nome,
+          email: emailFromPhone(pedido.cliente_telefone),
+          phone: {
+            number: pedido.cliente_telefone
+          }
+        },
+        back_urls: backUrls,
+        auto_return: 'approved',
         notification_url: webhookSecret
           ? `${origin}/api/mercado-pago-webhook?webhookSecret=${encodeURIComponent(webhookSecret)}`
           : undefined,
-        payer: {
-          email: emailFromPhone(pedido.cliente_telefone),
-          first_name: pedido.cliente_nome
-        },
-        additional_info: {
-          items: pedido.produtos.map(item => ({
-            title: item.nome,
-            quantity: item.quantidade,
-            unit_price: item.preco_unitario
-          }))
-        }
+        external_reference: pedido.id
       })
     });
 
     const body = await mercadoResponse.json().catch(() => null);
     if (!mercadoResponse.ok) {
       return res.status(mercadoResponse.status || 502).json({
-        error: body?.message || body?.error || 'Não foi possível criar o pagamento no Mercado Pago.',
+        error: body?.message || body?.error || 'Não foi possível criar a preferência de pagamento no Mercado Pago.',
         details: body?.cause?.[0]?.description || body?.cause?.[0]?.message || null
       });
     }
 
-    const transactionData = body?.point_of_interaction?.transaction_data || {};
     return res.status(201).json({
       pedido_id: pedido.id,
       checkout: {
         id: body.id,
         externalId: pedido.id,
-        method: 'PIX',
+        method: 'PRO',
         gateway: 'MERCADO_PAGO',
         amount: Math.round(Number(pedido.valor_total) * 100),
-        brCode: transactionData.qr_code,
-        brCodeBase64: transactionData.qr_code_base64
-          ? `data:image/png;base64,${transactionData.qr_code_base64}`
-          : '',
-        ticketUrl: transactionData.ticket_url || ''
+        url: body.init_point
       }
     });
   } catch (error: any) {
