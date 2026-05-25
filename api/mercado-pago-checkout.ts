@@ -226,7 +226,7 @@ export default async function handler(req: any, res: any) {
       pending: `${origin}/catalogo.html?status=pending&pedidoId=${pedido.id}`
     };
 
-    const mercadoResponse = await fetch('https://api.mercadopago.com/v1/preferences', {
+    const mercadoResponse = await fetch('https://api.mercadopago.com/checkout/preferences', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${accessToken}`,

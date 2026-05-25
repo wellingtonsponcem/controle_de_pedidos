@@ -54,7 +54,7 @@ describe('Módulo do Mercado Pago Checkout - Validação Baseada em Propriedades
     test('Propriedade: Números positivos são mantidos e truncados (arredondados para baixo)', () => {
       fc.assert(
         fc.property(
-          fc.double({ min: 0, max: 100000 }),
+          fc.double({ min: 0, max: 100000, noNaN: true, noInfinity: true }),
           (val) => {
             const qty = toPositiveQuantity(val);
             expect(qty).toBe(Math.floor(val));

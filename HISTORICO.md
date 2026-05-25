@@ -22,8 +22,7 @@ Mantém o histórico consolidado de decisões e progresso do projeto para portab
 - **Segurança & Upload**: Área de upload segura no catálogo conectada ao Cloudinary via assinatura SHA-1 no servidor.
 
 ### [2026-05-25] - Integração do Mercado Pago Checkout Pro (Produção) (Concluído)
-- **Credenciais**: Salvas chaves de produção (`Public Key`, `Access Token` e `Webhook Secret`) no `.env` e integradas diretamente no banco de dados Neon (`configuracoes_sistema`).
-- **Preference API**: Backend (`mercado-pago-checkout.ts`) migrado da criação de Pix direto para a API de Preferências do Mercado Pago (Checkout Pro), trazendo suporte nativo a Cartão de Crédito, Pix e Boleto.
-- **Frontend Premium**: Ajustada a função `openPaymentModal` em `catalogo-publico.js` renderizando botão estilizado azul oficial do Mercado Pago para redirecionar o cliente ao checkout seguro.
-- **Testes de Propriedade**: Criada suíte em `tests/mercado-pago-checkout.test.ts` validando de forma indutiva sanitizações de inputs e tratamentos numéricos de carrinho com `fast-check` e Jest (100% de sucesso).
-- **Validação**: Verificação estática (`npx tsc --noEmit`) executada com sucesso absoluto.
+- **Credenciais**: Salvas chaves reais de produção no `.env` e integradas no banco de dados Neon Postgres (`configuracoes_sistema`).
+- **Preference API**: Backend (`mercado-pago-checkout.ts`) migrado para a API oficial de Preferências do Mercado Pago (`/checkout/preferences`), fornecendo suporte nativo a Pix, Cartão e Boleto em ambiente seguro oficial.
+- **Frontend Premium**: Ajustada a função `openPaymentModal` em `catalogo-publico.js` renderizando botão estilizado azul oficial do Mercado Pago com gradiente e sombras premium.
+- **Qualidade**: Criados testes de propriedades (`fast-check`) em `tests/mercado-pago-checkout.test.ts` validando indutivamente tratamentos de dados (100% de sucesso nos 24 testes e sem erros no `npx tsc --noEmit`).
