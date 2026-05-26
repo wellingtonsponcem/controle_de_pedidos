@@ -916,7 +916,7 @@ function iniciarPixTimerEPolling(pedidoId, amount, paymentId) {
   pixPollingInterval = setInterval(async () => {
     try {
       if (paymentId) {
-        await fetch(`${API_BASE_URL}/api/mercado-pago-status?pedido_id=${encodeURIComponent(pedidoId)}&payment_id=${encodeURIComponent(paymentId)}`).catch(() => null);
+        await fetch(`${API_BASE_URL}/api/mercado-pago-checkout?pedido_id=${encodeURIComponent(pedidoId)}&payment_id=${encodeURIComponent(paymentId)}`).catch(() => null);
       }
 
       const response = await fetch(`${API_BASE_URL}/api/pedidos?id=${pedidoId}`);
