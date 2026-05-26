@@ -200,7 +200,7 @@ export default async function handler(req: any, res: any) {
       const amountStr = Number(dbPedido.valor_total).toFixed(2);
       const idempotencyKey = randomUUID();
 
-      const orderResponse = await fetch('https://api.mercadopago.com/v1/orders', {
+      const orderResponse = await fetch('https://api.mercadopago.com/v1/payments', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -208,25 +208,16 @@ export default async function handler(req: any, res: any) {
           'X-Idempotency-Key': idempotencyKey
         },
         body: JSON.stringify({
-          type: 'online',
-          total_amount: amountStr,
+          transaction_amount: Number(dbPedido.valor_total),
+          token: card_payment.token,
+          description: `Pedido Bemavi - ${dbPedido.id}`,
+          installments: Number(card_payment.installments) || 1,
+          payment_method_id: card_payment.payment_method_id,
           external_reference: dbPedido.id,
-          processing_mode: 'automatic',
-          transactions: {
-            payments: [
-              {
-                amount: amountStr,
-                payment_method: {
-                  id: card_payment.payment_method_id,
-                  type: card_payment.payment_type_id || 'credit_card',
-                  token: card_payment.token,
-                  installments: Number(card_payment.installments) || 1
-                }
-              }
-            ]
-          },
           payer: {
-            email: card_payment.email || emailFromPhone(dbPedido.cliente_telefone),
+            email: card_payment.email && String(card_payment.email).trim().includes('@') 
+              ? String(card_payment.email).trim() 
+              : emailFromPhone(dbPedido.cliente_telefone),
             first_name: firstName,
             last_name: lastName,
             identification: {
@@ -245,25 +236,26 @@ export default async function handler(req: any, res: any) {
         });
       }
 
-      const payment = orderData?.transactions?.payments?.[0];
+      const paymentStatus = orderData?.status;
+      const paymentStatusDetail = orderData?.status_detail;
       
-      if (payment?.status === 'approved' || payment?.status === 'processed') {
+      if (paymentStatus === 'approved' || paymentStatus === 'authorized') {
         await pool.query(`
           UPDATE pedidos
           SET status = 'Preparando', pago = TRUE, data_pagamento = NOW(), meio_pagamento = 'Cartão', valor_liquido = $1
           WHERE id = $2
         `, [Number(dbPedido.valor_total), dbPedido.id]);
-      } else if (payment?.status === 'rejected') {
+      } else if (paymentStatus === 'rejected') {
         return res.status(400).json({
           error: 'O pagamento com cartão foi recusado pelo Mercado Pago.',
-          details: payment?.status_detail || 'Pagamento rejeitado.'
+          details: paymentStatusDetail || 'Pagamento rejeitado.'
         });
       }
 
       return res.status(200).json({
         pedido_id: dbPedido.id,
-        status: payment?.status || 'processed',
-        status_detail: payment?.status_detail || ''
+        status: paymentStatus || 'approved',
+        status_detail: paymentStatusDetail || ''
       });
     } catch (error: any) {
       console.error('Erro ao processar pagamento de cartão via Brick:', error);
@@ -291,7 +283,8 @@ export default async function handler(req: any, res: any) {
     const pedido: PedidoCheckout = await createPublicPedido(req.body, normalizedItems);
 
     if (metodo_pagamento === 'PIX') {
-      const email = pix_payer?.email || emailFromPhone(pedido.cliente_telefone);
+      const emailDigitado = String(pix_payer?.email || '').trim();
+      const email = emailDigitado.includes('@') ? emailDigitado : emailFromPhone(pedido.cliente_telefone);
       const identificationType = pix_payer?.identification?.type;
       const identificationNumber = pix_payer?.identification?.number;
 
@@ -312,7 +305,7 @@ export default async function handler(req: any, res: any) {
       expDate.setMinutes(expDate.getMinutes() + 4);
       const expirationTimeStr = expDate.toISOString();
 
-      const orderResponse = await fetch('https://api.mercadopago.com/v1/orders', {
+      const orderResponse = await fetch('https://api.mercadopago.com/v1/payments', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -320,22 +313,11 @@ export default async function handler(req: any, res: any) {
           'X-Idempotency-Key': idempotencyKey
         },
         body: JSON.stringify({
-          type: 'online',
-          total_amount: amountStr,
+          transaction_amount: Number(pedido.valor_total),
+          description: `Pedido Bemavi - ${pedido.id}`,
+          payment_method_id: 'pix',
           external_reference: pedido.id,
-          processing_mode: 'automatic',
-          transactions: {
-            payments: [
-              {
-                amount: amountStr,
-                payment_method: {
-                  id: 'pix',
-                  type: 'bank_transfer'
-                },
-                expiration_time: expirationTimeStr
-              }
-            ]
-          },
+          date_of_expiration: expirationTimeStr,
           payer: {
             email: email,
             first_name: firstName,
@@ -356,12 +338,12 @@ export default async function handler(req: any, res: any) {
         });
       }
 
-      const payment = orderData?.transactions?.payments?.[0];
-      const paymentMethod = payment?.payment_method;
-      const qrCode = paymentMethod?.qr_code || '';
-      const qrCodeBase64Raw = paymentMethod?.qr_code_base64 || '';
+      const pointOfInteraction = orderData?.point_of_interaction;
+      const transactionData = pointOfInteraction?.transaction_data;
+      const qrCode = transactionData?.qr_code || '';
+      const qrCodeBase64Raw = transactionData?.qr_code_base64 || '';
       const qrCodeBase64 = qrCodeBase64Raw ? `data:image/png;base64,${qrCodeBase64Raw}` : '';
-      const ticketUrl = paymentMethod?.ticket_url || '';
+      const ticketUrl = transactionData?.ticket_url || '';
 
       return res.status(201).json({
         pedido_id: pedido.id,
