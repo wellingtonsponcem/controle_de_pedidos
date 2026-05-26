@@ -79,6 +79,11 @@ export default async function handler(req: any, res: any) {
   const paymentId = req.body?.data?.id || req.query['data.id'] || req.body?.id;
   if (!paymentId) return res.status(200).json({ ok: true, ignored: true });
 
+  // Se for o ID de teste/simulação padrão do painel do Mercado Pago, responde 200 OK
+  if (String(paymentId) === '123456') {
+    return res.status(200).json({ ok: true, simulated: true });
+  }
+
   const accessToken = await getMercadoPagoAccessToken();
   if (!accessToken) return res.status(500).json({ error: 'Access Token do Mercado Pago não configurado.' });
 
