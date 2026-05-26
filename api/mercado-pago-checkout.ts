@@ -307,6 +307,11 @@ export default async function handler(req: any, res: any) {
       const amountStr = Number(pedido.valor_total).toFixed(2);
       const idempotencyKey = randomUUID();
 
+      // Configurar expiração do Pix em 4 minutos
+      const expDate = new Date();
+      expDate.setMinutes(expDate.getMinutes() + 4);
+      const expirationTimeStr = expDate.toISOString();
+
       const orderResponse = await fetch('https://api.mercadopago.com/v1/orders', {
         method: 'POST',
         headers: {
@@ -326,7 +331,8 @@ export default async function handler(req: any, res: any) {
                 payment_method: {
                   id: 'pix',
                   type: 'bank_transfer'
-                }
+                },
+                expiration_time: expirationTimeStr
               }
             ]
           },

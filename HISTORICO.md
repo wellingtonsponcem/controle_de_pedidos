@@ -28,7 +28,14 @@ Mantém o histórico consolidado de decisões e progresso do projeto para portab
 - **Bugfix e Limpeza**: Removido por completo o gateway obsoleto Abacate Pay do frontend e backend. Injetada a `API_BASE_URL` nas chamadas de `app.js` resolvendo o travamento na inicialização do painel administrativo por protocolo local (`file:///`).
 - **Qualidade**: Criados testes de propriedades (`fast-check`) em `tests/mercado-pago-checkout.test.ts` validando indutivamente tratamentos de dados (100% de sucesso nos 24 testes e sem erros no `npx tsc --noEmit`).
 
-### [2026-05-26] - Checkout Transparente (Pix via Orders API & Cartão via Card Payment Brick) (Concluído)
-- **Orders API no Backend**: Refatorado o backend em `api/mercado-pago-checkout.ts` para integrar a **Orders API do Mercado Pago** (`/v1/orders`) de forma unificada. O Pix gera o QR Code e código copia e cola instantaneamente na mesma tela. O Cartão de crédito processa tokens PCI e parcelas.
-- **Frontend & SDK**: Exibição dinâmica dos campos transparentes e carregamento dinâmico dos tipos de documento via `mp.getIdentificationTypes()`. Renderizado o **Card Payment Brick** de Cartão no modal de pagamento (`paymentModal`) com desmontagem resiliente de ciclo de vida (`unmount()`) evitando memory leaks na heap.
-- **Qualidade & Testes**: Expandidos os testes baseados em propriedades com Jest e `fast-check` para validar de forma indutiva a divisão resiliente e higienização robusta contra múltiplos espaços internos de nomes dos clientes. Compilação estática (`npx tsc --noEmit`) e 26 testes 100% verdes.
+### [2026-05-26] - Checkout Transparente & Rastreabilidade Pix em Tempo Real (Concluído)
+- **Orders API no Backend**: Integrada a **Orders API** de forma unificada. O Pix expira em 4 min (`expiration_time` no payload). Criada rota `GET /api/pedidos?id={id}` retornando a posição logística diária e o horário de entrega estimado.
+- **Frontend & SDK**: Acoplados cronômetro countdown regressivo (`Expira em: 04:00`) e polling de status (a cada 4s) que identifica instantaneamente o pagamento do Pix. Implementado o **Card Payment Brick** com desmontagem resiliente (`unmount()`) de ciclo de vida.
+- **Logística do WhatsApp**: Intercepção automática de Pix aprovado e redirecionamento dinâmico para o WhatsApp com comprovante, pães e horário pré-estabelecido sugerido pela heurística de rotas diárias de 30 minutos a partir das 08:00.
+- **Segurança & Webhook**: Ajustado o segredo do webhook `.env` e Neon (`MERCADOPAGO_WEBHOOK_SECRET="bemavi_mercadopago_webhook_20260524"`) para compatibilidade e verificação bem-sucedida das notificações em produção.
+
+### [2026-05-26 - Extra] - Exclusão Segura de Pedidos Cancelados (Concluído)
+- **Backend & Transação**: Ajustada a rota `DELETE /api/pedidos` com suporte a exclusão em cascata (remove dependências em `itens_pedido` e `transacoes_financeiras` e depois em `pedidos`). Lógica protegida por transações atômicas resilientes (`withTransaction`).
+- **Validação de Segurança**: Criado utilitário puro `api/_pedidos_utils.ts` contendo a validação `podeExcluirPedido` para garantir que apenas pedidos com status "Cancelado" possam ser excluídos do banco de dados (retorna 400 para outros status).
+- **Frontend Administrativo**: Adicionado o botão "🗑️ Excluir Definitivamente" visível apenas em pedidos com status "Cancelado" no painel. Implementada a função global `excluirPedidoCancelado` que interage com o backend via fetch e atualiza reativamente o dashboard administrativo.
+- **Qualidade**: Criados 3 novos testes baseados em propriedades com `fast-check` em `tests/pedidos.test.ts` (totalizando 29 testes 100% verdes no Jest). Validação estática sem erros no `npx tsc --noEmit`.

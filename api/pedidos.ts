@@ -1,5 +1,6 @@
 import pool, { withTransaction } from './_db';
 import { calcularValorLiquido } from './_financeiro_utils';
+import { podeExcluirPedido } from './_pedidos_utils';
 
 /**
  * Handler Serverless unificado /api/pedidos
@@ -17,7 +18,76 @@ export default async function handler(req: any, res: any) {
   // MÉTODO GET: Listagem Completa de Pedidos (Calendário de Produção & Entrega)
   // ============================================================================
   if (method === 'GET') {
+    const { id } = req.query || {};
     try {
+      if (id) {
+        // Consultar apenas um pedido
+        const pedidosQuery = `
+          SELECT p.*, 
+                 c.nome as cliente_nome, c.telefone as cliente_telefone, c.email as cliente_email,
+                 c.logradouro as cliente_logradouro, c.numero as cliente_numero, 
+                 c.complemento as cliente_complemento, c.bairro as cliente_bairro, c.municipio as cliente_municipio
+          FROM pedidos p
+          JOIN clientes c ON p.cliente_id = c.id
+          WHERE p.id = $1
+        `;
+        const pedidosResult = await pool.query(pedidosQuery, [id]);
+        if (pedidosResult.rows.length === 0) {
+          return res.status(404).json({ error: 'Pedido não encontrado.' });
+        }
+        const pedido = pedidosResult.rows[0];
+
+        const itensQuery = `
+          SELECT ip.*, prod.nome, prod.versao, prod.sabor, prod.modelo
+          FROM itens_pedido ip
+          JOIN produtos prod ON ip.produto_id = prod.id
+          WHERE ip.pedido_id = $1
+        `;
+        const itensResult = await pool.query(itensQuery, [id]);
+        const itens = itensResult.rows;
+
+        // Calcular a posição de entrega na mesma data para a heurística logística
+        const posicaoQuery = await pool.query(`
+          SELECT COUNT(*) as posicao 
+          FROM pedidos 
+          WHERE data_agendada = $1 AND status IN ('Pendente', 'Agendado', 'Preparando', 'Entregue') AND created_at < $2
+        `, [pedido.data_agendada, pedido.created_at]);
+        const posicao = Number(posicaoQuery.rows[0].posicao) || 0;
+
+        // Heurística de Horário Estimado: Partida às 08:00 com 30 min por entrega
+        const minutosDePartida = 8 * 60; // 08:00
+        const minutosDeTransitoPorPedido = 30;
+        const minutosEstimados = minutosDePartida + (posicao * minutosDeTransitoPorPedido);
+        const horas = Math.floor(minutosEstimados / 60);
+        const minutos = minutosEstimados % 60;
+        const horarioEstimado = `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}`;
+
+        return res.status(200).json({
+          ...pedido,
+          horario_estimado: horarioEstimado,
+          cliente: {
+            nome: pedido.cliente_nome,
+            telefone: pedido.cliente_telefone,
+            email: pedido.cliente_email,
+            logradouro: pedido.cliente_logradouro,
+            numero: pedido.cliente_numero,
+            complemento: pedido.cliente_complemento,
+            bairro: pedido.cliente_bairro,
+            municipio: pedido.cliente_municipio
+          },
+          itens: itens.map(i => ({
+            id: i.id,
+            produto_id: i.produto_id,
+            nome: i.nome,
+            versao: i.versao,
+            sabor: i.sabor,
+            modelo: i.modelo,
+            quantidade: i.quantidade,
+            preco_unitario: Number(i.preco_unitario)
+          }))
+        });
+      }
+
       // Obter pedidos com os dados do cliente e suas coordenadas geográficas
       const pedidosQuery = `
         SELECT p.*, 
@@ -434,9 +504,44 @@ export default async function handler(req: any, res: any) {
     }
   }
 
+  // ============================================================================
+  // MÉTODO DELETE: Exclusão Segura de Pedidos Cancelados (Limpeza de Testes)
+  // ============================================================================
+  else if (method === 'DELETE') {
+    const { id } = req.query || req.body || {};
+
+    if (!id) {
+      return res.status(400).json({ error: 'Pedido ID é obrigatório para exclusão.' });
+    }
+
+    try {
+      await withTransaction(async (client) => {
+        // Verificar status do pedido
+        const pedCheck = await client.query('SELECT status FROM pedidos WHERE id = $1', [id]);
+        if (pedCheck.rows.length === 0) {
+          throw Object.assign(new Error('Pedido não encontrado.'), { statusCode: 404 });
+        }
+
+        if (!podeExcluirPedido(pedCheck.rows[0].status)) {
+          throw Object.assign(new Error('Apenas pedidos previamente cancelados podem ser excluídos do sistema.'), { statusCode: 400 });
+        }
+
+        // Excluir de forma em cascata transações, itens e o pedido
+        await client.query('DELETE FROM transacoes_financeiras WHERE pedido_id = $1', [id]);
+        await client.query('DELETE FROM itens_pedido WHERE pedido_id = $1', [id]);
+        await client.query('DELETE FROM pedidos WHERE id = $1', [id]);
+      });
+
+      return res.status(200).json({ success: true, message: 'Pedido cancelado excluído com sucesso.' });
+    } catch (error: any) {
+      console.error('Falha na transação de exclusão de pedido cancelado:', error);
+      return res.status(error.statusCode || 500).json({ error: 'Erro ao excluir pedido.', details: error.message });
+    }
+  }
+
   // Método HTTP não suportado no endpoint
   else {
-    res.setHeader('Allow', ['GET', 'POST', 'PUT', 'PATCH']);
+    res.setHeader('Allow', ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']);
     return res.status(405).json({ error: `Método ${method} não suportado.` });
   }
 }

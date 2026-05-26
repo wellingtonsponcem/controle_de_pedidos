@@ -1015,6 +1015,12 @@ function renderPedidos() {
       `;
     }
 
+    if (pedido.status === 'Cancelado') {
+      acoesHtml += `
+        <button class="btn btn-danger" onclick="excluirPedidoCancelado('${pedido.id}')" style="background: rgba(220, 38, 38, 0.08); border-color: rgba(220, 38, 38, 0.2); color: var(--danger);">🗑️ Excluir Definitivamente</button>
+      `;
+    }
+
     const itemsHtml = pedido.itens.map(item => `
       <div class="order-item-row">
         <span>${item.quantidade}x ${item.nome} (${item.modelo})</span>
@@ -1090,6 +1096,35 @@ window.alterarStatusPedido = async function(pedidoId, novoStatus) {
   } catch (error) {
     console.error('Falha ao alterar status de pedido:', error);
     showToast('Falha de rede ao alterar status.', 'error');
+  }
+};
+
+window.excluirPedidoCancelado = async function(pedidoId) {
+  if (!state.isOnline) {
+    showToast('Apenas online é permitido excluir pedidos do banco de dados.', 'error');
+    return;
+  }
+
+  if (!confirm('Deseja excluir definitivamente este pedido cancelado? Esta ação não pode ser desfeita e removerá todos os registros financeiros e itens associados.')) {
+    return;
+  }
+
+  try {
+    const response = await fetch(`/api/pedidos?id=${pedidoId}`, {
+      method: 'DELETE'
+    });
+
+    if (response.ok) {
+      showToast('Pedido cancelado excluído com sucesso!', 'success');
+      await refreshDashboard();
+      await refreshFinanceiro();
+    } else {
+      const err = await response.json();
+      showToast(err.error || 'Erro ao excluir pedido.', 'error');
+    }
+  } catch (error) {
+    console.error('Falha ao excluir pedido:', error);
+    showToast('Falha de rede ao excluir pedido.', 'error');
   }
 };
 

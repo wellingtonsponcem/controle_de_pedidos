@@ -12,6 +12,9 @@ function getMercadoPagoInstance() {
   return mpInstance;
 }
 
+let pixCountdownInterval = null;
+let pixPollingInterval = null;
+
 const state = {
   produtos: [],
   carrinho: [],
@@ -531,12 +534,19 @@ function openPaymentModal({ isCard, isPix, isPro, amount, qrCode, pixCode, url, 
       }
     }, 100);
   } else {
-    text.textContent = 'Escaneie o QR Code ou copie o código PIX para pagar de forma instantânea.';
+    text.textContent = 'Escaneie o QR Code ou copie o código PIX para pagar. Este código expira em 4 minutos.';
     body.innerHTML = `
       <div class="modal-amount">${money.format(amount / 100)}</div>
-      ${qrCode ? `<img class="modal-qr" src="${qrCode}" alt="QR Code PIX" style="max-width: 256px; margin: 1rem auto; display: block; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">` : ''}
+      <div id="pix-countdown-timer" style="font-weight: 600; color: #ff5722; text-align: center; font-size: 0.95rem; margin-bottom: 0.5rem; font-family: var(--font-display);">Expira em: 04:00</div>
+      ${qrCode ? `<img class="modal-qr" src="${qrCode}" alt="QR Code PIX" style="max-width: 230px; margin: 0.5rem auto; display: block; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">` : ''}
+      <div id="pix-payment-status" style="text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: 0.5rem;">
+        <span class="loading-spinner-small" style="display: inline-block; vertical-align: middle; margin-right: 6px;"></span>
+        Aguardando pagamento...
+      </div>
     `;
     copyButton.hidden = !pixCode;
+    
+    iniciarPixTimerEPolling(checkoutId, amount);
   }
 
   modal.hidden = false;
@@ -562,6 +572,9 @@ window.closePaymentModal = function() {
   if (!modal) return;
   modal.hidden = true;
   document.body.classList.remove('modal-open');
+
+  clearInterval(pixCountdownInterval);
+  clearInterval(pixPollingInterval);
 
   if (window.cardPaymentBrickController) {
     try {
@@ -846,3 +859,127 @@ async function carregarTiposDocumento() {
     console.error('Erro ao carregar tipos de documento:', error);
   }
 }
+
+function iniciarPixTimerEPolling(pedidoId, amount) {
+  clearInterval(pixCountdownInterval);
+  clearInterval(pixPollingInterval);
+
+  let tempoRestante = 4 * 60; // 4 minutos em segundos
+  const timerEl = document.getElementById('pix-countdown-timer');
+  const statusEl = document.getElementById('pix-payment-status');
+
+  pixCountdownInterval = setInterval(() => {
+    tempoRestante -= 1;
+    if (tempoRestante <= 0) {
+      clearInterval(pixCountdownInterval);
+      clearInterval(pixPollingInterval);
+      if (timerEl) timerEl.textContent = 'QR Code Expirado!';
+      if (statusEl) statusEl.innerHTML = '<span style="color: #ff5722;">O pagamento expirou. Feche e tente novamente.</span>';
+      return;
+    }
+
+    const min = String(Math.floor(tempoRestante / 60)).padStart(2, '0');
+    const seg = String(tempoRestante % 60).padStart(2, '0');
+    if (timerEl) timerEl.textContent = `Expira em: ${min}:${seg}`;
+  }, 1000);
+
+  pixPollingInterval = setInterval(async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/pedidos?id=${pedidoId}`);
+      if (!response.ok) return;
+      const pedido = await response.json();
+
+      if (pedido.pago === true) {
+        clearInterval(pixCountdownInterval);
+        clearInterval(pixPollingInterval);
+
+        showToast('Pagamento Pix confirmado com sucesso!');
+        const text = document.getElementById('paymentModalText');
+        const body = document.getElementById('paymentModalBody');
+        const copyButton = document.getElementById('copyPixModalBtn');
+
+        if (text) text.textContent = 'Pagamento Confirmado! Seu pedido já está sendo preparado.';
+        if (copyButton) copyButton.hidden = true;
+
+        const dataAgendada = formatDate(pedido.data_agendada);
+        const horarioEstimado = pedido.horario_estimado || '08:00';
+
+        if (body) {
+          body.innerHTML = `
+            <div class="success-payment" style="text-align: center; padding: 1.5rem 1rem;">
+              <div style="font-size: 3.5rem; color: #4CAF50; margin-bottom: 0.75rem;">✓</div>
+              <h3 style="margin-bottom: 0.5rem; font-family: var(--font-display); font-size: 1.25rem;">Pagamento Pix Aprovado!</h3>
+              <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">Seu pagamento foi confirmado de forma automática e seu horário estimado de entrega é às <strong>${horarioEstimado}</strong> na data agendada.</p>
+              <button type="button" class="whatsapp-send-btn" onclick="enviarConfirmacaoWhatsapp('${pedidoId}', '${horarioEstimado}')" style="background: #25D366; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: bold; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; box-shadow: 0 4px 15px rgba(37,211,102,0.3); font-size: 0.95rem; margin-top: 1rem;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="display: inline-block; vertical-align: middle;">
+                  <path d="M12.012 2c-5.506 0-9.989 4.478-9.99 9.984a9.96 9.96 0 0 0 1.335 4.978L2 22l5.197-1.363a9.957 9.957 0 0 0 4.815 1.242h.005c5.507 0 9.99-4.478 9.99-9.985A9.97 9.97 0 0 0 12.012 2zm5.727 14.127c-.247.697-1.206 1.275-1.66 1.327-.453.052-.903.243-2.903-.553-2.001-.798-3.284-2.83-3.385-2.964-.101-.133-.822-1.094-.822-2.087 0-.993.518-1.48.702-1.687.185-.206.402-.258.536-.258.135 0 .27-.001.387.005.123.006.29-.046.454.346.169.403.58 1.413.63 1.516.052.103.088.222.019.36-.069.138-.104.222-.207.345-.103.123-.217.274-.31.372-.103.103-.211.217-.09.423.122.207.544.896 1.163 1.447.797.712 1.467.933 1.673 1.036.207.103.326.088.446-.052.12-.138.517-.603.655-.81.137-.206.275-.172.464-.103.19.07 1.206.569 1.413.673.207.103.345.155.397.242.052.088.052.508-.195 1.205z"/>
+                </svg>
+                Enviar no WhatsApp da Padaria
+              </button>
+            </div>
+          `;
+        }
+
+        state.carrinho = [];
+        renderCart();
+        renderCatalog();
+
+        setTimeout(() => {
+          enviarConfirmacaoWhatsapp(pedidoId, horarioEstimado);
+        }, 2500);
+      }
+    } catch (e) {
+      console.warn('Erro ao checar status do Pix:', e);
+    }
+  }, 4000);
+}
+
+window.enviarConfirmacaoWhatsapp = async function(pedidoId, horarioEstimado) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/pedidos?id=${pedidoId}`);
+    if (!response.ok) return;
+    const pedido = await response.json();
+
+    const dataAgendada = formatDate(pedido.data_agendada);
+    const totalProdutos = Number(pedido.valor_produtos);
+    const taxaEntrega = Number(pedido.valor_entrega);
+    const total = Number(pedido.valor_total);
+
+    const itens = pedido.itens
+      .map(item => `- ${item.quantidade}x ${item.nome}${item.modelo ? ` (${item.modelo})` : ''} - ${money.format(item.preco_unitario * item.quantidade)}`)
+      .join('\n');
+
+    const message = [
+      'Ola, Bemavi! Meu pagamento de Pix foi confirmado automaticamente! ⚡🍞',
+      '',
+      `*Pedido Confirmado:* #${pedido.id.slice(0, 8).toUpperCase()}`,
+      '',
+      '*Itens*',
+      itens,
+      '',
+      `*Total dos paes:* ${money.format(totalProdutos)}`,
+      `*Entrega:* ${money.format(taxaEntrega)}`,
+      `*Total Pago (Pix Online):* ${money.format(total)}`,
+      '',
+      '*Dados do cliente*',
+      `Nome: ${pedido.cliente?.nome}`,
+      `WhatsApp: ${pedido.cliente?.telefone}`,
+      `Entrega/retirada: ${pedido.entrega}`,
+      `Data agendada: ${dataAgendada}`,
+      pedido.entrega === 'Entrega' ? `Endereco: ${pedido.cliente?.logradouro}` : null,
+      pedido.observacao ? `Observacoes: ${pedido.observacao.split('\n')[0]}` : null,
+      '',
+      '*Logística Estimada Bemavi*',
+      `📅 Entrega em: *${dataAgendada}*`,
+      `⏰ Horário estimado aproximado: *${horarioEstimado}*`,
+      '_(Definido com base na fila de produção e horários de partida)_',
+      '',
+      'Pode confirmar se a data/horário está disponível para entrega?'
+    ].filter(Boolean).join('\n');
+
+    const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+    window.location.href = whatsappUrl;
+  } catch (error) {
+    console.error('Erro ao enviar mensagem para o WhatsApp:', error);
+  }
+};
