@@ -373,7 +373,11 @@ async function createMercadoPagoCheckout(metodoPagamento) {
     throw new Error(data.details || data.error || 'Nao foi possivel gerar o pagamento online.');
   }
 
-  return data.checkout;
+  return {
+    ...(data.checkout || {}),
+    pedidoId: data.pedido_id || data.checkout?.pedidoId || data.checkout?.externalId || '',
+    paymentId: data.checkout?.paymentId || data.checkout?.id || ''
+  };
 }
 
 function renderMercadoPagoCheckout(checkout) {
@@ -384,6 +388,8 @@ function renderMercadoPagoCheckout(checkout) {
   const isCard = checkout.method === 'CARD';
   const isPix = checkout.method === 'PIX';
   const isPro = checkout.method === 'PRO' || (checkout.method !== 'PIX' && !!checkout.url);
+  const pedidoId = checkout.pedidoId || checkout.pedido_id || checkout.externalId || '';
+  const paymentId = checkout.paymentId || checkout.id || '';
 
   openPaymentModal({
     isCard,
@@ -393,7 +399,9 @@ function renderMercadoPagoCheckout(checkout) {
     qrCode,
     pixCode,
     url: checkout.url || '',
-    checkoutId: checkout.id || checkout.externalId || ''
+    checkoutId: checkout.id || checkout.externalId || '',
+    pedidoId,
+    paymentId
   });
 }
 
@@ -404,7 +412,7 @@ function clearAbacateCheckout() {
   box.innerHTML = '';
 }
 
-function openPaymentModal({ isCard, isPix, isPro, amount, qrCode, pixCode, url, checkoutId }) {
+function openPaymentModal({ isCard, isPix, isPro, amount, qrCode, pixCode, url, checkoutId, pedidoId, paymentId }) {
   const modal = document.getElementById('paymentModal');
   const text = document.getElementById('paymentModalText');
   const body = document.getElementById('paymentModalBody');
@@ -454,7 +462,7 @@ function openPaymentModal({ isCard, isPix, isPro, amount, qrCode, pixCode, url, 
                       'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                      pedido_id: checkoutId,
+                      pedido_id: pedidoId || checkoutId,
                       metodo_pagamento: 'CARD',
                       card_payment: {
                         amount: String(formData.transaction_amount),
@@ -563,7 +571,7 @@ function openPaymentModal({ isCard, isPix, isPro, amount, qrCode, pixCode, url, 
     `;
     copyButton.hidden = !pixCode;
     
-    iniciarPixTimerEPolling(checkoutId, amount);
+    iniciarPixTimerEPolling(pedidoId || checkoutId, amount, paymentId || checkoutId);
   }
 
   modal.hidden = false;
@@ -877,13 +885,18 @@ async function carregarTiposDocumento() {
   }
 }
 
-function iniciarPixTimerEPolling(pedidoId, amount) {
+function iniciarPixTimerEPolling(pedidoId, amount, paymentId) {
   clearInterval(pixCountdownInterval);
   clearInterval(pixPollingInterval);
 
   let tempoRestante = 4 * 60; // 4 minutos em segundos
   const timerEl = document.getElementById('pix-countdown-timer');
   const statusEl = document.getElementById('pix-payment-status');
+
+  if (!pedidoId) {
+    if (statusEl) statusEl.innerHTML = '<span style="color: #ff5722;">Nao foi possivel acompanhar este pagamento. Se o Pix foi pago, chame pelo WhatsApp.</span>';
+    return;
+  }
 
   pixCountdownInterval = setInterval(() => {
     tempoRestante -= 1;
@@ -902,6 +915,10 @@ function iniciarPixTimerEPolling(pedidoId, amount) {
 
   pixPollingInterval = setInterval(async () => {
     try {
+      if (paymentId) {
+        await fetch(`${API_BASE_URL}/api/mercado-pago-status?pedido_id=${encodeURIComponent(pedidoId)}&payment_id=${encodeURIComponent(paymentId)}`).catch(() => null);
+      }
+
       const response = await fetch(`${API_BASE_URL}/api/pedidos?id=${pedidoId}`);
       if (!response.ok) return;
       const pedido = await response.json();

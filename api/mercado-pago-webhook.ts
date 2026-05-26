@@ -8,7 +8,7 @@ async function getMercadoPagoAccessToken() {
     || await getSystemConfigValue('MERCADOPAGO_ACCESS_TOKEN');
 }
 
-async function markPedidoAsPaid(pedidoId: string, payment: any) {
+export async function markPedidoAsPaid(pedidoId: string, payment: any) {
   return withTransaction(async (client) => {
     const pedidoResult = await client.query(`
       SELECT p.*, c.nome as cliente_nome
