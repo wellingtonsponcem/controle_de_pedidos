@@ -46,7 +46,7 @@ async function createPublicPedido(payload: any, normalizedItems: Array<{ produto
   }
 
   if (entrega === 'Entrega' && !String(pedido.endereco || '').trim()) {
-    throw Object.assign(new Error('Endereço é obrigatório para entrega.'), { statusCode: 400 });
+    throw Object.assign(new Error('Endereço é obrigatório for entrega.'), { statusCode: 400 });
   }
 
   return withTransaction(async (client) => {
@@ -175,8 +175,103 @@ export default async function handler(req: any, res: any) {
     return res.status(500).json({ error: 'Access Token do Mercado Pago não configurado.' });
   }
 
-  const { itens } = req.body || {};
+  const { itens, metodo_pagamento, pix_payer, pedido_id, card_payment } = req.body || {};
 
+  // ROTA DE FINALIZAÇÃO DE CARTÃO DE CRÉDITO (SUBMIT DO BRICK)
+  if (pedido_id && metodo_pagamento === 'CARD' && card_payment) {
+    try {
+      const pedidoQuery = await pool.query(`
+        SELECT p.*, c.nome as cliente_nome, c.telefone as cliente_telefone 
+        FROM pedidos p 
+        JOIN clientes c ON p.cliente_id = c.id 
+        WHERE p.id = $1
+      `, [pedido_id]);
+
+      if (pedidoQuery.rows.length === 0) {
+        return res.status(404).json({ error: 'Pedido não encontrado.' });
+      }
+
+      const dbPedido = pedidoQuery.rows[0];
+      const nomeCompleto = String(dbPedido.cliente_nome).trim().replace(/\s+/g, ' ');
+      const nomeParts = nomeCompleto.split(' ');
+      const firstName = nomeParts[0] || 'Cliente';
+      const lastName = nomeParts.slice(1).join(' ') || 'Bemavi';
+
+      const amountStr = Number(dbPedido.valor_total).toFixed(2);
+      const idempotencyKey = randomUUID();
+
+      const orderResponse = await fetch('https://api.mercadopago.com/v1/orders', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+          'X-Idempotency-Key': idempotencyKey
+        },
+        body: JSON.stringify({
+          type: 'online',
+          total_amount: amountStr,
+          external_reference: dbPedido.id,
+          processing_mode: 'automatic',
+          transactions: {
+            payments: [
+              {
+                amount: amountStr,
+                payment_method: {
+                  id: card_payment.payment_method_id,
+                  type: card_payment.payment_type_id || 'credit_card',
+                  token: card_payment.token,
+                  installments: Number(card_payment.installments) || 1
+                }
+              }
+            ]
+          },
+          payer: {
+            email: card_payment.email || emailFromPhone(dbPedido.cliente_telefone),
+            first_name: firstName,
+            last_name: lastName,
+            identification: {
+              type: card_payment.identification?.type || 'CPF',
+              number: String(card_payment.identification?.number || '').replace(/\D/g, '')
+            }
+          }
+        })
+      });
+
+      const orderData = await orderResponse.json().catch(() => null);
+      if (!orderResponse.ok) {
+        return res.status(orderResponse.status || 502).json({
+          error: orderData?.message || orderData?.error || 'Não foi possível processar o pagamento com cartão no Mercado Pago.',
+          details: orderData?.cause?.[0]?.description || orderData?.cause?.[0]?.message || null
+        });
+      }
+
+      const payment = orderData?.transactions?.payments?.[0];
+      
+      if (payment?.status === 'approved' || payment?.status === 'processed') {
+        await pool.query(`
+          UPDATE pedidos
+          SET status = 'Preparando', pago = TRUE, data_pagamento = NOW(), meio_pagamento = 'Cartão', valor_liquido = $1
+          WHERE id = $2
+        `, [Number(dbPedido.valor_total), dbPedido.id]);
+      } else if (payment?.status === 'rejected') {
+        return res.status(400).json({
+          error: 'O pagamento com cartão foi recusado pelo Mercado Pago.',
+          details: payment?.status_detail || 'Pagamento rejeitado.'
+        });
+      }
+
+      return res.status(200).json({
+        pedido_id: dbPedido.id,
+        status: payment?.status || 'processed',
+        status_detail: payment?.status_detail || ''
+      });
+    } catch (error: any) {
+      console.error('Erro ao processar pagamento de cartão via Brick:', error);
+      return res.status(500).json({ error: 'Erro interno ao processar pagamento com cartão.', details: error.message });
+    }
+  }
+
+  // CRIAÇÃO INICIAL DO PEDIDO
   if (!Array.isArray(itens) || itens.length === 0) {
     return res.status(400).json({ error: 'Informe itens para gerar o pagamento online.' });
   }
@@ -194,82 +289,102 @@ export default async function handler(req: any, res: any) {
 
   try {
     const pedido: PedidoCheckout = await createPublicPedido(req.body, normalizedItems);
-    const origin = req.headers.origin || process.env.APP_URL || 'https://bemavi.vercel.app';
-    const webhookSecret = process.env.MERCADOPAGO_WEBHOOK_SECRET
-      || process.env.ABACATEPAY_WEBHOOK_SECRET
-      || await getSystemConfigValue('MERCADOPAGO_WEBHOOK_SECRET')
-      || await getSystemConfigValue('ABACATEPAY_WEBHOOK_SECRET');
 
-    // Montando itens detalhados para exibição elegante no checkout oficial
-    const mpItems = pedido.produtos.map(item => ({
-      title: item.nome,
-      quantity: Number(item.quantidade),
-      unit_price: Number(item.preco_unitario),
-      currency_id: 'BRL'
-    }));
+    if (metodo_pagamento === 'PIX') {
+      const email = pix_payer?.email || emailFromPhone(pedido.cliente_telefone);
+      const identificationType = pix_payer?.identification?.type;
+      const identificationNumber = pix_payer?.identification?.number;
 
-    // Se houver valor de entrega, insere como item adicional
-    const taxaQuery = await pool.query('SELECT valor_entrega FROM pedidos WHERE id = $1', [pedido.id]);
-    const valorEntrega = taxaQuery.rows.length > 0 ? Number(taxaQuery.rows[0].valor_entrega) : 0;
-    if (valorEntrega > 0) {
-      mpItems.push({
-        title: 'Taxa de Entrega (Logística Bemavi)',
-        quantity: 1,
-        unit_price: valorEntrega,
-        currency_id: 'BRL'
-      });
-    }
-
-    const backUrls = {
-      success: `${origin}/catalogo.html?status=success&pedidoId=${pedido.id}`,
-      failure: `${origin}/catalogo.html?status=failure&pedidoId=${pedido.id}`,
-      pending: `${origin}/catalogo.html?status=pending&pedidoId=${pedido.id}`
-    };
-
-    const mercadoResponse = await fetch('https://api.mercadopago.com/checkout/preferences', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        items: mpItems,
-        payer: {
-          name: pedido.cliente_nome,
-          email: emailFromPhone(pedido.cliente_telefone),
-          phone: {
-            number: pedido.cliente_telefone
-          }
-        },
-        back_urls: backUrls,
-        auto_return: 'approved',
-        notification_url: webhookSecret
-          ? `${origin}/api/mercado-pago-webhook?webhookSecret=${encodeURIComponent(webhookSecret)}`
-          : undefined,
-        external_reference: pedido.id
-      })
-    });
-
-    const body = await mercadoResponse.json().catch(() => null);
-    if (!mercadoResponse.ok) {
-      return res.status(mercadoResponse.status || 502).json({
-        error: body?.message || body?.error || 'Não foi possível criar a preferência de pagamento no Mercado Pago.',
-        details: body?.cause?.[0]?.description || body?.cause?.[0]?.message || null
-      });
-    }
-
-    return res.status(201).json({
-      pedido_id: pedido.id,
-      checkout: {
-        id: body.id,
-        externalId: pedido.id,
-        method: 'PRO',
-        gateway: 'MERCADO_PAGO',
-        amount: Math.round(Number(pedido.valor_total) * 100),
-        url: body.init_point,
-        publicKey: process.env.MERCADOPAGO_PUBLIC_KEY || await getSystemConfigValue('MERCADOPAGO_PUBLIC_KEY')
+      if (!identificationType || !identificationNumber) {
+        return res.status(400).json({ error: 'Para pagamento via Pix, os dados de identificação (tipo e número de documento) são obrigatórios.' });
       }
-    });
+
+      const nomeCompleto = String(pedido.cliente_nome).trim().replace(/\s+/g, ' ');
+      const nomeParts = nomeCompleto.split(' ');
+      const firstName = nomeParts[0] || 'Cliente';
+      const lastName = nomeParts.slice(1).join(' ') || 'Bemavi';
+
+      const amountStr = Number(pedido.valor_total).toFixed(2);
+      const idempotencyKey = randomUUID();
+
+      const orderResponse = await fetch('https://api.mercadopago.com/v1/orders', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+          'X-Idempotency-Key': idempotencyKey
+        },
+        body: JSON.stringify({
+          type: 'online',
+          total_amount: amountStr,
+          external_reference: pedido.id,
+          processing_mode: 'automatic',
+          transactions: {
+            payments: [
+              {
+                amount: amountStr,
+                payment_method: {
+                  id: 'pix',
+                  type: 'bank_transfer'
+                }
+              }
+            ]
+          },
+          payer: {
+            email: email,
+            first_name: firstName,
+            last_name: lastName,
+            identification: {
+              type: identificationType,
+              number: String(identificationNumber).replace(/\D/g, '')
+            }
+          }
+        })
+      });
+
+      const orderData = await orderResponse.json().catch(() => null);
+      if (!orderResponse.ok) {
+        return res.status(orderResponse.status || 502).json({
+          error: orderData?.message || orderData?.error || 'Não foi possível criar a cobrança Pix no Mercado Pago.',
+          details: orderData?.cause?.[0]?.description || orderData?.cause?.[0]?.message || null
+        });
+      }
+
+      const payment = orderData?.transactions?.payments?.[0];
+      const paymentMethod = payment?.payment_method;
+      const qrCode = paymentMethod?.qr_code || '';
+      const qrCodeBase64Raw = paymentMethod?.qr_code_base64 || '';
+      const qrCodeBase64 = qrCodeBase64Raw ? `data:image/png;base64,${qrCodeBase64Raw}` : '';
+      const ticketUrl = paymentMethod?.ticket_url || '';
+
+      return res.status(201).json({
+        pedido_id: pedido.id,
+        checkout: {
+          id: orderData.id,
+          externalId: pedido.id,
+          method: 'PIX',
+          gateway: 'MERCADO_PAGO',
+          amount: Math.round(Number(pedido.valor_total) * 100),
+          brCode: qrCode,
+          brCodeBase64: qrCodeBase64,
+          url: ticketUrl
+        }
+      });
+    }
+
+    if (metodo_pagamento === 'CARD') {
+      return res.status(201).json({
+        pedido_id: pedido.id,
+        checkout: {
+          method: 'CARD',
+          gateway: 'MERCADO_PAGO',
+          amount: Math.round(Number(pedido.valor_total) * 100),
+          externalId: pedido.id
+        }
+      });
+    }
+
+    return res.status(400).json({ error: 'Método de pagamento inválido ou não suportado.' });
   } catch (error: any) {
     console.error('Erro ao criar checkout Mercado Pago:', error);
     return res.status(error.statusCode || 500).json({ error: 'Erro ao criar pagamento Mercado Pago.', details: error.message });

@@ -1,7 +1,16 @@
 const WHATSAPP_NUMBER = '5527992760190';
 const API_BASE_URL = window.location.protocol === 'file:' ? 'https://bemavi.vercel.app' : '';
+const MERCADOPAGO_PUBLIC_KEY = 'APP_USR-5c9cbe03-f1c5-4e5c-9843-ea8c6b90a1d8';
 const ONLINE_PIX_OPTION = 'Pix';
 const ONLINE_CARD_OPTION = 'Cartão';
+
+let mpInstance = null;
+function getMercadoPagoInstance() {
+  if (!mpInstance && window.MercadoPago) {
+    mpInstance = new window.MercadoPago(MERCADOPAGO_PUBLIC_KEY, { locale: 'pt-BR' });
+  }
+  return mpInstance;
+}
 
 const state = {
   produtos: [],
@@ -23,6 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupPhoneMask();
   setupCustomDatepicker();
   setupMunicipioChange();
+  setupPaymentChange();
   loadDeliveryFees();
   loadPublicCatalog();
 });
@@ -297,29 +307,45 @@ function getMercadoPagoPaymentMethod(pagamento) {
 }
 
 async function createMercadoPagoCheckout(metodoPagamento) {
+  const payload = {
+    cliente: {
+      nome: document.getElementById('public_nome').value.trim(),
+      telefone: document.getElementById('public_telefone').value.trim()
+    },
+    pedido: {
+      entrega: document.getElementById('public_entrega').value,
+      data_agendada: document.getElementById('public_data').value,
+      endereco: document.getElementById('public_endereco').value.trim(),
+      municipio_entrega: document.getElementById('public_municipio').value,
+      observacao: document.getElementById('public_obs').value.trim()
+    },
+    itens: state.carrinho.map(item => ({
+      produto_id: item.id,
+      quantidade: item.quantidade
+    })),
+    metodo_pagamento: metodoPagamento
+  };
+
+  if (metodoPagamento === 'PIX') {
+    const emailField = document.getElementById('form-checkout__email');
+    const docTypeField = document.getElementById('form-checkout__identificationType');
+    const docNumField = document.getElementById('form-checkout__identificationNumber');
+    
+    payload.pix_payer = {
+      email: emailField ? emailField.value.trim() : '',
+      identification: {
+        type: docTypeField ? docTypeField.value.trim() : '',
+        number: docNumField ? docNumField.value.trim() : ''
+      }
+    };
+  }
+
   const response = await fetch(`${API_BASE_URL}/api/mercado-pago-checkout`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({
-      cliente: {
-        nome: document.getElementById('public_nome').value.trim(),
-        telefone: document.getElementById('public_telefone').value.trim()
-      },
-      pedido: {
-        entrega: document.getElementById('public_entrega').value,
-        data_agendada: document.getElementById('public_data').value,
-        endereco: document.getElementById('public_endereco').value.trim(),
-        municipio_entrega: document.getElementById('public_municipio').value,
-        observacao: document.getElementById('public_obs').value.trim()
-      },
-      itens: state.carrinho.map(item => ({
-        produto_id: item.id,
-        quantidade: item.quantidade
-      })),
-      metodo_pagamento: metodoPagamento
-    })
+    body: JSON.stringify(payload)
   });
 
   const data = await response.json().catch(() => ({}));
@@ -336,17 +362,18 @@ function renderMercadoPagoCheckout(checkout) {
   const pixCode = checkout.brCode || checkout.pix?.brCode || '';
   const qrCode = checkout.brCodeBase64 || checkout.pix?.brCodeBase64 || '';
   const isCard = checkout.method === 'CARD';
-  const isPro = checkout.method === 'PRO' || !!checkout.url;
+  const isPix = checkout.method === 'PIX';
+  const isPro = checkout.method === 'PRO' || (checkout.method !== 'PIX' && !!checkout.url);
 
   openPaymentModal({
     isCard,
+    isPix,
     isPro,
     amount: Number(checkout.amount) || 0,
     qrCode,
     pixCode,
     url: checkout.url || '',
-    publicKey: checkout.publicKey || '',
-    checkoutId: checkout.id || ''
+    checkoutId: checkout.id || checkout.externalId || ''
   });
 }
 
@@ -357,7 +384,7 @@ function clearAbacateCheckout() {
   box.innerHTML = '';
 }
 
-function openPaymentModal({ isCard, isPro, amount, qrCode, pixCode, url, publicKey, checkoutId }) {
+function openPaymentModal({ isCard, isPix, isPro, amount, qrCode, pixCode, url, checkoutId }) {
   const modal = document.getElementById('paymentModal');
   const text = document.getElementById('paymentModalText');
   const body = document.getElementById('paymentModalBody');
@@ -366,7 +393,104 @@ function openPaymentModal({ isCard, isPro, amount, qrCode, pixCode, url, publicK
 
   modal.dataset.pixCode = pixCode || '';
 
-  if (isPro) {
+  if (isCard) {
+    text.textContent = 'Preencha os dados do cartão com segurança para concluir seu pedido.';
+    body.innerHTML = `
+      <div class="modal-amount">${money.format(amount / 100)}</div>
+      <div id="cardPaymentBrick_container" style="margin: 1rem 0; min-height: 200px;"></div>
+    `;
+    copyButton.hidden = true;
+
+    // Inicializar o Card Payment Brick do Mercado Pago para checkout em modal transparente
+    setTimeout(async () => {
+      const container = document.getElementById('cardPaymentBrick_container');
+      if (container && window.MercadoPago && checkoutId) {
+        try {
+          const mp = getMercadoPagoInstance();
+          if (!mp) return;
+          const bricksBuilder = mp.bricks();
+
+          if (window.cardPaymentBrickController) {
+            try {
+              await window.cardPaymentBrickController.unmount();
+            } catch (e) {
+              console.warn(e);
+            }
+          }
+
+          window.cardPaymentBrickController = await bricksBuilder.create("cardPayment", "cardPaymentBrick_container", {
+            initialization: {
+              amount: amount / 100, // valor em reais
+            },
+            callbacks: {
+              onReady: () => {
+                console.log('Card Payment Brick pronto.');
+              },
+              onSubmit: (formData, additionalData) => {
+                return new Promise((resolve, reject) => {
+                  fetch(`${API_BASE_URL}/api/mercado-pago-checkout`, {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                      pedido_id: checkoutId,
+                      metodo_pagamento: 'CARD',
+                      card_payment: {
+                        amount: String(formData.transaction_amount),
+                        payment_method_id: formData.payment_method_id,
+                        payment_type_id: additionalData.paymentTypeId,
+                        token: formData.token,
+                        installments: formData.installments,
+                        email: formData.payer.email,
+                        identification: formData.payer.identification
+                      }
+                    })
+                  })
+                  .then(response => response.json().then(data => ({ status: response.status, data })))
+                  .then(({ status, data }) => {
+                    if (status >= 200 && status < 300) {
+                      showToast('Pagamento com cartão processado com sucesso!');
+                      text.textContent = 'Pagamento Confirmado! Seu pedido já está sendo preparado.';
+                      body.innerHTML = `
+                        <div class="success-payment" style="text-align: center; padding: 2rem 1rem;">
+                          <div style="font-size: 3rem; color: #4CAF50; margin-bottom: 1rem;">✓</div>
+                          <h3 style="margin-bottom: 0.5rem; font-family: var(--font-display);">Pagamento Aprovado!</h3>
+                          <p style="color: var(--text-muted); font-size: 0.9rem;">O pagamento foi confirmado e a produção de seus pães artesanais já foi iniciada.</p>
+                        </div>
+                      `;
+                      
+                      // Limpar carrinho
+                      state.carrinho = [];
+                      renderCart();
+                      renderCatalog();
+                      
+                      resolve();
+                    } else {
+                      showToast(data.error || 'Erro ao processar pagamento com cartão.');
+                      reject();
+                    }
+                  })
+                  .catch(err => {
+                    console.error('Erro na requisição de pagamento com cartão:', err);
+                    showToast('Erro ao processar o pagamento com cartão. Tente novamente.');
+                    reject();
+                  });
+                });
+              },
+              onError: (error) => {
+                console.error('Erro no Card Payment Brick:', error);
+                showToast('Erro no formulário de cartão do Mercado Pago.');
+              }
+            }
+          });
+        } catch (sdkError) {
+          console.error('Erro ao renderizar Card Payment Brick:', sdkError);
+          body.innerHTML = `<div style="color: red; text-align: center; padding: 1rem;">Erro ao inicializar o formulário de cartão. Por favor, tente pelo WhatsApp.</div>`;
+        }
+      }
+    }, 100);
+  } else if (isPro) {
     text.textContent = 'Clique no botão oficial abaixo para pagar de forma transparente via Pix, Cartão ou Boleto sem sair do site!';
     body.innerHTML = `
       <div class="modal-amount">${money.format(amount / 100)}</div>
@@ -377,9 +501,10 @@ function openPaymentModal({ isCard, isPro, amount, qrCode, pixCode, url, publicK
     // Renderizar o Wallet Brick do Mercado Pago para checkout em modal transparente
     setTimeout(() => {
       const container = document.getElementById('mp-wallet-brick-container');
-      if (container && window.MercadoPago && publicKey && checkoutId) {
+      if (container && window.MercadoPago && checkoutId) {
         try {
-          const mp = new window.MercadoPago(publicKey, { locale: 'pt-BR' });
+          const mp = getMercadoPagoInstance();
+          if (!mp) return;
           const bricksBuilder = mp.bricks();
           
           bricksBuilder.create("wallet", "mp-wallet-brick-container", {
@@ -406,17 +531,12 @@ function openPaymentModal({ isCard, isPro, amount, qrCode, pixCode, url, publicK
       }
     }, 100);
   } else {
-    text.textContent = isCard
-      ? 'Use o link abaixo para concluir o pagamento com cartão.'
-      : 'Escaneie o QR Code ou copie o código PIX para pagar.';
-    body.innerHTML = isCard ? `
+    text.textContent = 'Escaneie o QR Code ou copie o código PIX para pagar de forma instantânea.';
+    body.innerHTML = `
       <div class="modal-amount">${money.format(amount / 100)}</div>
-      <a class="abacate-pay-link" href="${escapeHtml(url || '#')}" rel="noopener">Pagar com cartão</a>
-    ` : `
-      <div class="modal-amount">${money.format(amount / 100)}</div>
-      ${qrCode ? `<img class="modal-qr" src="${qrCode}" alt="QR Code PIX">` : ''}
+      ${qrCode ? `<img class="modal-qr" src="${qrCode}" alt="QR Code PIX" style="max-width: 256px; margin: 1rem auto; display: block; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">` : ''}
     `;
-    copyButton.hidden = isCard || !pixCode;
+    copyButton.hidden = !pixCode;
   }
 
   modal.hidden = false;
@@ -442,6 +562,15 @@ window.closePaymentModal = function() {
   if (!modal) return;
   modal.hidden = true;
   document.body.classList.remove('modal-open');
+
+  if (window.cardPaymentBrickController) {
+    try {
+      window.cardPaymentBrickController.unmount();
+      window.cardPaymentBrickController = null;
+    } catch (e) {
+      console.warn('Erro ao desmontar o Card Payment Brick:', e);
+    }
+  }
 };
 
 window.copyModalPixCode = async function() {
@@ -660,4 +789,60 @@ function showToast(message) {
   toast.classList.add('active');
   clearTimeout(showToast.timer);
   showToast.timer = setTimeout(() => toast.classList.remove('active'), 2800);
+}
+
+function setupPaymentChange() {
+  const selectPagamento = document.getElementById('public_pagamento');
+  const mpFields = document.getElementById('mp-transparent-fields');
+  if (!selectPagamento || !mpFields) return;
+
+  const update = async () => {
+    const isPix = selectPagamento.value === ONLINE_PIX_OPTION;
+    mpFields.style.display = isPix ? 'flex' : 'none';
+
+    const docType = document.getElementById('form-checkout__identificationType');
+    const docNum = document.getElementById('form-checkout__identificationNumber');
+    const emailField = document.getElementById('form-checkout__email');
+
+    if (docType) docType.required = isPix;
+    if (docNum) docNum.required = isPix;
+    if (emailField) emailField.required = isPix;
+
+    if (isPix) {
+      await carregarTiposDocumento();
+    }
+  };
+
+  selectPagamento.addEventListener('change', update);
+  update();
+}
+
+async function carregarTiposDocumento() {
+  const docTypeElement = document.getElementById('form-checkout__identificationType');
+  if (!docTypeElement) return;
+
+  if (docTypeElement.options.length > 0) return;
+
+  try {
+    const mp = getMercadoPagoInstance();
+    if (!mp) {
+      console.warn('SDK do Mercado Pago não disponível.');
+      return;
+    }
+    const identificationTypes = await mp.getIdentificationTypes();
+
+    docTypeElement.options.length = 0;
+    const tempOptions = document.createDocumentFragment();
+
+    identificationTypes.forEach(option => {
+      const opt = document.createElement('option');
+      opt.value = option.id;
+      opt.textContent = option.name;
+      tempOptions.appendChild(opt);
+    });
+
+    docTypeElement.appendChild(tempOptions);
+  } catch (error) {
+    console.error('Erro ao carregar tipos de documento:', error);
+  }
 }

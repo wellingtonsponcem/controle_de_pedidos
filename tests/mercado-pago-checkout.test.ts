@@ -127,4 +127,48 @@ describe('Módulo do Mercado Pago Checkout - Validação Baseada em Propriedades
     });
   });
 
+  describe('Divisão Resiliente de Nome do Cliente (first_name / last_name)', () => {
+    
+    function splitClienteName(nomeCompleto: string) {
+      const sanitized = nomeCompleto.trim().replace(/\s+/g, ' ');
+      const nomeParts = sanitized.split(' ');
+      const firstName = nomeParts[0] || 'Cliente';
+      const lastName = nomeParts.slice(1).join(' ') || 'Bemavi';
+      return { firstName, lastName };
+    }
+
+    // Propriedade 1: O first_name nunca possui espaços e nunca é vazio
+    test('Propriedade: O primeiro nome nunca possui espaços internos', () => {
+      fc.assert(
+        fc.property(
+          fc.string(),
+          (input) => {
+            const { firstName } = splitClienteName(input);
+            expect(firstName.length).toBeGreaterThan(0);
+            expect(firstName.includes(' ')).toBe(false);
+          }
+        ),
+        { numRuns: 1000 }
+      );
+    });
+
+    // Propriedade 2: Se a entrada for válida e possuir sobrenome, a junção reconstrói o nome original (sem espaços extras)
+    test('Propriedade: A junção reconstrói o nome original higienizado se houver sobrenome', () => {
+      fc.assert(
+        fc.property(
+          fc.string().filter(str => str.trim().split(/\s+/).filter(Boolean).length >= 2), // strings com 2 ou mais palavras
+          (input) => {
+            const { firstName, lastName } = splitClienteName(input);
+            const reconstructed = `${firstName} ${lastName}`;
+            
+            // Remove múltiplos espaços seguidos para comparação
+            const sanitizedInput = input.trim().replace(/\s+/g, ' ');
+            expect(reconstructed).toBe(sanitizedInput);
+          }
+        ),
+        { numRuns: 1000 }
+      );
+    });
+  });
+
 });
