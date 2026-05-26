@@ -344,7 +344,9 @@ function renderMercadoPagoCheckout(checkout) {
     amount: Number(checkout.amount) || 0,
     qrCode,
     pixCode,
-    url: checkout.url || ''
+    url: checkout.url || '',
+    publicKey: checkout.publicKey || '',
+    checkoutId: checkout.id || ''
   });
 }
 
@@ -355,7 +357,7 @@ function clearAbacateCheckout() {
   box.innerHTML = '';
 }
 
-function openPaymentModal({ isCard, isPro, amount, qrCode, pixCode, url }) {
+function openPaymentModal({ isCard, isPro, amount, qrCode, pixCode, url, publicKey, checkoutId }) {
   const modal = document.getElementById('paymentModal');
   const text = document.getElementById('paymentModalText');
   const body = document.getElementById('paymentModalBody');
@@ -365,18 +367,44 @@ function openPaymentModal({ isCard, isPro, amount, qrCode, pixCode, url }) {
   modal.dataset.pixCode = pixCode || '';
 
   if (isPro) {
-    text.textContent = 'Clique no botão abaixo para realizar o pagamento seguro no Mercado Pago (PIX, Cartão ou Boleto).';
+    text.textContent = 'Clique no botão oficial abaixo para pagar de forma transparente via Pix, Cartão ou Boleto sem sair do site!';
     body.innerHTML = `
       <div class="modal-amount">${money.format(amount / 100)}</div>
-      <a class="abacate-pay-link" href="${escapeHtml(url || '#')}" target="_blank" rel="noopener" style="background: linear-gradient(135deg, #009EE3 0%, #007CA8 100%); color: white; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: bold; border-radius: 8px; padding: 0.85rem; text-decoration: none; box-shadow: 0 4px 15px rgba(0, 158, 227, 0.4); border: none; font-size: 1rem; transition: transform 0.2s ease, box-shadow 0.2s ease; outline: none; margin: 1rem 0;">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle;">
-          <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
-          <line x1="1" y1="10" x2="23" y2="10"></line>
-        </svg>
-        Pagar com Mercado Pago
-      </a>
+      <div id="mp-wallet-brick-container" style="margin: 1rem 0; min-height: 48px;"></div>
     `;
     copyButton.hidden = true;
+
+    // Renderizar o Wallet Brick do Mercado Pago para checkout em modal transparente
+    setTimeout(() => {
+      const container = document.getElementById('mp-wallet-brick-container');
+      if (container && window.MercadoPago && publicKey && checkoutId) {
+        try {
+          const mp = new window.MercadoPago(publicKey, { locale: 'pt-BR' });
+          const bricksBuilder = mp.bricks();
+          
+          bricksBuilder.create("wallet", "mp-wallet-brick-container", {
+            initialization: {
+              preferenceId: checkoutId,
+              redirectMode: "modal" // ABRE O MODAL / POPUP TRANSPARENTE NA PRÓPRIA PÁGINA!
+            },
+            customization: {
+              texts: {
+                valueProp: "smart_option"
+              },
+              visual: {
+                buttonBackground: 'default',
+                borderRadius: '8px'
+              }
+            }
+          });
+        } catch (sdkError) {
+          console.error('Erro ao renderizar Wallet Brick do Mercado Pago:', sdkError);
+          renderRedirectionFallback(body, url);
+        }
+      } else {
+        renderRedirectionFallback(body, url);
+      }
+    }, 100);
   } else {
     text.textContent = isCard
       ? 'Use o link abaixo para concluir o pagamento com cartão.'
@@ -393,6 +421,20 @@ function openPaymentModal({ isCard, isPro, amount, qrCode, pixCode, url }) {
 
   modal.hidden = false;
   document.body.classList.add('modal-open');
+}
+
+function renderRedirectionFallback(bodyEl, url) {
+  const amountText = bodyEl.querySelector('.modal-amount')?.innerHTML || '';
+  bodyEl.innerHTML = `
+    <div class="modal-amount">${amountText}</div>
+    <a class="abacate-pay-link" href="${escapeHtml(url || '#')}" target="_blank" rel="noopener" style="background: linear-gradient(135deg, #009EE3 0%, #007CA8 100%); color: white; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: bold; border-radius: 8px; padding: 0.85rem; text-decoration: none; box-shadow: 0 4px 15px rgba(0, 158, 227, 0.4); font-size: 1rem; transition: transform 0.2s ease, box-shadow 0.2s ease; outline: none; margin: 1rem 0;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle;">
+        <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+        <line x1="1" y1="10" x2="23" y2="10"></line>
+      </svg>
+      Pagar com Mercado Pago
+    </a>
+  `;
 }
 
 window.closePaymentModal = function() {

@@ -266,7 +266,8 @@ export default async function handler(req: any, res: any) {
         method: 'PRO',
         gateway: 'MERCADO_PAGO',
         amount: Math.round(Number(pedido.valor_total) * 100),
-        url: body.init_point
+        url: body.init_point,
+        publicKey: process.env.MERCADOPAGO_PUBLIC_KEY || await getSystemConfigValue('MERCADOPAGO_PUBLIC_KEY')
       }
     });
   } catch (error: any) {
