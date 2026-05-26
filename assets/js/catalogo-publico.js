@@ -1,6 +1,6 @@
 const WHATSAPP_NUMBER = '5527992760190';
 const API_BASE_URL = window.location.protocol === 'file:' ? 'https://bemavi.vercel.app' : '';
-const MERCADOPAGO_PUBLIC_KEY = 'APP_USR-5c9cbe03-f1c5-4e5c-9843-ea8c6b90a1d8';
+let MERCADOPAGO_PUBLIC_KEY = 'APP_USR-5c9cbe03-f1c5-4e5c-9843-ea8c6b90a1d8';
 const ONLINE_PIX_OPTION = 'Pix';
 const ONLINE_CARD_OPTION = 'Cartão';
 
@@ -38,7 +38,24 @@ document.addEventListener('DOMContentLoaded', () => {
   setupPaymentChange();
   loadDeliveryFees();
   loadPublicCatalog();
+  loadMercadoPagoPublicKey();
 });
+
+async function loadMercadoPagoPublicKey() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/mercado-pago-public-key`);
+    if (response.ok) {
+      const data = await response.json();
+      if (data.publicKey) {
+        MERCADOPAGO_PUBLIC_KEY = data.publicKey;
+        // Reseta a instância para que seja recriada com a chave correta no fuso de produção
+        mpInstance = null;
+      }
+    }
+  } catch (error) {
+    console.error('Falha ao obter Public Key dinâmica do Mercado Pago:', error);
+  }
+}
 
 async function loadDeliveryFees() {
   try {
