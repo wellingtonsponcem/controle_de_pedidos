@@ -819,7 +819,7 @@ function setupPaymentChange() {
 
     if (docType) docType.required = isPix;
     if (docNum) docNum.required = isPix;
-    if (emailField) emailField.required = false; // E-mail opcional para evitar fricção no checkout
+    if (emailField) emailField.required = isPix;
 
     if (isPix) {
       await carregarTiposDocumento();
