@@ -300,10 +300,12 @@ export default async function handler(req: any, res: any) {
       const amountStr = Number(pedido.valor_total).toFixed(2);
       const idempotencyKey = randomUUID();
 
-      // Configurar expiração do Pix em 4 minutos
-      const expDate = new Date();
-      expDate.setMinutes(expDate.getMinutes() + 4);
-      const expirationTimeStr = expDate.toISOString();
+      // Configurar expiração do Pix em 4 minutos no fuso horário correto de Brasília (UTC-3)
+      // para evitar incompatibilidades de fuso horário que expiram o Pix instantaneamente no Mercado Pago.
+      const expDate = new Date(Date.now() + 4 * 60 * 1000);
+      const tzOffset = -3 * 60 * 60 * 1000; // -3 horas em milissegundos (Brasília)
+      const brTime = new Date(expDate.getTime() + tzOffset);
+      const expirationTimeStr = brTime.toISOString().replace('Z', '-03:00');
 
       const orderResponse = await fetch('https://api.mercadopago.com/v1/payments', {
         method: 'POST',
