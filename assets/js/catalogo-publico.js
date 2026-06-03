@@ -29,6 +29,17 @@ const money = new Intl.NumberFormat('pt-BR', {
   currency: 'BRL'
 });
 
+function generateUUID() {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   setupPublicOrderForm();
   setupDeliveryMode();
@@ -289,11 +300,13 @@ function setupPublicOrderForm() {
 
     if (button) {
       button.disabled = true;
-        button.textContent = isOnlinePayment(pagamento) ? 'Gerando pagamento...' : 'Finalizando...';
+      button.textContent = isOnlinePayment(pagamento) ? 'Gerando pagamento...' : 'Finalizando...';
     }
 
+    let onlinePay = false;
     try {
       if (isOnlinePayment(pagamento)) {
+        onlinePay = true;
         state.abacateCheckout = await createMercadoPagoCheckout(getMercadoPagoPaymentMethod(pagamento));
         renderMercadoPagoCheckout(state.abacateCheckout);
         showToast(pagamento === ONLINE_CARD_OPTION ? 'Link de cartão gerado.' : 'PIX gerado no checkout.');
@@ -307,10 +320,11 @@ function setupPublicOrderForm() {
       const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
       window.location.href = whatsappUrl;
     } catch (error) {
+      onlinePay = false;
       console.error('Falha ao preparar pedido publico:', error);
       showToast(error.message || 'Nao foi possivel preparar o pedido agora.');
     } finally {
-      if (button) {
+      if (button && !onlinePay) {
         button.disabled = false;
         button.textContent = 'Finalizar pedido';
       }
@@ -328,6 +342,7 @@ function getMercadoPagoPaymentMethod(pagamento) {
 
 async function createMercadoPagoCheckout(metodoPagamento) {
   const payload = {
+    id: generateUUID(),
     cliente: {
       nome: document.getElementById('public_nome').value.trim(),
       telefone: document.getElementById('public_telefone').value.trim()
@@ -379,7 +394,6 @@ async function createMercadoPagoCheckout(metodoPagamento) {
     paymentId: data.checkout?.paymentId || data.checkout?.id || ''
   };
 }
-
 function renderMercadoPagoCheckout(checkout) {
   if (!checkout) return;
 
@@ -587,33 +601,6 @@ function renderRedirectionFallback(bodyEl, url) {
         <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
         <line x1="1" y1="10" x2="23" y2="10"></line>
       </svg>
-      Pagar com Mercado Pago
-    </a>
-  `;
-}
-
-window.closePaymentModal = function() {
-  const modal = document.getElementById('paymentModal');
-  if (!modal) return;
-  modal.hidden = true;
-  document.body.classList.remove('modal-open');
-
-  clearInterval(pixCountdownInterval);
-  clearInterval(pixPollingInterval);
-
-  if (window.cardPaymentBrickController) {
-    try {
-      window.cardPaymentBrickController.unmount();
-      window.cardPaymentBrickController = null;
-    } catch (e) {
-      console.warn('Erro ao desmontar o Card Payment Brick:', e);
-    }
-  }
-};
-
-window.copyModalPixCode = async function() {
-  const modal = document.getElementById('paymentModal');
-  const pixCode = modal?.dataset.pixCode || '';
   if (!pixCode) return;
 
   try {

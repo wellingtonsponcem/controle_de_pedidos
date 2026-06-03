@@ -31,6 +31,17 @@ const state = {
   clientesHistoricos: []
 };
 
+function generateUUID() {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
 // Configurações de Frete da Grande Vitória (valores iniciais reduzidos e controle síncrono local)
 const freteConfig = { vitoria: 5.0, vilaVelha: 6.0, serra: 7.0, gratis: false };
 
@@ -1139,7 +1150,14 @@ function setupOrderForm() {
       return;
     }
 
+    const submitBtn = document.getElementById('btnSubmitOrder');
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = '⏳ Gravando...';
+    }
+
     const payload = {
+      id: generateUUID(),
       cliente: {
         nome: document.getElementById('cli_nome').value,
         telefone: document.getElementById('cli_telefone').value,
@@ -1197,6 +1215,11 @@ function setupOrderForm() {
       showToast('Falha de rede! Pedido retido de forma segura no IndexedDB.', 'info');
       limparFormularioPedido();
       switchTab('dashboard');
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '✨ Confirmar & Agendar Pedido';
+      }
     }
   });
 }
@@ -1288,6 +1311,14 @@ function setupFinanceForm() {
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
+    const submitBtn = form.querySelector('button[type="submit"]');
+    let originalText = '';
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      originalText = submitBtn.textContent;
+      submitBtn.textContent = '⏳ Gravando...';
+    }
+
     const payload = {
       tipo: document.getElementById('fin_tipo').value,
       valor: parseFloat(document.getElementById('fin_valor').value),
@@ -1327,6 +1358,11 @@ function setupFinanceForm() {
       showToast('Falha de rede! Lançamento retido localmente para sincronização.', 'info');
       form.reset();
       closeFinanceModal();
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+      }
     }
   });
 }
@@ -1785,6 +1821,14 @@ function setupProductForm() {
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
+    const submitBtn = form.querySelector('button[type="submit"]');
+    let originalText = '';
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      originalText = submitBtn.textContent;
+      submitBtn.textContent = '⏳ Salvando...';
+    }
+
     const id = document.getElementById('prod_id').value;
     const payload = {
       nome: document.getElementById('prod_nome').value,
@@ -1802,6 +1846,10 @@ function setupProductForm() {
 
     if (!state.isOnline) {
       showToast('Apenas online é permitido cadastrar ou editar produtos no catálogo Bemavi.', 'error');
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+      }
       return;
     }
 
@@ -1830,6 +1878,11 @@ function setupProductForm() {
     } catch (error) {
       console.error('Falha ao salvar produto:', error);
       showToast('Falha de rede ao salvar produto. O banco de dados pode estar indisponível.', 'error');
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+      }
     }
   });
 }
@@ -2257,6 +2310,14 @@ function setupOrderEditForm() {
       return;
     }
 
+    const submitBtn = form.querySelector('button[type="submit"]');
+    let originalText = '';
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      originalText = submitBtn.textContent;
+      submitBtn.textContent = '⏳ Salvando...';
+    }
+
     const orderId = document.getElementById('edit_order_id').value;
     const payload = {
       id: orderId,
@@ -2289,6 +2350,10 @@ function setupOrderEditForm() {
 
     if (!state.isOnline) {
       showToast('Para edições completas e recálculo financeiro, é necessário conexão online com o Neon.', 'error');
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+      }
       return;
     }
 
@@ -2311,6 +2376,11 @@ function setupOrderEditForm() {
     } catch (error) {
       console.error('Falha de rede ao editar pedido:', error);
       showToast('Falha de rede ao salvar alterações. O banco de dados pode estar indisponível.', 'error');
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+      }
     }
   });
 
@@ -2678,6 +2748,14 @@ function setupConsignationForm() {
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
+    const submitBtn = form.querySelector('button[type="submit"]');
+    let originalText = '';
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      originalText = submitBtn.textContent;
+      submitBtn.textContent = '⏳ Gravando...';
+    }
+
     const amigo_nome = document.getElementById('cons_amigo').value;
     const amigo_telefone = document.getElementById('cons_telefone').value;
     const data_envio = document.getElementById('cons_data_envio').value;
@@ -2703,6 +2781,10 @@ function setupConsignationForm() {
 
     if (itens.length === 0) {
       showToast('Por favor, informe a quantidade de pelo menos um pão.', 'error');
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+      }
       return;
     }
 
@@ -2742,6 +2824,11 @@ function setupConsignationForm() {
       showToast('Falha de rede! Guardado no IndexedDB local.', 'info');
       closeConsignationModal();
       await refreshConsignacoes();
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+      }
     }
   });
 }
@@ -2840,6 +2927,14 @@ function setupConsignationSalesForm() {
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
+    const submitBtn = form.querySelector('button[type="submit"]');
+    let originalText = '';
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      originalText = submitBtn.textContent;
+      submitBtn.textContent = '⏳ Gravando...';
+    }
+
     const id = document.getElementById('acerto_consignacao_id').value;
     const qInputs = document.querySelectorAll('.acerto-qtd-input');
     const itens = [];
@@ -2855,11 +2950,19 @@ function setupConsignationSalesForm() {
 
     if (id.startsWith('offline-')) {
       showToast('Por favor, sincronize o lote com a nuvem antes de fazer o acerto.', 'error');
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+      }
       return;
     }
 
     if (!state.isOnline) {
       showToast('O acerto de vendas exige conexão online para garantir a integridade do caixa no banco Neon.', 'error');
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+      }
       return;
     }
 
@@ -2888,6 +2991,11 @@ function setupConsignationSalesForm() {
     } catch (error) {
       console.error('Falha crítica de rede no acerto da consignação:', error);
       showToast('Falha de rede ao liquidar acerto. Verifique a internet.', 'error');
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+      }
     }
   });
 }
@@ -2961,6 +3069,14 @@ function setupOrderDeliveryForm() {
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
+    const submitBtn = form.querySelector('button[type="submit"]');
+    let originalText = '';
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      originalText = submitBtn.textContent;
+      submitBtn.textContent = '⏳ Concluindo...';
+    }
+
     const pedidoId = document.getElementById('delivery_pedido_id').value;
     const radios = document.getElementsByName('delivery_meio_pagamento');
     let meio = 'PIX';
@@ -2970,6 +3086,10 @@ function setupOrderDeliveryForm() {
 
     if (!state.isOnline) {
       showToast('O fechamento financeiro do pedido exige conexão ativa com a internet para calcular as taxas no banco Neon.', 'error');
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+      }
       return;
     }
 
@@ -2996,6 +3116,11 @@ function setupOrderDeliveryForm() {
     } catch (error) {
       console.error('Falha crítica ao enviar conclusão de entrega:', error);
       showToast('Falha de rede ao concluir o pedido.', 'error');
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+      }
     }
   });
 }
