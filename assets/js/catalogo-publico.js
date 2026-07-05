@@ -21,6 +21,8 @@ const state = {
   abacateCheckout: null,
   taxasEntrega: {},
   checkoutStep: 'cart',
+  searchQuery: '',
+  categoriaAtiva: 'Todos',
   calendarMonth: new Date(new Date().getFullYear(), new Date().getMonth(), 1)
 };
 
@@ -50,6 +52,24 @@ document.addEventListener('DOMContentLoaded', () => {
   loadDeliveryFees();
   loadPublicCatalog();
   loadMercadoPagoPublicKey();
+
+  // Set up search event listeners
+  const searchInput = document.getElementById('searchInput');
+  const mobileSearchInput = document.getElementById('mobileSearchInput');
+  
+  const handleSearchInput = (e) => {
+    state.searchQuery = e.target.value;
+    if (searchInput && searchInput !== e.target) searchInput.value = state.searchQuery;
+    if (mobileSearchInput && mobileSearchInput !== e.target) mobileSearchInput.value = state.searchQuery;
+    renderCatalog();
+  };
+
+  if (searchInput) searchInput.addEventListener('input', handleSearchInput);
+  if (mobileSearchInput) mobileSearchInput.addEventListener('input', handleSearchInput);
+
+  // Initialize visual active states
+  updateDeliveryVisualCards('Entrega');
+  updatePaymentVisualCards('Pagamento na entrega');
 });
 
 async function loadMercadoPagoPublicKey() {
@@ -111,36 +131,87 @@ function renderCatalog() {
   const count = document.getElementById('catalogCount');
   if (!grid) return;
 
-  if (count) {
-    count.textContent = `${state.produtos.length} ${state.produtos.length === 1 ? 'item' : 'itens'}`;
+  // Filter products by category and search query
+  let filtered = state.produtos;
+  
+  if (state.categoriaAtiva !== 'Todos') {
+    filtered = filtered.filter(prod => {
+      const name = (prod.nome || '').toLowerCase();
+      const versao = (prod.versao || '').toLowerCase();
+      const text = `${name} ${versao}`.toLowerCase();
+      
+      if (state.categoriaAtiva === 'Pães') {
+        return text.includes('pão') || text.includes('baguete') || text.includes('levain') || text.includes('focaccia') || text.includes('croissant') || text.includes('broinha');
+      }
+      if (state.categoriaAtiva === 'Bolos') {
+        return text.includes('bolo');
+      }
+      if (state.categoriaAtiva === 'Outros') {
+        const isBread = text.includes('pão') || text.includes('baguete') || text.includes('levain') || text.includes('focaccia') || text.includes('croissant') || text.includes('broinha');
+        const isCake = text.includes('bolo');
+        return !isBread && !isCake;
+      }
+      return true;
+    });
   }
 
-  if (state.produtos.length === 0) {
-    grid.innerHTML = '<div class="loading-card">Nenhum produto disponivel no momento.</div>';
+  if (state.searchQuery) {
+    const q = state.searchQuery.toLowerCase();
+    filtered = filtered.filter(prod => {
+      const nome = (prod.nome || '').toLowerCase();
+      const sabor = (prod.sabor || '').toLowerCase();
+      const versao = (prod.versao || '').toLowerCase();
+      const modelo = (prod.modelo || '').toLowerCase();
+      return nome.includes(q) || sabor.includes(q) || versao.includes(q) || modelo.includes(q);
+    });
+  }
+
+  if (count) {
+    count.textContent = `${filtered.length} ${filtered.length === 1 ? 'item' : 'itens'}`;
+  }
+
+  if (filtered.length === 0) {
+    grid.innerHTML = `
+      <div class="col-span-full py-16 flex flex-col items-center justify-center text-on-surface-variant bg-surface-container-low/40 rounded-2xl border border-dashed border-outline-variant/60">
+        <span class="material-symbols-outlined text-[48px] text-outline mb-2">search_off</span>
+        <span class="font-medium text-base">Nenhum produto encontrado. Tente buscar outro termo!</span>
+      </div>
+    `;
     return;
   }
 
-  grid.innerHTML = state.produtos.map(prod => {
+  grid.innerHTML = filtered.map(prod => {
     const quantidade = getCartQuantity(prod.id);
     return `
-    <article class="product-card">
-      <div class="product-photo">
-        <img src="${getProductImage(prod)}" alt="${escapeHtml(prod.nome)}" loading="lazy">
-      </div>
-      <span class="product-type">${escapeHtml(prod.versao || 'Artesanal')}</span>
-      <h3>${escapeHtml(prod.nome)}</h3>
-      <p class="product-details">${escapeHtml(prod.sabor || 'Pao artesanal Bemavi')}</p>
-      <p class="product-details">${escapeHtml(prod.modelo || '')}</p>
-      <div class="product-footer">
-        <span class="price">${money.format(Number(prod.preco_base) || 0)}</span>
-        <div class="product-counter" aria-label="Quantidade de ${escapeHtml(prod.nome)}">
-          <button type="button" class="qty-btn" onclick="changeCartQty('${prod.id}', -1)" ${quantidade === 0 ? 'disabled' : ''}>-</button>
-          <strong>${quantidade}</strong>
-          <button type="button" class="qty-btn" onclick="changeCartQty('${prod.id}', 1)">+</button>
+    <article class="group bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden card-hover transition-all duration-300 flex flex-col justify-between">
+      <div>
+        <div class="relative aspect-[4/3] overflow-hidden bg-surface-container-low">
+          <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="${getProductImage(prod)}" alt="${escapeHtml(prod.nome)}" loading="lazy">
+        </div>
+        <div class="p-5 flex-grow flex flex-col">
+          <span class="font-label-bold text-[10px] text-primary uppercase tracking-widest mb-1.5 block">${escapeHtml(prod.versao || 'Artesanal')}</span>
+          <h4 class="font-headline-md text-lg text-on-surface font-bold mb-1 leading-tight">${escapeHtml(prod.nome)}</h4>
+          <p class="font-body-md text-xs text-on-surface-variant line-clamp-2 leading-relaxed mb-2">${escapeHtml(prod.sabor || 'Pão artesanal Bemavi')}</p>
+          <p class="font-body-md text-xs text-on-surface-variant font-semibold">${escapeHtml(prod.modelo || '')}</p>
         </div>
       </div>
+      <div class="px-5 pb-5 pt-2 flex items-center justify-between mt-auto">
+        <span class="font-price-display text-lg text-on-background font-extrabold">${money.format(Number(prod.preco_base) || 0)}</span>
+        
+        ${quantidade > 0 ? `
+          <div class="flex items-center bg-surface-container rounded-xl p-1 border border-outline-variant/30 shadow-sm">
+            <button type="button" class="material-symbols-outlined text-sm text-primary hover:bg-primary/10 rounded-full p-1 transition-all" onclick="changeCartQty('${prod.id}', -1)">remove</button>
+            <span class="font-label-bold text-sm px-3 text-on-surface">${quantidade}</span>
+            <button type="button" class="material-symbols-outlined text-sm text-primary hover:bg-primary/10 rounded-full p-1 transition-all" onclick="changeCartQty('${prod.id}', 1)">add</button>
+          </div>
+        ` : `
+          <button type="button" class="w-10 h-10 bg-primary text-on-primary rounded-xl flex items-center justify-center hover:bg-primary-container transition-all active:scale-90 shadow-sm" onclick="changeCartQty('${prod.id}', 1)">
+            <span class="material-symbols-outlined text-[20px]">add</span>
+          </button>
+        `}
+      </div>
     </article>
-  `;
+    `;
   }).join('');
 }
 
@@ -207,51 +278,96 @@ function renderCart() {
   const list = document.getElementById('publicCartItems');
   const total = document.getElementById('publicCartTotal');
   const count = document.getElementById('cartCount');
+  const countBadge = document.getElementById('cartCountBadge');
+  const productsTotal = document.getElementById('cartProductsTotal');
+  const deliveryFeeTotal = document.getElementById('cartDeliveryFeeTotal');
   const continueButton = document.getElementById('continueCheckoutBtn');
+  const submitButton = document.getElementById('submitOrderBtn');
   const form = document.getElementById('publicOrderForm');
 
   const totalItens = state.carrinho.reduce((acc, item) => acc + item.quantidade, 0);
   const totalValor = getOrderTotal();
+  const totalProdutos = getProductsTotal();
+  const taxaEntrega = getSelectedDeliveryFee();
 
+  // Update counters and badges
   if (count) count.textContent = `${totalItens} ${totalItens === 1 ? 'item' : 'itens'}`;
+  if (countBadge) countBadge.textContent = totalItens;
   if (total) total.textContent = money.format(totalValor);
-  if (continueButton) continueButton.disabled = state.carrinho.length === 0;
-  if (form) form.hidden = state.carrinho.length === 0 || state.checkoutStep !== 'identification';
+  if (productsTotal) productsTotal.textContent = money.format(totalProdutos);
+  
+  if (deliveryFeeTotal) {
+    const entrega = document.getElementById('public_entrega')?.value;
+    if (entrega !== 'Entrega') {
+      deliveryFeeTotal.textContent = 'Grátis';
+      deliveryFeeTotal.className = 'text-primary font-bold';
+    } else if (taxaEntrega === 0) {
+      deliveryFeeTotal.textContent = 'Grátis';
+      deliveryFeeTotal.className = 'text-primary font-bold';
+    } else {
+      deliveryFeeTotal.textContent = money.format(taxaEntrega);
+      deliveryFeeTotal.className = 'text-on-surface-variant font-medium';
+    }
+  }
+
+  // Manage checkout step views & buttons
+  if (continueButton) {
+    continueButton.disabled = state.carrinho.length === 0;
+    if (state.checkoutStep === 'identification') {
+      continueButton.style.display = 'none';
+    } else {
+      continueButton.style.display = 'flex';
+    }
+  }
+
+  if (submitButton) {
+    if (state.checkoutStep === 'identification') {
+      submitButton.style.display = 'flex';
+    } else {
+      submitButton.style.display = 'none';
+    }
+  }
 
   if (!list) return;
 
   if (state.carrinho.length === 0) {
-    list.innerHTML = '<div class="empty-cart">Seu carrinho está vazio. Adicione pães artesanais para começar!</div>';
+    list.innerHTML = '<div class="empty-cart text-center py-8 text-on-surface-variant text-sm font-medium">Seu carrinho está vazio. Adicione pães artesanais para começar!</div>';
     return;
   }
 
-  list.innerHTML = state.carrinho.map(item => `
-    <div class="cart-item">
-      <div>
-        <strong>${escapeHtml(item.nome)}</strong>
-        <span>${escapeHtml(item.modelo || '')} - ${money.format(item.preco * item.quantidade)}</span>
+  list.innerHTML = state.carrinho.map(item => {
+    const prod = state.produtos.find(p => p.id === item.id);
+    const imageUrl = prod ? getProductImage(prod) : 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=150&q=80';
+    return `
+    <div class="flex gap-4 items-center bg-surface-container-low/40 p-3 rounded-xl border border-outline-variant/30">
+      <div class="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-surface-container">
+        <img class="w-full h-full object-cover" src="${imageUrl}" alt="${escapeHtml(item.nome)}">
       </div>
-      <div class="qty-controls">
-        <button type="button" class="qty-btn" onclick="changeCartQty('${item.id}', -1)">-</button>
-        <strong>${item.quantidade}</strong>
-        <button type="button" class="qty-btn" onclick="changeCartQty('${item.id}', 1)">+</button>
+      <div class="flex-grow flex flex-col justify-between">
+        <div>
+          <p class="font-label-bold text-sm font-bold text-on-surface leading-tight">${escapeHtml(item.nome)}</p>
+          <p class="text-[10px] text-on-surface-variant mt-0.5">${escapeHtml(item.modelo || '')}</p>
+        </div>
+        <div class="flex justify-between items-center mt-2">
+          <div class="flex items-center bg-surface-container rounded-lg p-0.5 border border-outline-variant/20 shadow-inner">
+            <button type="button" class="material-symbols-outlined text-[16px] text-primary hover:bg-primary/10 rounded-full p-1 active:scale-90 transition-all" onclick="changeCartQty('${item.id}', -1)">remove</button>
+            <span class="font-label-bold text-xs px-2.5">${item.quantidade}</span>
+            <button type="button" class="material-symbols-outlined text-[16px] text-primary hover:bg-primary/10 rounded-full p-1 active:scale-90 transition-all" onclick="changeCartQty('${item.id}', 1)">add</button>
+          </div>
+          <span class="font-price-display text-sm font-extrabold text-primary">${money.format(item.preco * item.quantidade)}</span>
+        </div>
       </div>
     </div>
-  `).join('');
+    `;
+  }).join('');
 }
 
 window.openCheckoutIdentification = function() {
-  if (state.carrinho.length === 0) {
-    showToast('Adicione pelo menos um item ao pedido.');
-    return;
-  }
-  state.checkoutStep = 'identification';
-  renderCart();
-  document.getElementById('public_nome')?.focus();
+  window.navigateTo('identification');
 };
 
 function closeCheckoutIdentification() {
-  state.checkoutStep = 'cart';
+  window.navigateTo('cart');
 }
 
 function getProductsTotal() {
@@ -1029,5 +1145,162 @@ window.enviarConfirmacaoWhatsapp = async function(pedidoId, horarioEstimado) {
     window.location.href = whatsappUrl;
   } catch (error) {
     console.error('Erro ao enviar mensagem para o WhatsApp:', error);
+  }
+};
+
+window.navigateTo = function(step) {
+  const viewCatalog = document.getElementById('viewCatalog');
+  const viewCheckout = document.getElementById('viewCheckout');
+  const headerSearch = document.getElementById('headerSearchBar');
+
+  if (step === 'cart') {
+    state.checkoutStep = 'cart';
+    if (viewCatalog) viewCatalog.style.display = 'flex';
+    if (viewCheckout) viewCheckout.classList.add('hidden');
+    if (headerSearch) headerSearch.classList.remove('hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } else if (step === 'identification') {
+    if (state.carrinho.length === 0) {
+      showToast('Adicione pelo menos um item ao pedido.');
+      return;
+    }
+    state.checkoutStep = 'identification';
+    if (viewCatalog) viewCatalog.style.display = 'none';
+    if (viewCheckout) viewCheckout.classList.remove('hidden');
+    if (headerSearch) headerSearch.classList.add('hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.getElementById('public_nome')?.focus();
+  }
+  renderCart();
+  renderCatalog();
+};
+
+window.toggleCheckoutView = function() {
+  if (state.checkoutStep === 'cart') {
+    window.navigateTo('identification');
+  } else {
+    window.navigateTo('cart');
+  }
+};
+
+window.selectDeliveryMethod = function(method) {
+  const select = document.getElementById('public_entrega');
+  if (!select) return;
+  select.value = method;
+  
+  // Trigger native change event
+  const event = new Event('change', { bubbles: true });
+  select.dispatchEvent(event);
+
+  // Update visual cards active state
+  updateDeliveryVisualCards(method);
+};
+
+function updateDeliveryVisualCards(method) {
+  const deliveryCard = document.getElementById('deliveryCard_Entrega');
+  const pickupCard = document.getElementById('deliveryCard_Retirada');
+
+  if (method === 'Entrega') {
+    if (deliveryCard) {
+      deliveryCard.className = "relative flex flex-col items-center justify-center p-5 border-2 border-primary-container bg-primary-container/5 rounded-xl cursor-pointer hover:bg-primary-container/10 transition-all group";
+      const icon = deliveryCard.querySelector('.material-symbols-outlined');
+      if (icon) icon.className = "material-symbols-outlined text-4xl text-primary mb-2";
+    }
+    if (pickupCard) {
+      pickupCard.className = "relative flex flex-col items-center justify-center p-5 border border-outline-variant rounded-xl cursor-pointer hover:border-primary transition-all group";
+      const icon = pickupCard.querySelector('.material-symbols-outlined');
+      if (icon) icon.className = "material-symbols-outlined text-4xl text-on-surface-variant group-hover:text-primary mb-2";
+    }
+  } else {
+    if (deliveryCard) {
+      deliveryCard.className = "relative flex flex-col items-center justify-center p-5 border border-outline-variant rounded-xl cursor-pointer hover:border-primary transition-all group";
+      const icon = deliveryCard.querySelector('.material-symbols-outlined');
+      if (icon) icon.className = "material-symbols-outlined text-4xl text-on-surface-variant group-hover:text-primary mb-2";
+    }
+    if (pickupCard) {
+      pickupCard.className = "relative flex flex-col items-center justify-center p-5 border-2 border-primary-container bg-primary-container/5 rounded-xl cursor-pointer hover:bg-primary-container/10 transition-all group";
+      const icon = pickupCard.querySelector('.material-symbols-outlined');
+      if (icon) icon.className = "material-symbols-outlined text-4xl text-primary mb-2";
+    }
+  }
+}
+
+window.selectPaymentMethod = function(method) {
+  const select = document.getElementById('public_pagamento');
+  if (!select) return;
+  select.value = method;
+
+  // Trigger native change event
+  const event = new Event('change', { bubbles: true });
+  select.dispatchEvent(event);
+
+  // Update visual cards active state
+  updatePaymentVisualCards(method);
+};
+
+function updatePaymentVisualCards(method) {
+  const cards = [
+    { id: 'paymentCard_Pagamento_na_entrega', value: 'Pagamento na entrega' },
+    { id: 'paymentCard_Pix', value: 'Pix' },
+    { id: 'paymentCard_Cartão', value: 'Cartão' }
+  ];
+
+  cards.forEach(cardInfo => {
+    const card = document.getElementById(cardInfo.id);
+    if (!card) return;
+
+    const dotContainer = card.querySelector('.checked-dot-container');
+    const dot = card.querySelector('.select-dot');
+
+    if (cardInfo.value === method) {
+      card.className = "flex items-center p-4 border-2 border-primary bg-primary/5 rounded-xl cursor-pointer hover:bg-surface-container-low transition-all bg-surface";
+      if (dotContainer) dotContainer.className = "w-5 h-5 border-2 border-primary rounded-full flex items-center justify-center p-0.5 mr-4 transition-all checked-dot-container bg-white";
+      if (dot) dot.classList.remove('opacity-0');
+    } else {
+      card.className = "flex items-center p-4 border border-outline-variant rounded-xl cursor-pointer hover:bg-surface-container-low transition-all bg-surface";
+      if (dotContainer) dotContainer.className = "w-5 h-5 border border-outline rounded-full flex items-center justify-center p-0.5 mr-4 transition-all checked-dot-container";
+      if (dot) dot.classList.add('opacity-0');
+    }
+  });
+}
+
+window.filterCategory = function(category) {
+  state.categoriaAtiva = category;
+
+  // Update active state of category buttons
+  const categories = ['Todos', 'Pães', 'Bolos', 'Outros'];
+  categories.forEach(cat => {
+    const btn = document.getElementById(`catBtn_${cat}`);
+    if (!btn) return;
+    if (cat === category) {
+      btn.className = "cat-btn flex items-center gap-xs px-5 py-2.5 bg-primary text-on-primary font-semibold rounded-full shadow-sm transition-all whitespace-nowrap";
+    } else {
+      btn.className = "cat-btn flex items-center gap-xs px-5 py-2.5 bg-surface hover:bg-surface-container-high text-on-surface-variant font-semibold rounded-full transition-all whitespace-nowrap border border-outline-variant";
+    }
+  });
+
+  renderCatalog();
+};
+
+window.scrollToCatalog = function() {
+  const section = document.getElementById('catalog-section');
+  if (section) {
+    const offset = 100;
+    const bodyRect = document.body.getBoundingClientRect().top;
+    const elementRect = section.getBoundingClientRect().top;
+    const elementPosition = elementRect - bodyRect;
+    const offsetPosition = elementPosition - offset;
+
+    window.scrollTo({
+      top: offsetPosition,
+      behavior: 'smooth'
+    });
+  }
+};
+
+window.triggerCheckoutSubmit = function() {
+  const form = document.getElementById('publicOrderForm');
+  if (form) {
+    form.requestSubmit();
   }
 };

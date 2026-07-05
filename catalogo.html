@@ -1,161 +1,698 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html class="light" lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Catalogo publico da Bemavi Pao Artesanal para pedidos por WhatsApp.">
-  <title>Bemavi | Catalogo de Pedidos</title>
+  <meta name="description" content="Catálogo público da Bemavi Pão Artesanal para pedidos por WhatsApp.">
+  <title>Bemavi | Catálogo de Pedidos</title>
+  
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./assets/css/catalogo-publico.css">
+  <link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "on-secondary": "#ffffff",
+            "on-background": "#201b11",
+            "on-tertiary-fixed": "#001e2d",
+            "tertiary-fixed-dim": "#82cfff",
+            "surface-variant": "#ede1d1",
+            "surface-container": "#f8ecdc",
+            "primary-fixed": "#ffdead",
+            "on-tertiary-container": "#004b6a",
+            "primary-container": "#eda70b",
+            "on-tertiary": "#ffffff",
+            "on-secondary-fixed": "#271900",
+            "surface-tint": "#7f5700",
+            "primary": "#7f5700",
+            "inverse-primary": "#ffba3a",
+            "secondary": "#775925",
+            "surface-container-high": "#f3e6d7",
+            "on-secondary-container": "#795c27",
+            "on-surface-variant": "#514533",
+            "on-primary": "#ffffff",
+            "tertiary-container": "#3ebfff",
+            "on-primary-fixed": "#281900",
+            "on-error": "#ffffff",
+            "primary-fixed-dim": "#ffba3a",
+            "error-container": "#ffdad6",
+            "background": "#fff8f3",
+            "surface-container-lowest": "#ffffff",
+            "surface-container-low": "#fef2e2",
+            "on-surface": "#201b11",
+            "surface-dim": "#e4d8c9",
+            "secondary-container": "#ffd797",
+            "outline-variant": "#d5c4ad",
+            "secondary-fixed-dim": "#e8c182",
+            "surface": "#fff8f3",
+            "inverse-surface": "#362f25",
+            "tertiary-fixed": "#c6e7ff",
+            "secondary-fixed": "#ffdeab",
+            "surface-container-highest": "#ede1d1",
+            "error": "#ba1a1a",
+            "on-error-container": "#93000a",
+            "outline": "#837561",
+            "surface-bright": "#fff8f3",
+            "on-tertiary-fixed-variant": "#004c6b",
+            "on-primary-fixed-variant": "#604100",
+            "tertiary": "#00658d",
+            "on-secondary-fixed-variant": "#5d420f",
+            "on-primary-container": "#5f4000",
+            "inverse-on-surface": "#fbefdf"
+          },
+          borderRadius: {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "2xl": "1rem",
+            "full": "9999px"
+          },
+          spacing: {
+            "xl": "64px",
+            "sm": "12px",
+            "xs": "4px",
+            "margin-mobile": "16px",
+            "gutter": "20px",
+            "margin-desktop": "40px",
+            "lg": "48px",
+            "md": "24px",
+            "base": "8px"
+          },
+          fontFamily: {
+            "headline-xl": ["Epilogue", "sans-serif"],
+            "headline-lg": ["Epilogue", "sans-serif"],
+            "headline-md": ["Epilogue", "sans-serif"],
+            "body-md": ["Plus Jakarta Sans", "sans-serif"],
+            "body-lg": ["Plus Jakarta Sans", "sans-serif"],
+            "label-bold": ["Plus Jakarta Sans", "sans-serif"],
+            "price-display": ["Epilogue", "sans-serif"]
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    #paymentModal[hidden] {
+      display: none !important;
+    }
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .glass-header {
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    .hero-gradient {
+      background: linear-gradient(to right, rgba(255, 248, 243, 1) 30%, rgba(255, 248, 243, 0.4) 100%);
+    }
+    @media (max-width: 768px) {
+      .hero-gradient {
+        background: linear-gradient(to top, rgba(255, 248, 243, 1) 50%, rgba(255, 248, 243, 0.6) 100%);
+      }
+    }
+    .card-hover:hover {
+      box-shadow: 0 10px 30px -5px rgba(121, 92, 39, 0.15);
+      transform: translateY(-4px);
+    }
+    /* Hide scrollbars */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #f8ecdc;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #d5c4ad;
+      border-radius: 10px;
+    }
+    .custom-datepicker {
+      background: #ffffff;
+      border: 1px solid #d5c4ad;
+      border-radius: 12px;
+      padding: 1rem;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+      position: absolute;
+      z-index: 50;
+      width: 100%;
+      max-width: 320px;
+      margin-top: 0.5rem;
+    }
+    .datepicker-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+    .datepicker-header button {
+      background: #fef2e2;
+      border: none;
+      border-radius: 6px;
+      padding: 0.25rem 0.5rem;
+      cursor: pointer;
+      color: #7f5700;
+      font-weight: bold;
+    }
+    .datepicker-weekdays {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      text-align: center;
+      font-size: 0.75rem;
+      color: #514533;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+    }
+    .datepicker-days {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+    }
+    .datepicker-days button {
+      padding: 0.4rem;
+      font-size: 0.85rem;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      background: transparent;
+      color: #201b11;
+      transition: all 0.2s;
+    }
+    .datepicker-days button:hover:not(:disabled) {
+      background: #ffd797;
+    }
+    .datepicker-days button.selected {
+      background: #7f5700;
+      color: #ffffff;
+      font-weight: bold;
+    }
+    .datepicker-days button:disabled {
+      color: #d5c4ad;
+      cursor: not-allowed;
+      text-decoration: line-through;
+    }
+    .datepicker-days span {
+      display: inline-block;
+    }
+    .datepicker-wrapper {
+      position: relative;
+    }
+  </style>
 </head>
-<body>
-  <header class="public-header">
-    <div class="brand">
-      <img src="https://cdn-icons-png.flaticon.com/512/992/992747.png" alt="" class="brand-icon">
-      <div>
-        <strong>Bemavi</strong>
-        <span>Pao artesanal sob encomenda</span>
+<body class="bg-background text-on-background font-body-md antialiased min-h-screen flex flex-col">
+
+  <!-- Header -->
+  <header class="fixed top-0 w-full z-40 glass-header bg-surface/90 border-b border-outline-variant">
+    <div class="max-w-[1280px] mx-auto flex justify-between items-center px-4 md:px-margin-desktop h-20">
+      <!-- Brand/Logo -->
+      <a href="#" onclick="navigateTo('cart'); return false;" class="flex items-center gap-sm group">
+        <img src="https://cdn-icons-png.flaticon.com/512/992/992747.png" alt="Logo Bemavi" class="w-10 h-10 object-contain group-hover:scale-105 transition-transform">
+        <div>
+          <strong class="font-headline-md text-[22px] text-primary tracking-tight block leading-tight">Bemavi</strong>
+          <span class="text-[10px] text-on-surface-variant uppercase tracking-widest block font-medium">Pão Artesanal</span>
+        </div>
+      </a>
+
+      <!-- Search Bar -->
+      <div id="headerSearchBar" class="hidden md:flex flex-1 max-w-md mx-8 relative">
+        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline">search</span>
+        <input id="searchInput" class="w-full pl-12 pr-4 py-2.5 bg-surface-container-low border border-outline-variant rounded-full focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none text-body-md placeholder-on-surface-variant/60" placeholder="Buscar pães artesanais..." type="text">
       </div>
+
+      <!-- Actions -->
+      <nav class="flex items-center gap-md">
+        <div class="hidden sm:flex items-center gap-md">
+          <a href="#" onclick="navigateTo('cart'); return false;" class="font-label-bold text-label-bold text-primary hover:text-primary-container transition-colors">Catálogo</a>
+          <a href="https://wa.me/5527992760190" target="_blank" rel="noopener" class="font-label-bold text-label-bold text-on-surface-variant hover:text-primary transition-colors flex items-center gap-xs">
+            <span class="material-symbols-outlined text-[18px]">chat</span> WhatsApp
+          </a>
+        </div>
+        
+        <!-- Cart Basket Icon Button -->
+        <button onclick="toggleCheckoutView()" class="relative p-2.5 text-on-surface hover:bg-primary-container/20 rounded-full transition-transform active:scale-95 flex items-center justify-center">
+          <span class="material-symbols-outlined text-[26px]">shopping_basket</span>
+          <span id="cartCountBadge" class="absolute top-0 right-0 bg-primary text-on-primary text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-surface shadow-sm">0</span>
+        </button>
+      </nav>
     </div>
-    <a class="whatsapp-link" href="https://wa.me/5527992760190" target="_blank" rel="noopener">WhatsApp</a>
   </header>
 
-  <main class="public-shell">
-    <section class="hero">
-      <div class="hero-copy">
-        <h1>Catalogo Bemavi</h1>
-        <p>Escolha seus paes, revise o carrinho e envie o pedido direto pelo WhatsApp.</p>
-      </div>
-    </section>
+  <!-- Shell Wrapper -->
+  <main class="pt-20 flex-1 flex flex-col">
 
-    <section class="content-grid">
-      <div class="catalog-panel">
-        <div class="section-heading">
-          <h2>Paes disponiveis</h2>
-          <span id="catalogCount">Carregando...</span>
+    <!-- VIEW 1: CATALOGO VIEW -->
+    <div id="viewCatalog" class="flex-col flex">
+      <!-- Hero Section -->
+      <section class="relative min-h-[480px] md:h-[500px] w-full overflow-hidden flex items-center bg-surface-container-low">
+        <div class="absolute inset-0 z-0">
+          <div class="w-full h-full bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=1600&q=80')"></div>
+          <div class="absolute inset-0 hero-gradient"></div>
         </div>
-        <div id="publicCatalogGrid" class="product-grid">
-          <div class="loading-card">Buscando catalogo...</div>
+        <div class="relative z-10 max-w-[1280px] mx-auto px-4 md:px-margin-desktop w-full py-12 md:py-0">
+          <div class="max-w-2xl">
+            <span class="inline-block px-4 py-1.5 bg-primary-container text-on-primary-container font-label-bold text-xs font-bold rounded-full mb-md shadow-sm">
+              FERMENTAÇÃO NATURAL
+            </span>
+            <h2 class="font-headline-xl text-4xl md:text-5xl text-on-background mb-4 font-extrabold leading-tight">
+              O despertar dos sentidos em cada fatia.
+            </h2>
+            <p class="font-body-lg text-lg text-on-surface-variant mb-6 leading-relaxed max-w-xl font-medium">
+              Pães de fermentação lenta, produzidos diariamente com grãos selecionados e a paciência que a verdadeira arte exige.
+            </p>
+            <div class="flex flex-wrap gap-4">
+              <button onclick="scrollToCatalog()" class="px-8 py-3.5 bg-primary text-on-primary font-label-bold text-sm font-bold rounded-xl shadow-lg hover:bg-primary-container hover:scale-[1.02] transition-all active:scale-95">
+                VER PÃES DISPONÍVEIS
+              </button>
+              <a href="https://wa.me/5527992760190" target="_blank" rel="noopener" class="px-8 py-3.5 border-2 border-secondary text-secondary font-label-bold text-sm font-bold rounded-xl hover:bg-secondary-container/10 transition-all active:scale-95 text-center">
+                FALAR COM PADEIRO
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Category Selector -->
+      <section class="py-6 bg-surface-container-low border-b border-outline-variant">
+        <div class="max-w-[1280px] mx-auto px-4 md:px-margin-desktop">
+          <div class="flex items-center gap-md overflow-x-auto pb-2 no-scrollbar">
+            <button onclick="filterCategory('Todos')" id="catBtn_Todos" class="cat-btn flex items-center gap-xs px-5 py-2.5 bg-primary text-on-primary font-semibold rounded-full shadow-sm transition-all whitespace-nowrap">
+              <span class="material-symbols-outlined text-[20px]">breakfast_dining</span>
+              <span>Todos</span>
+            </button>
+            <button onclick="filterCategory('Pães')" id="catBtn_Pães" class="cat-btn flex items-center gap-xs px-5 py-2.5 bg-surface hover:bg-surface-container-high text-on-surface-variant font-semibold rounded-full transition-all whitespace-nowrap border border-outline-variant">
+              <span class="material-symbols-outlined text-[20px]">bakery_dining</span>
+              <span>Pães</span>
+            </button>
+            <button onclick="filterCategory('Bolos')" id="catBtn_Bolos" class="cat-btn flex items-center gap-xs px-5 py-2.5 bg-surface hover:bg-surface-container-high text-on-surface-variant font-semibold rounded-full transition-all whitespace-nowrap border border-outline-variant">
+              <span class="material-symbols-outlined text-[20px]">cake</span>
+              <span>Bolos</span>
+            </button>
+            <button onclick="filterCategory('Outros')" id="catBtn_Outros" class="cat-btn flex items-center gap-xs px-5 py-2.5 bg-surface hover:bg-surface-container-high text-on-surface-variant font-semibold rounded-full transition-all whitespace-nowrap border border-outline-variant">
+              <span class="material-symbols-outlined text-[20px]">local_mall</span>
+              <span>Outros</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Mobile Search Bar -->
+      <div class="px-4 py-4 md:hidden bg-background border-b border-outline-variant">
+        <div class="relative w-full">
+          <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline">search</span>
+          <input id="mobileSearchInput" class="w-full pl-12 pr-4 py-2.5 bg-surface-container-low border border-outline-variant rounded-full focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none text-body-md" placeholder="Buscar pães artesanais..." type="text">
         </div>
       </div>
 
-      <aside class="checkout-panel" aria-label="Resumo do pedido">
-        <div class="checkout-sticky">
-          <div class="section-heading">
-            <h2>Seu pedido</h2>
-            <span id="cartCount">0 itens</span>
+      <!-- Catalog Main Grid -->
+      <section id="catalog-section" class="py-12 max-w-[1280px] mx-auto px-4 md:px-margin-desktop w-full">
+        <div class="flex justify-between items-end mb-8">
+          <div>
+            <h3 class="font-headline-lg text-3xl text-on-background font-bold tracking-tight">Pães Disponíveis</h3>
+            <p class="font-body-md text-sm text-on-surface-variant mt-1">Saindo do forno de pedra para sua mesa</p>
           </div>
+          <span id="catalogCount" class="bg-primary-container/20 text-primary font-bold text-xs px-3.5 py-1.5 rounded-full border border-primary-container/30">Carregando...</span>
+        </div>
 
-          <div id="publicCartItems" class="cart-list">
-            <div class="empty-cart">Seu carrinho esta vazio.</div>
+        <!-- Catalog Container -->
+        <div id="publicCatalogGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter w-full">
+          <!-- Spinner template -->
+          <div class="col-span-full py-16 flex flex-col items-center justify-center text-on-surface-variant">
+            <span class="loading-card font-medium text-lg">Buscando catálogo de produtos...</span>
           </div>
+        </div>
+      </section>
 
-          <div class="cart-total">
-            <span>Total estimado</span>
-            <strong id="publicCartTotal">R$ 0,00</strong>
-          </div>
-
-          <button type="button" id="continueCheckoutBtn" class="submit-order checkout-continue" onclick="openCheckoutIdentification()" disabled>Continuar para Identificação</button>
-
-          <form id="publicOrderForm" class="public-form checkout-identification" hidden>
-            <div class="field-group">
-              <label for="public_nome">Nome *</label>
-              <input id="public_nome" type="text" autocomplete="name" required placeholder="Seu nome completo">
-            </div>
-
-            <div class="field-group">
-              <label for="public_telefone">WhatsApp *</label>
-              <input id="public_telefone" type="tel" autocomplete="tel" required placeholder="(27) 99999-9999">
-            </div>
-
-            <div class="field-row">
-              <div class="field-group">
-                <label for="public_entrega">Entrega/retirada *</label>
-                <select id="public_entrega" required>
-                  <option value="Entrega">Entrega</option>
-                  <option value="Retirada">Retirada</option>
-                </select>
+      <!-- Bento Featured Section -->
+      <section class="py-12 bg-surface-container-low border-t border-outline-variant">
+        <div class="max-w-[1280px] mx-auto px-4 md:px-margin-desktop">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-md">
+            <div class="md:col-span-2 relative rounded-2xl overflow-hidden group min-h-[260px] flex flex-col justify-end p-8 shadow-sm">
+              <div class="absolute inset-0 bg-cover bg-center group-hover:scale-[1.02] transition-transform duration-700" style="background-image: url('https://images.unsplash.com/photo-1586444248902-2f64eddc13df?auto=format&fit=crop&w=1200&q=80')"></div>
+              <div class="absolute inset-0 bg-gradient-to-t from-on-background/80 via-on-background/30 to-transparent"></div>
+              <div class="relative z-10">
+                <h3 class="font-headline-lg text-2xl md:text-3xl text-on-primary font-bold mb-2">Pedidos Sob Encomenda</h3>
+                <p class="text-on-primary/80 font-body-md text-sm md:text-base max-w-md mb-4">Escolha seus pães favoritos pelo catálogo e reserve com entrega agendada e pagamento online.</p>
+                <button onclick="scrollToCatalog()" class="px-6 py-2.5 bg-secondary-container text-on-secondary-container font-bold text-xs rounded-xl uppercase transition-all hover:brightness-110 active:scale-95 shadow-sm">Encomendar Agora</button>
               </div>
-              <div class="field-group">
-                <label for="public_data">Data desejada *</label>
-                <div class="datepicker-wrapper">
-                  <input id="public_data_display" type="text" readonly required placeholder="Selecione a data">
-                  <input id="public_data" type="hidden" required>
-                  <div id="publicDatepicker" class="custom-datepicker" hidden></div>
+            </div>
+            <div class="flex flex-col gap-md">
+              <div class="flex-1 bg-primary text-on-primary p-6 rounded-2xl flex flex-col justify-between shadow-sm">
+                <span class="material-symbols-outlined text-[42px] text-white">local_shipping</span>
+                <div class="mt-4">
+                  <h4 class="font-headline-md text-lg font-bold mb-1">Entregas no ES</h4>
+                  <p class="text-on-primary/85 text-xs">Entregas programadas nas cidades de Vitória, Vila Velha e Serra.</p>
+                </div>
+              </div>
+              <div class="flex-1 bg-surface-container-highest border border-outline-variant p-6 rounded-2xl flex flex-col justify-between shadow-sm">
+                <span class="material-symbols-outlined text-primary text-[42px]">workspace_premium</span>
+                <div class="mt-4">
+                  <h4 class="font-headline-md text-lg text-on-surface font-bold mb-1">Qualidade Artesanal</h4>
+                  <p class="text-on-surface-variant text-xs">Sem conservantes, aditivos ou produtos químicos. 100% natural.</p>
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+    </div>
 
-            <div class="field-group">
-              <label for="public_municipio">Municipio *</label>
-              <select id="public_municipio" required>
-                <option value="Vitória">Vitoria</option>
-                <option value="Vila Velha">Vila Velha</option>
-                <option value="Serra">Serra</option>
-              </select>
-            </div>
+    <!-- VIEW 2: CHECKOUT VIEW (HIDDEN BY DEFAULT) -->
+    <div id="viewCheckout" class="hidden max-w-[1280px] mx-auto px-4 md:px-margin-desktop py-8 w-full">
+      <div class="flex flex-col lg:grid lg:grid-cols-12 gap-8 items-start">
+        
+        <!-- Left Column: Checkout Form -->
+        <div class="w-full lg:col-span-8 space-y-6">
+          <div class="mb-4">
+            <button onclick="navigateTo('cart')" class="text-primary font-bold text-sm flex items-center gap-xs hover:underline mb-2">
+              <span class="material-symbols-outlined text-[18px]">arrow_back</span> Voltar para o Catálogo
+            </button>
+            <h2 class="font-headline-xl text-3xl font-extrabold text-on-surface tracking-tight">Finalizar Pedido</h2>
+            <p class="font-body-lg text-sm text-on-surface-variant font-medium mt-1">Preencha os detalhes abaixo para agendarmos sua fornada fresquinha.</p>
+          </div>
 
-            <div id="addressFields">
-              <div class="field-group">
-                <label for="public_endereco">Endereco *</label>
-                <input id="public_endereco" type="text" autocomplete="street-address" required placeholder="Rua, numero, bairro, cidade">
+          <!-- Checkout Identification Form -->
+          <form id="publicOrderForm" class="space-y-6">
+            
+            <!-- Section 1: Personal Details -->
+            <section class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 shadow-sm">
+              <div class="flex items-center gap-3 mb-6 border-b border-outline-variant/30 pb-3">
+                <span class="material-symbols-outlined text-primary text-[28px]" style="font-variation-settings: 'FILL' 1;">person</span>
+                <h3 class="font-headline-md text-xl font-bold">Identificação</h3>
               </div>
-            </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="flex flex-col gap-1.5">
+                  <label for="public_nome" class="font-label-bold text-xs font-bold text-on-surface-variant uppercase tracking-wider">Nome Completo *</label>
+                  <input id="public_nome" type="text" autocomplete="name" required placeholder="Seu nome completo" class="w-full bg-surface border-outline-variant rounded-xl p-3 text-body-md focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all">
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  <label for="public_telefone" class="font-label-bold text-xs font-bold text-on-surface-variant uppercase tracking-wider">WhatsApp *</label>
+                  <input id="public_telefone" type="tel" autocomplete="tel" required placeholder="(27) 99999-9999" class="w-full bg-surface border-outline-variant rounded-xl p-3 text-body-md focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all">
+                </div>
+              </div>
+            </section>
 
-            <div class="field-group">
-              <label for="public_pagamento">Pagamento *</label>
-              <select id="public_pagamento" required>
-                <option value="Pagamento na entrega">Pagamento na entrega</option>
-                <option value="Pix">Pix Online (⚡ QR Code na Hora)</option>
+            <!-- Section 2: Delivery/Method -->
+            <section class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 shadow-sm">
+              <div class="flex items-center gap-3 mb-6 border-b border-outline-variant/30 pb-3">
+                <span class="material-symbols-outlined text-primary text-[28px]" style="font-variation-settings: 'FILL' 1;">local_shipping</span>
+                <h3 class="font-headline-md text-xl font-bold">Forma de Entrega</h3>
+              </div>
+              
+              <!-- Hidden Native Select (Synchronized via Visual Cards) -->
+              <select id="public_entrega" class="hidden" required>
+                <option value="Entrega" selected>Entrega</option>
+                <option value="Retirada">Retirada</option>
+              </select>
+
+              <!-- Visual Delivery Cards -->
+              <div class="grid grid-cols-2 gap-4">
+                <div id="deliveryCard_Entrega" onclick="selectDeliveryMethod('Entrega')" class="relative flex flex-col items-center justify-center p-5 border-2 border-primary-container bg-primary-container/5 rounded-xl cursor-pointer hover:bg-primary-container/10 transition-all group">
+                  <span class="material-symbols-outlined text-4xl text-primary mb-2">home</span>
+                  <span class="font-label-bold text-sm font-bold">Receber em Casa</span>
+                  <span class="text-[10px] text-on-surface-variant mt-0.5">Entrega programada</span>
+                </div>
+                <div id="deliveryCard_Retirada" onclick="selectDeliveryMethod('Retirada')" class="relative flex flex-col items-center justify-center p-5 border border-outline-variant rounded-xl cursor-pointer hover:border-primary transition-all group">
+                  <span class="material-symbols-outlined text-4xl text-on-surface-variant group-hover:text-primary mb-2">storefront</span>
+                  <span class="font-label-bold text-sm font-bold">Retirada Física</span>
+                  <span class="text-[10px] text-on-surface-variant mt-0.5">Grátis na padaria</span>
+                </div>
+              </div>
+
+              <!-- Date Picker Row -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                <div class="flex flex-col gap-1.5">
+                  <label for="public_data_display" class="font-label-bold text-xs font-bold text-on-surface-variant uppercase tracking-wider">Data de Entrega desejada *</label>
+                  <div class="datepicker-wrapper">
+                    <input id="public_data_display" type="text" readonly required placeholder="Selecione a data..." class="w-full bg-surface border-outline-variant rounded-xl p-3 text-body-md cursor-pointer focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all pr-10">
+                    <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none">calendar_today</span>
+                    <input id="public_data" type="hidden" required>
+                    <div id="publicDatepicker" class="custom-datepicker" hidden></div>
+                  </div>
+                </div>
+                
+                <div class="flex flex-col gap-1.5">
+                  <label for="public_municipio" class="font-label-bold text-xs font-bold text-on-surface-variant uppercase tracking-wider">Município *</label>
+                  <select id="public_municipio" required class="w-full bg-surface border-outline-variant rounded-xl p-3 text-body-md focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all">
+                    <option value="Vitória" selected>Vitória</option>
+                    <option value="Vila Velha">Vila Velha</option>
+                    <option value="Serra">Serra</option>
+                  </select>
+                </div>
+              </div>
+            </section>
+
+            <!-- Section 3: Address (Collapsible depending on selectDeliveryMethod) -->
+            <section id="addressFields" class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 shadow-sm">
+              <div class="flex items-center gap-3 mb-6 border-b border-outline-variant/30 pb-3">
+                <span class="material-symbols-outlined text-primary text-[28px]" style="font-variation-settings: 'FILL' 1;">location_on</span>
+                <h3 class="font-headline-md text-xl font-bold">Endereço de Entrega</h3>
+              </div>
+              <div class="flex flex-col gap-1.5">
+                <label for="public_endereco" class="font-label-bold text-xs font-bold text-on-surface-variant uppercase tracking-wider">Endereço Completo *</label>
+                <input id="public_endereco" type="text" autocomplete="street-address" required placeholder="Rua, número, bairro, apto, referência..." class="w-full bg-surface border-outline-variant rounded-xl p-3 text-body-md focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all">
+              </div>
+            </section>
+
+            <!-- Section 4: Payment -->
+            <section class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 shadow-sm">
+              <div class="flex items-center gap-3 mb-6 border-b border-outline-variant/30 pb-3">
+                <span class="material-symbols-outlined text-primary text-[28px]" style="font-variation-settings: 'FILL' 1;">payments</span>
+                <h3 class="font-headline-md text-xl font-bold">Pagamento</h3>
+              </div>
+              
+              <!-- Hidden Native Payment Select -->
+              <select id="public_pagamento" class="hidden" required>
+                <option value="Pagamento na entrega" selected>Pagamento na entrega</option>
+                <option value="Pix">Pix Online</option>
                 <option value="Cartão">Cartão de Crédito Online</option>
               </select>
-            </div>
 
-            <div id="mp-transparent-fields" style="display: none; background: rgba(255,255,255,0.02); border: 1px solid var(--border-subtle); padding: 1rem; border-radius: 8px; margin-top: 0.75rem; flex-direction: column; gap: 0.75rem;">
-              <div class="field-row" style="display: flex; gap: 0.75rem; width: 100%;">
-                <div class="field-group" style="flex: 1; min-width: 0;">
-                  <label for="form-checkout__identificationType">Tipo Doc. *</label>
-                  <select id="form-checkout__identificationType" style="width: 100%; padding: 0.6rem; font-size: 0.85rem;"></select>
+              <!-- Payment Method Selection Cards -->
+              <div class="flex flex-col gap-3">
+                <div id="paymentCard_Pagamento_na_entrega" onclick="selectPaymentMethod('Pagamento na entrega')" class="flex items-center p-4 border border-outline-variant rounded-xl cursor-pointer hover:bg-surface-container-low transition-all bg-surface">
+                  <div class="w-5 h-5 border border-outline rounded-full flex items-center justify-center p-0.5 mr-4 transition-all checked-dot-container"><div class="w-full h-full rounded-full bg-primary opacity-0 transition-opacity select-dot"></div></div>
+                  <div class="flex items-center gap-3">
+                    <span class="material-symbols-outlined text-on-surface-variant text-2xl">local_atm</span>
+                    <div>
+                      <p class="font-label-bold text-sm font-bold">Pagar na Entrega</p>
+                      <p class="text-[10px] text-on-surface-variant mt-0.5">Pague em dinheiro ou cartão ao motoboy</p>
+                    </div>
+                  </div>
                 </div>
-                <div class="field-group" style="flex: 2; min-width: 0;">
-                  <label for="form-checkout__identificationNumber">Documento (CPF/CNPJ) *</label>
-                  <input id="form-checkout__identificationNumber" type="text" placeholder="Apenas números" style="width: 100%; padding: 0.6rem; font-size: 0.85rem;">
+
+                <div id="paymentCard_Pix" onclick="selectPaymentMethod('Pix')" class="flex items-center p-4 border border-outline-variant rounded-xl cursor-pointer hover:bg-surface-container-low transition-all bg-surface">
+                  <div class="w-5 h-5 border border-outline rounded-full flex items-center justify-center p-0.5 mr-4 transition-all checked-dot-container"><div class="w-full h-full rounded-full bg-primary opacity-0 transition-opacity select-dot"></div></div>
+                  <div class="flex items-center gap-3">
+                    <span class="material-symbols-outlined text-on-surface-variant text-2xl">qr_code_2</span>
+                    <div>
+                      <p class="font-label-bold text-sm font-bold">Pix Online (⚡ Desconto/Aprovação na Hora)</p>
+                      <p class="text-[10px] text-on-surface-variant mt-0.5">Código copia-e-cola e QR code gerados no final</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div id="paymentCard_Cartão" onclick="selectPaymentMethod('Cartão')" class="flex items-center p-4 border border-outline-variant rounded-xl cursor-pointer hover:bg-surface-container-low transition-all bg-surface">
+                  <div class="w-5 h-5 border border-outline rounded-full flex items-center justify-center p-0.5 mr-4 transition-all checked-dot-container"><div class="w-full h-full rounded-full bg-primary opacity-0 transition-opacity select-dot"></div></div>
+                  <div class="flex items-center gap-3">
+                    <span class="material-symbols-outlined text-on-surface-variant text-2xl">credit_card</span>
+                    <div>
+                      <p class="font-label-bold text-sm font-bold">Cartão de Crédito Online</p>
+                      <p class="text-[10px] text-on-surface-variant mt-0.5">Pago de forma segura na finalização</p>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div class="field-group" style="width: 100%;">
-                <label for="form-checkout__email">E-mail para Recibo *</label>
-                <input id="form-checkout__email" type="email" placeholder="seu-email@provedor.com" style="width: 100%; padding: 0.6rem; font-size: 0.85rem;">
+
+              <!-- Transparent Checkout Documents and Emails -->
+              <div id="mp-transparent-fields" style="display: none;" class="flex-col gap-4 bg-surface-container/30 border border-outline-variant p-5 rounded-xl mt-4">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div class="flex flex-col gap-1.5">
+                    <label for="form-checkout__identificationType" class="font-label-bold text-xs font-bold text-on-surface-variant uppercase tracking-wider">Tipo Doc. *</label>
+                    <select id="form-checkout__identificationType" class="w-full bg-surface border-outline-variant rounded-xl p-3 text-body-md focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"></select>
+                  </div>
+                  <div class="sm:col-span-2 flex flex-col gap-1.5">
+                    <label for="form-checkout__identificationNumber" class="font-label-bold text-xs font-bold text-on-surface-variant uppercase tracking-wider">CPF / CNPJ *</label>
+                    <input id="form-checkout__identificationNumber" type="text" placeholder="Apenas números" class="w-full bg-surface border-outline-variant rounded-xl p-3 text-body-md focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all">
+                  </div>
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  <label for="form-checkout__email" class="font-label-bold text-xs font-bold text-on-surface-variant uppercase tracking-wider">E-mail para Recibo *</label>
+                  <input id="form-checkout__email" type="email" placeholder="seu-email@provedor.com" class="w-full bg-surface border-outline-variant rounded-xl p-3 text-body-md focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all">
+                </div>
               </div>
-            </div>
+            </section>
 
-            <div class="field-group">
-              <label for="public_obs">Observacoes</label>
-              <textarea id="public_obs" rows="3" placeholder="Ex: pao fatiado, horario preferido, referencia"></textarea>
-            </div>
+            <!-- Section 5: Observações -->
+            <section class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 shadow-sm">
+              <div class="flex items-center gap-3 mb-6 border-b border-outline-variant/30 pb-3">
+                <span class="material-symbols-outlined text-primary text-[28px]">description</span>
+                <h3 class="font-headline-md text-xl font-bold">Observações</h3>
+              </div>
+              <div class="flex flex-col gap-1.5">
+                <label for="public_obs" class="font-label-bold text-xs font-bold text-on-surface-variant uppercase tracking-wider">Instruções Adicionais</label>
+                <textarea id="public_obs" rows="3" placeholder="Ex: pão fatiado, ponto do bolo, horário de preferência, etc..." class="w-full bg-surface border-outline-variant rounded-xl p-3 text-body-md resize-none focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"></textarea>
+              </div>
+            </section>
 
-            <button type="submit" class="submit-order">Finalizar pedido</button>
+            <!-- Hidden Abacate Checkout Container -->
+            <div id="abacateCheckout" class="abacate-checkout" hidden></div>
           </form>
-
-          <div id="abacateCheckout" class="abacate-checkout" hidden></div>
         </div>
-      </aside>
-    </section>
+
+        <!-- Right Column: Order Summary (Sticky) -->
+        <div class="w-full lg:col-span-4 lg:sticky lg:top-24">
+          <section class="bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden shadow-lg">
+            <div class="bg-surface-container p-5 border-b border-outline-variant flex justify-between items-center">
+              <h3 class="font-headline-md text-lg font-bold text-on-surface">Seu Pedido</h3>
+              <span id="cartCount" class="text-xs font-semibold bg-surface-container-highest text-on-surface px-2.5 py-1 rounded-md">0 itens</span>
+            </div>
+
+            <!-- Cart Items Grid List -->
+            <div id="publicCartItems" class="p-5 space-y-4 max-h-[360px] overflow-y-auto custom-scrollbar bg-surface/30">
+              <div class="empty-cart text-center py-8 text-on-surface-variant text-sm font-medium">Seu carrinho está vazio. Adicione pães artesanais para começar!</div>
+            </div>
+
+            <!-- Price Breakdown -->
+            <div class="p-5 bg-surface-container-low space-y-3 border-t border-outline-variant">
+              <div class="flex justify-between text-sm text-on-surface-variant font-medium">
+                <span>Pães</span>
+                <span id="cartProductsTotal">R$ 0,00</span>
+              </div>
+              <div class="flex justify-between text-sm text-on-surface-variant font-medium">
+                <span>Taxa de Entrega</span>
+                <span id="cartDeliveryFeeTotal" class="text-primary font-bold">Grátis</span>
+              </div>
+              <div class="pt-4 flex justify-between items-end border-t border-outline-variant">
+                <span class="font-label-bold text-sm font-bold text-on-surface uppercase">Total Estimado</span>
+                <strong id="publicCartTotal" class="font-headline-md text-2xl text-primary">R$ 0,00</strong>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="p-5 bg-surface-container-low/50">
+              <!-- Catalog Proceed Button -->
+              <button type="button" id="continueCheckoutBtn" onclick="openCheckoutIdentification()" class="w-full py-4 bg-primary text-on-primary rounded-xl font-bold flex items-center justify-center gap-3 hover:bg-primary-container transition-all active:scale-[0.98] shadow-md disabled:opacity-50 disabled:cursor-not-allowed uppercase text-sm tracking-wider" disabled>
+                Continuar para Identificação
+              </button>
+
+              <!-- Finalize Order Form Button -->
+              <button type="button" id="submitOrderBtn" onclick="triggerCheckoutSubmit()" class="hidden w-full py-4 bg-primary text-on-primary rounded-xl font-bold flex items-center justify-center gap-3 hover:bg-primary-container transition-all active:scale-[0.98] shadow-md uppercase text-sm tracking-wider">
+                <span class="material-symbols-outlined">shopping_bag</span> Finalizar Pedido
+              </button>
+              
+              <p class="text-[10px] text-center text-on-surface-variant/80 mt-3 uppercase tracking-wider font-semibold">Pedidos serão finalizados de forma integrada via WhatsApp ou checkout.</p>
+            </div>
+          </section>
+
+          <!-- Trust Badge -->
+          <div class="bg-primary/5 border border-primary/20 rounded-2xl p-4 flex items-start gap-4 mt-4">
+            <span class="material-symbols-outlined text-primary text-[28px]" style="font-variation-settings: 'FILL' 1;">verified_user</span>
+            <div>
+              <p class="font-label-bold text-sm text-primary font-bold">Fornada Fresca Garantida</p>
+              <p class="text-xs text-on-surface-variant mt-0.5 leading-relaxed font-medium">Nossos pães são assados diariamente sob demanda e embalados com todo carinho para você.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
   </main>
 
-  <div id="paymentModal" class="payment-modal" hidden>
-    <div class="payment-modal-overlay" onclick="closePaymentModal()"></div>
-    <div class="payment-modal-content" role="dialog" aria-modal="true" aria-labelledby="paymentModalTitle">
-      <h2 id="paymentModalTitle">Pedido Realizado!</h2>
-      <p id="paymentModalText">Finalize o pagamento para confirmar seu pedido.</p>
-      <div id="paymentModalBody"></div>
-      <button type="button" id="copyPixModalBtn" class="copy-pix" onclick="copyModalPixCode()" hidden>Copiar código PIX</button>
-      <button type="button" class="modal-secondary-btn" onclick="closePaymentModal()">Voltar ao Catálogo</button>
+  <!-- Footer -->
+  <footer class="bg-surface-container-lowest pt-12 pb-6 border-t border-outline-variant mt-auto">
+    <div class="max-w-[1280px] mx-auto px-4 md:px-margin-desktop">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
+        <div class="col-span-1 md:col-span-1">
+          <div class="flex items-center gap-sm mb-4">
+            <img src="https://cdn-icons-png.flaticon.com/512/992/992747.png" alt="Logo Bemavi" class="w-8 h-8 object-contain">
+            <h2 class="font-headline-lg text-xl text-primary font-bold tracking-tight">Bemavi</h2>
+          </div>
+          <p class="text-on-surface-variant font-body-md text-sm leading-relaxed font-medium">
+            Transformando farinha, água e sal em poesia comestível sob encomenda.
+          </p>
+          <div class="flex gap-sm mt-4">
+            <a class="w-9 h-9 rounded-full bg-surface-container-high flex items-center justify-center text-primary hover:bg-primary hover:text-on-primary transition-all" href="https://wa.me/5527992760190" target="_blank" rel="noopener">
+              <span class="material-symbols-outlined text-[18px]">chat</span>
+            </a>
+            <a class="w-9 h-9 rounded-full bg-surface-container-high flex items-center justify-center text-primary hover:bg-primary hover:text-on-primary transition-all" href="mailto:contato@bemavi.com.br">
+              <span class="material-symbols-outlined text-[18px]">mail</span>
+            </a>
+          </div>
+        </div>
+        <div>
+          <h5 class="font-label-bold text-xs font-bold text-on-surface mb-4 uppercase tracking-wider">Produtos</h5>
+          <ul class="space-y-2 text-sm text-on-surface-variant font-medium">
+            <li><a class="hover:text-primary transition-colors" href="#" onclick="filterCategory('Pães'); scrollToCatalog(); return false;">Pães Artesanais</a></li>
+            <li><a class="hover:text-primary transition-colors" href="#" onclick="filterCategory('Bolos'); scrollToCatalog(); return false;">Bolos Especiais</a></li>
+            <li><a class="hover:text-primary transition-colors" href="#" onclick="filterCategory('Todos'); scrollToCatalog(); return false;">Ver Todos</a></li>
+          </ul>
+        </div>
+        <div>
+          <h5 class="font-label-bold text-xs font-bold text-on-surface mb-4 uppercase tracking-wider">Suporte</h5>
+          <ul class="space-y-2 text-sm text-on-surface-variant font-medium">
+            <li><a class="hover:text-primary transition-colors" href="https://wa.me/5527992760190" target="_blank" rel="noopener">Fale Conosco</a></li>
+            <li><a class="hover:text-primary transition-colors" href="#" onclick="selectDeliveryMethod('Retirada'); return false;">Locais de Retirada</a></li>
+            <li><a class="hover:text-primary transition-colors" href="#" onclick="selectDeliveryMethod('Entrega'); return false;">Regiões de Entrega</a></li>
+          </ul>
+        </div>
+        <div>
+          <h5 class="font-label-bold text-xs font-bold text-on-surface mb-4 uppercase tracking-wider">Contato</h5>
+          <p class="text-on-surface-variant font-body-md text-sm leading-relaxed font-medium">
+            Dúvidas ou pedidos especiais? Entre em contato pelo WhatsApp e fale com nosso padeiro.
+          </p>
+        </div>
+      </div>
+      <div class="flex flex-col md:flex-row justify-between items-center pt-6 border-t border-outline-variant/30 text-[11px] text-on-surface-variant font-bold uppercase tracking-wider">
+        <p>© 2026 Bemavi Pão Artesanal. Todos os direitos reservados.</p>
+        <div class="flex gap-md mt-4 md:mt-0">
+          <a class="hover:text-primary" href="#">Termos</a>
+          <a class="hover:text-primary" href="#">Privacidade</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Mercado Pago Transparent Payment Modal -->
+  <div id="paymentModal" class="payment-modal fixed inset-0 z-50 flex items-center justify-center" hidden>
+    <div class="payment-modal-overlay absolute inset-0 bg-on-background/60 backdrop-blur-sm" onclick="closePaymentModal()"></div>
+    <div class="payment-modal-content relative bg-surface-container-lowest border border-outline-variant rounded-2xl shadow-2xl p-6 md:p-8 max-w-lg w-full mx-4 z-10" role="dialog" aria-modal="true" aria-labelledby="paymentModalTitle">
+      <button onclick="closePaymentModal()" class="absolute top-4 right-4 text-on-surface-variant hover:text-primary transition-all p-1 rounded-full hover:bg-surface">
+        <span class="material-symbols-outlined text-[24px]">close</span>
+      </button>
+      
+      <h2 id="paymentModalTitle" class="font-headline-lg text-2xl font-bold text-on-surface mb-2 pr-6">Pedido Realizado!</h2>
+      <p id="paymentModalText" class="font-body-md text-sm text-on-surface-variant mb-6">Finalize o pagamento para confirmar seu pedido.</p>
+      
+      <div id="paymentModalBody" class="bg-surface border border-outline-variant rounded-xl p-4 md:p-6 mb-6"></div>
+      
+      <div class="flex flex-col sm:flex-row gap-3">
+        <button type="button" id="copyPixModalBtn" class="copy-pix py-3 px-6 bg-primary text-on-primary rounded-xl font-bold hover:bg-primary-container transition-all active:scale-[0.98] text-sm text-center flex-1" onclick="copyModalPixCode()" hidden>
+          Copiar Código Pix
+        </button>
+        <button type="button" class="modal-secondary-btn py-3 px-6 border border-outline-variant text-on-surface-variant rounded-xl font-bold hover:bg-surface-container transition-all active:scale-[0.98] text-sm text-center flex-1" onclick="closePaymentModal()">
+          Voltar ao Catálogo
+        </button>
+      </div>
     </div>
   </div>
 
-  <div id="publicToast" class="public-toast" role="status" aria-live="polite"></div>
+  <!-- Toast Notification -->
+  <div id="publicToast" class="public-toast fixed bottom-6 left-1/2 -translate-x-1/2 bg-on-background text-background font-semibold py-3 px-6 rounded-xl shadow-lg border border-outline-variant/20 transition-all opacity-0 pointer-events-none z-50 text-sm max-w-xs text-center" role="status" aria-live="polite"></div>
+
+  <!-- Scripts -->
   <script src="https://sdk.mercadopago.com/js/v2"></script>
   <script src="./assets/js/catalogo-publico.js"></script>
 </body>

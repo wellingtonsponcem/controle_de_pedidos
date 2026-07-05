@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+
+<html class="light" lang="pt-br"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Bemavi | Padaria Artesanal</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@700;800&amp;family=Plus+Jakarta+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-secondary": "#ffffff",
+                    "on-background": "#201b11",
+                    "on-tertiary-fixed": "#001e2d",
+                    "tertiary-fixed-dim": "#82cfff",
+                    "surface-variant": "#ede1d1",
+                    "surface-container": "#f8ecdc",
+                    "primary-fixed": "#ffdead",
+                    "on-tertiary-container": "#004b6a",
+                    "primary-container": "#eda70b",
+                    "on-tertiary": "#ffffff",
+                    "on-secondary-fixed": "#271900",
+                    "surface-tint": "#7f5700",
+                    "primary": "#7f5700",
+                    "inverse-primary": "#ffba3a",
+                    "secondary": "#775925",
+                    "surface-container-high": "#f3e6d7",
+                    "on-secondary-container": "#795c27",
+                    "on-surface-variant": "#514533",
+                    "on-primary": "#ffffff",
+                    "tertiary-container": "#3ebfff",
+                    "on-primary-fixed": "#281900",
+                    "on-error": "#ffffff",
+                    "primary-fixed-dim": "#ffba3a",
+                    "error-container": "#ffdad6",
+                    "background": "#fff8f3",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-container-low": "#fef2e2",
+                    "on-surface": "#201b11",
+                    "surface-dim": "#e4d8c9",
+                    "secondary-container": "#ffd797",
+                    "outline-variant": "#d5c4ad",
+                    "secondary-fixed-dim": "#e8c182",
+                    "surface": "#fff8f3",
+                    "inverse-surface": "#362f25",
+                    "tertiary-fixed": "#c6e7ff",
+                    "secondary-fixed": "#ffdeab",
+                    "surface-container-highest": "#ede1d1",
+                    "error": "#ba1a1a",
+                    "on-error-container": "#93000a",
+                    "outline": "#837561",
+                    "surface-bright": "#fff8f3",
+                    "on-tertiary-fixed-variant": "#004c6b",
+                    "on-primary-fixed-variant": "#604100",
+                    "tertiary": "#00658d",
+                    "on-secondary-fixed-variant": "#5d420f",
+                    "on-primary-container": "#5f4000",
+                    "inverse-on-surface": "#fbefdf"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xl": "64px",
+                    "sm": "12px",
+                    "xs": "4px",
+                    "margin-mobile": "16px",
+                    "gutter": "20px",
+                    "margin-desktop": "40px",
+                    "lg": "48px",
+                    "md": "24px",
+                    "base": "8px"
+            },
+            "fontFamily": {
+                    "headline-xl": ["Epilogue"],
+                    "headline-lg-mobile": ["Epilogue"],
+                    "headline-lg": ["Epilogue"],
+                    "price-display": ["Epilogue"],
+                    "body-md": ["Plus Jakarta Sans"],
+                    "body-lg": ["Plus Jakarta Sans"],
+                    "label-bold": ["Plus Jakarta Sans"],
+                    "headline-md": ["Epilogue"]
+            },
+            "fontSize": {
+                    "headline-xl": ["40px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                    "headline-lg-mobile": ["28px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                    "headline-lg": ["32px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                    "price-display": ["20px", {"lineHeight": "1.0", "fontWeight": "800"}],
+                    "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "500"}],
+                    "label-bold": ["14px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                    "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-header {
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .hero-gradient {
+            background: linear-gradient(to right, rgba(255, 248, 243, 1) 30%, rgba(255, 248, 243, 0) 100%);
+        }
+        .card-hover:hover {
+            box-shadow: 0 10px 30px -5px rgba(121, 92, 39, 0.15);
+            transform: translateY(-4px);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md antialiased">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 glass-header bg-surface/95 border-b border-outline-variant">
+<div class="max-w-[1280px] mx-auto flex justify-between items-center px-margin-desktop h-20">
+<!-- Brand -->
+<div class="flex items-center gap-base">
+<span class="material-symbols-outlined text-primary text-[32px]">bakery_dining</span>
+<h1 class="font-headline-lg text-headline-lg text-primary tracking-tight">Bemavi</h1>
+</div>
+<!-- Search Bar -->
+<div class="hidden md:flex flex-1 max-w-md mx-xl relative group">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="w-full pl-12 pr-4 py-3 bg-surface-container-low border border-outline-variant rounded-full focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none text-body-md" placeholder="Procure por pães, bolos e doces..." type="text"/>
+</div>
+<!-- Actions -->
+<nav class="flex items-center gap-md">
+<div class="hidden lg:flex items-center gap-lg mr-md">
+<a class="font-label-bold text-label-bold text-primary transition-colors hover:text-primary-container" href="#">Catalog</a>
+<a class="font-label-bold text-label-bold text-on-surface-variant transition-colors hover:text-primary" href="#">Orders</a>
+</div>
+<button class="relative p-2 text-on-surface hover:bg-primary-container/20 rounded-full transition-transform active:scale-95">
+<span class="material-symbols-outlined text-[28px]">shopping_basket</span>
+<span class="absolute top-0 right-0 bg-primary text-on-primary text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-surface">2</span>
+</button>
+<button class="p-2 text-on-surface hover:bg-primary-container/20 rounded-full transition-transform active:scale-95 md:hidden">
+<span class="material-symbols-outlined text-[28px]">menu</span>
+</button>
+</nav>
+</div>
+</header>
+<main class="pt-20">
+<!-- Hero Section -->
+<section class="relative h-[600px] w-full overflow-hidden flex items-center">
+<div class="absolute inset-0 z-0">
+<div class="w-full h-full bg-cover bg-center" data-alt="A macro cinematic photograph of a freshly baked artisanal sourdough loaf with a perfectly crackled golden-brown crust. Soft sunlight streams from a window, illuminating the flour-dusted surface and highlighting the rich textures. The background shows a warm, rustic kitchen setting with honey-toned wooden surfaces and earthy textures, aligning with the brand's professional yet sun-drenched aesthetic." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAopeiB6W2HHHgfhbVcC9Z67J6CEnWXMN649KmT9abRC_-RPKowtZdKXaV9v2BMHKWEjo4xgZsw15oPIenYiyGHtHN9B-t0Yv-wxdTIsEAqsl3hR5VkNkrhYqSOMolis6Kip4Sk7gzeCAKT4DzADFVu42ijypmmxvLeFKH6dA_GLWjVMwv9qVGCxTETHIDEf0uCVoDh_2zCT3W5kqlBBXwtdiG89dcM_XJbMFxG5uglIGcX5eD3dfi-')"></div>
+<div class="absolute inset-0 hero-gradient"></div>
+</div>
+<div class="relative z-10 max-w-[1280px] mx-auto px-margin-desktop w-full">
+<div class="max-w-2xl">
+<span class="inline-block px-4 py-1.5 bg-primary-container text-on-primary-container font-label-bold text-label-bold rounded-full mb-md">
+                        ARTESANAL &amp; FRESCO
+                    </span>
+<h2 class="font-headline-xl text-headline-xl text-on-background mb-md">
+                        O despertar dos sentidos em cada fatia.
+                    </h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant mb-lg leading-relaxed">
+                        Pães de fermentação natural, produzidos diariamente com grãos selecionados e a paciência que a verdadeira arte exige. Sinta o calor da nossa fornada.
+                    </p>
+<div class="flex gap-md">
+<button class="px-xl py-4 bg-primary text-on-primary font-label-bold text-label-bold rounded-lg shadow-lg hover:bg-primary-container transition-all active:scale-95 uppercase tracking-wider">
+                            Ver Cardápio
+                        </button>
+<button class="px-xl py-4 border-2 border-secondary text-secondary font-label-bold text-label-bold rounded-lg hover:bg-secondary-container/10 transition-all active:scale-95 uppercase tracking-wider">
+                            Nossa História
+                        </button>
+</div>
+</div>
+</div>
+</section>
+<!-- Category Selector -->
+<section class="py-lg bg-surface-container-low border-b border-outline-variant">
+<div class="max-w-[1280px] mx-auto px-margin-desktop">
+<div class="flex items-center justify-center gap-md overflow-x-auto pb-4 no-scrollbar">
+<button class="flex flex-col items-center gap-sm min-w-[100px] p-md bg-secondary-container text-on-secondary-container rounded-xl transition-all">
+<span class="material-symbols-outlined text-[32px]">bakery_dining</span>
+<span class="font-label-bold text-label-bold">Pães Brancos</span>
+</button>
+<button class="flex flex-col items-center gap-sm min-w-[100px] p-md hover:bg-surface-container-high rounded-xl transition-all text-on-surface-variant">
+<span class="material-symbols-outlined text-[32px]">breakfast_dining</span>
+<span class="font-label-bold text-label-bold">Integrais</span>
+</button>
+<button class="flex flex-col items-center gap-sm min-w-[100px] p-md hover:bg-surface-container-high rounded-xl transition-all text-on-surface-variant">
+<span class="material-symbols-outlined text-[32px]">cookie</span>
+<span class="font-label-bold text-label-bold">Doces</span>
+</button>
+<button class="flex flex-col items-center gap-sm min-w-[100px] p-md hover:bg-surface-container-high rounded-xl transition-all text-on-surface-variant">
+<span class="material-symbols-outlined text-[32px]">cake</span>
+<span class="font-label-bold text-label-bold">Bolos</span>
+</button>
+<button class="flex flex-col items-center gap-sm min-w-[100px] p-md hover:bg-surface-container-high rounded-xl transition-all text-on-surface-variant">
+<span class="material-symbols-outlined text-[32px]">coffee</span>
+<span class="font-label-bold text-label-bold">Cafés</span>
+</button>
+<button class="flex flex-col items-center gap-sm min-w-[100px] p-md hover:bg-surface-container-high rounded-xl transition-all text-on-surface-variant">
+<span class="material-symbols-outlined text-[32px]">local_mall</span>
+<span class="font-label-bold text-label-bold">Kits</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Product Grid "Nossa Fornada" -->
+<section class="py-xl max-w-[1280px] mx-auto px-margin-desktop">
+<div class="flex justify-between items-end mb-lg">
+<div>
+<h3 class="font-headline-lg text-headline-lg text-on-background">Nossa Fornada</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Saindo agora do forno de pedra</p>
+</div>
+<a class="font-label-bold text-label-bold text-primary flex items-center gap-xs hover:underline" href="#">
+                    Ver tudo <span class="material-symbols-outlined">arrow_forward</span>
+</a>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter">
+<!-- Card 1 -->
+<div class="group bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden card-hover transition-all duration-300">
+<div class="relative aspect-[4/3] overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A top-down detailed shot of a rustic Italian Focaccia bread topped with fresh sprigs of rosemary, coarse sea salt, and droplets of golden olive oil. The bread has a beautiful bubbly texture with golden charred spots. Warm sunlight highlights the glistening oil against the artisanal crust. High-contrast light mode photography with soft shadows and a warm color story of bronze and honey." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDjYAC7XRUPOYZQPBOeCOAS3ZAMEoRdteAb1tbbyzBjlZVfwZFSEGddgg4aMhibmR2-Wi3J1zUDh98j_Z7fQfd6UW7g-R366wJpm6P0gpuO62akyQVmclu7n4WablRH22ctK3wrIhIjOKogl4-I60xcykZCjwqAjluNq-UlhzLVkXmFvz_p2VkApSH5RzQv-7EvnTEyC-lTFoCNrH_YJl1z-fqVOVRKe7ZPJbPaGWkwiKf56KGPZmxI"/>
+<div class="absolute top-4 left-4">
+<span class="px-3 py-1 bg-tertiary-container text-on-tertiary-container font-label-bold text-[12px] rounded-full">NOVIDADE</span>
+</div>
+</div>
+<div class="p-md">
+<span class="font-label-bold text-[12px] text-primary uppercase tracking-widest mb-xs block">Fermentação Natural</span>
+<h4 class="font-headline-md text-headline-md text-on-surface mb-xs">Focaccia de Alecrim</h4>
+<p class="font-body-md text-body-md text-on-surface-variant mb-md line-clamp-2">Tradicional italiana com azeite extra virgem e flor de sal.</p>
+<div class="flex items-center justify-between mt-auto">
+<span class="font-price-display text-price-display text-on-background">R$ 28,90</span>
+<button class="w-10 h-10 bg-primary text-on-primary rounded-lg flex items-center justify-center hover:bg-primary-container transition-colors active:scale-90">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="group bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden card-hover transition-all duration-300">
+<div class="relative aspect-[4/3] overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A close-up of a classic French Baguette being sliced on a wooden board. Crumbs are scattered around the crisp, dark golden crust. The interior shows an open, airy crumb structure typical of long fermentation. The setting is bright and professional, using a warm palette of taupe and amber tones with high-key lighting that emphasizes the bread's texture." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBVI9yelFckMzNzRSy3sgnUx_5h-y2pAj7-Ud6DoRyGRcOn-QpsHD6nwY0ktkCsRrXOGol7lsQhdsD89d8XhUQ6vwx0aSQXLJCwz6H2YFzKzhg53ttNEdOGYiX72pmn7jZbbHS75LXjgg2sGCWlAK8goZXOabJN6Eal0jttlpZWhwGdgmmbKmkXWmPndTey1NoJOH9tnYdIhPiWTXb_Leo_n2PjFrxPFl-FDiDV3OlSOvbKtnjw1rDC"/>
+<div class="absolute top-4 left-4">
+<span class="px-3 py-1 bg-primary-container text-on-primary-container font-label-bold text-[12px] rounded-full">BEST SELLER</span>
+</div>
+</div>
+<div class="p-md">
+<span class="font-label-bold text-[12px] text-primary uppercase tracking-widest mb-xs block">Clássicos</span>
+<h4 class="font-headline-md text-headline-md text-on-surface mb-xs">Baguette Tradition</h4>
+<p class="font-body-md text-body-md text-on-surface-variant mb-md line-clamp-2">A legítima receita francesa com crosta crocante e miolo aerado.</p>
+<div class="flex items-center justify-between mt-auto">
+<span class="font-price-display text-price-display text-on-background">R$ 14,50</span>
+<button class="w-10 h-10 bg-primary text-on-primary rounded-lg flex items-center justify-center hover:bg-primary-container transition-colors active:scale-90">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="group bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden card-hover transition-all duration-300">
+<div class="relative aspect-[4/3] overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A rustic sourdough boule with a cross-scored top, revealing a deep golden crust and dusting of white flour. The loaf sits on a piece of parchment paper inside a warm wooden bowl. The lighting is soft and golden, creating a comforting artisanal atmosphere. The background features a clean, high-contrast kitchen space with elements of sky blue and bronze accents." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDs_9XeaQDJ8cg50vBE8MffWhz67fWgFCuwSUm3_Ony0n4Ziihu4m9d_REA2cPmfTkIY3mjqB4l084QMpjsCPWAYRI-B6Xol3rkQ_GwXoap00VtRTHZS_LhS_0Re1LB0JEY569s8AfUbV8tMbJv5vF4T1kuPM8hJfGvuKW3K5zLttgAiu1rNph95-PWjAErh-_7Pf90XiE0xXD9Gqv7wYmRoYkGATRzb8bzuVH8u6H_J-TmkFqOptHD"/>
+</div>
+<div class="p-md">
+<span class="font-label-bold text-[12px] text-primary uppercase tracking-widest mb-xs block">Especiais</span>
+<h4 class="font-headline-md text-headline-md text-on-surface mb-xs">Levain Clássico</h4>
+<p class="font-body-md text-body-md text-on-surface-variant mb-md line-clamp-2">Nosso pão de assinatura, 48h de fermentação lenta e sabor marcante.</p>
+<div class="flex items-center justify-between mt-auto">
+<span class="font-price-display text-price-display text-on-background">R$ 32,00</span>
+<button class="w-10 h-10 bg-primary text-on-primary rounded-lg flex items-center justify-center hover:bg-primary-container transition-colors active:scale-90">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Card 4 -->
+<div class="group bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden card-hover transition-all duration-300">
+<div class="relative aspect-[4/3] overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A trio of golden-brown butter croissants stacked neatly on a white ceramic plate. The flaky, multi-layered texture is clearly visible, with a glossy finish. A small bowl of fresh artisanal jam sits nearby. The style is bright and clean, reflecting a professional bakery aesthetic with warm honey lighting and a palette of bronze and neutral tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDFEsK4vG1-ZBkU392X-Btr9XrVvmIfetm0Sqdi4RFfAhgEuYX0MITVff4KjOgnhrgE-ytra0LidNjL7dIvLqecdRCQwv7kiLJNfLkVFmrsUAIXAl67BNHFg5ntUuwqp3Tm2JwnFVFDd9qO5m9qfDkVe8y1tnncZ6u6hxiIG9eK7PQjgrdOrfkjR9Nl28Thb0X6DeVqVmsqNDRmxhNOPjR7Fm1bFv6WybN7RJFUmKfV8WQEfL-rxyEm"/>
+</div>
+<div class="p-md">
+<span class="font-label-bold text-[12px] text-primary uppercase tracking-widest mb-xs block">Viennoiserie</span>
+<h4 class="font-headline-md text-headline-md text-on-surface mb-xs">Croissant de Manteiga</h4>
+<p class="font-body-md text-body-md text-on-surface-variant mb-md line-clamp-2">Laminado à mão com manteiga francesa, leve e extremamente folhado.</p>
+<div class="flex items-center justify-between mt-auto">
+<span class="font-price-display text-price-display text-on-background">R$ 12,90</span>
+<button class="w-10 h-10 bg-primary text-on-primary rounded-lg flex items-center justify-center hover:bg-primary-container transition-colors active:scale-90">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Bento Featured Section -->
+<section class="py-xl bg-surface-container-low">
+<div class="max-w-[1280px] mx-auto px-margin-desktop">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-md h-auto md:h-[500px]">
+<div class="md:col-span-2 relative rounded-2xl overflow-hidden group">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="A wide cinematic shot of a professional artisanal bakery kitchen. Bakers in clean white aprons are working with large pieces of dough on heavy wooden tables. Industrial ovens glow in the background. The atmosphere is productive and clean, filled with warm golden light that highlights the professional yet artisanal nature of the business. Earthy tones and sky-blue accents are integrated into the decor." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCVtqmQvISRU9_Yh-p52kq5w-N0YRhMt3cEbkMgasOKJsTkeTCGSZsKbrIf0xdMvLI4qTxQSTzhDPhNb52BnyodxtebW-iBFIV5s4N1XLyrJ-cEcnyXyR4_SmbsVZEgBLi6wAEYfaTfk48YNyn5f5WgK3-4UPo11f-32qIItGNuq7n-5OFVskMV5QS1sTS3Tq6MIFjfg84J61jD-yZnCGO_37XcCMApXbANHsIvND6BuLqifXorYlx8"/>
+<div class="absolute inset-0 bg-gradient-to-t from-on-background/80 via-on-background/20 to-transparent flex flex-col justify-end p-lg">
+<h3 class="font-headline-xl text-headline-xl text-on-primary mb-sm">Clube de Assinaturas</h3>
+<p class="text-on-primary/80 font-body-lg text-body-lg max-w-md mb-md">Receba pães frescos toda semana no conforto da sua casa com benefícios exclusivos.</p>
+<button class="w-fit px-xl py-3 bg-secondary-container text-on-secondary-container font-label-bold text-label-bold rounded-lg uppercase transition-all hover:brightness-110 active:scale-95">Saiba Mais</button>
+</div>
+</div>
+<div class="flex flex-col gap-md">
+<div class="flex-1 bg-primary text-on-primary p-lg rounded-2xl flex flex-col justify-between">
+<span class="material-symbols-outlined text-[48px]">local_shipping</span>
+<div>
+<h4 class="font-headline-md text-headline-md mb-xs">Entrega Expressa</h4>
+<p class="text-on-primary/80 font-body-md text-body-md">Peça até as 10h e receba para o café da tarde.</p>
+</div>
+</div>
+<div class="flex-1 bg-surface-container-highest border border-outline-variant p-lg rounded-2xl flex flex-col justify-between">
+<span class="material-symbols-outlined text-primary text-[48px]">workspace_premium</span>
+<div>
+<h4 class="font-headline-md text-headline-md text-on-surface mb-xs">Qualidade Bemavi</h4>
+<p class="text-on-surface-variant font-body-md text-body-md">Ingredientes 100% naturais, sem aditivos químicos.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-lowest pt-xl pb-md border-t border-outline-variant">
+<div class="max-w-[1280px] mx-auto px-margin-desktop">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-lg mb-xl">
+<div class="col-span-1 md:col-span-1">
+<div class="flex items-center gap-base mb-md">
+<span class="material-symbols-outlined text-primary text-[32px]">bakery_dining</span>
+<h2 class="font-headline-lg text-headline-lg text-primary tracking-tight">Bemavi</h2>
+</div>
+<p class="text-on-surface-variant font-body-md text-body-md mb-md">
+                        Transformando farinha, água e sal em poesia comestível desde 2018.
+                    </p>
+<div class="flex gap-sm">
+<a class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center text-primary hover:bg-primary hover:text-on-primary transition-all" href="#">
+<span class="material-symbols-outlined">share</span>
+</a>
+<a class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center text-primary hover:bg-primary hover:text-on-primary transition-all" href="#">
+<span class="material-symbols-outlined">mail</span>
+</a>
+</div>
+</div>
+<div>
+<h5 class="font-label-bold text-label-bold text-on-surface mb-md uppercase tracking-wider">Explorar</h5>
+<ul class="space-y-sm">
+<li><a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Menu Semanal</a></li>
+<li><a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Assinaturas</a></li>
+<li><a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Presentes</a></li>
+<li><a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Eventos</a></li>
+</ul>
+</div>
+<div>
+<h5 class="font-label-bold text-label-bold text-on-surface mb-md uppercase tracking-wider">Suporte</h5>
+<ul class="space-y-sm">
+<li><a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Entregas</a></li>
+<li><a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Trocas e Devoluções</a></li>
+<li><a class="text-on-surface-variant hover:text-primary transition-colors" href="#">FAQ</a></li>
+<li><a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Contato</a></li>
+</ul>
+</div>
+<div>
+<h5 class="font-label-bold text-label-bold text-on-surface mb-md uppercase tracking-wider">Newsletter</h5>
+<p class="text-on-surface-variant font-body-md text-body-md mb-md">Assine para receber avisos de fornadas especiais.</p>
+<div class="flex gap-xs">
+<input class="bg-surface-container-low border border-outline-variant rounded-lg px-4 py-2 flex-1 focus:ring-1 focus:ring-primary outline-none" placeholder="Seu e-mail" type="email"/>
+<button class="bg-primary text-on-primary px-4 py-2 rounded-lg font-label-bold text-label-bold uppercase">OK</button>
+</div>
+</div>
+</div>
+<div class="flex flex-col md:flex-row justify-between items-center pt-md border-t border-outline-variant/30 text-[12px] text-on-surface-variant font-label-bold">
+<p>© 2024 Bemavi Padaria Artesanal. Todos os direitos reservados.</p>
+<div class="flex gap-md mt-md md:mt-0">
+<a class="hover:text-primary" href="#">Termos de Uso</a>
+<a class="hover:text-primary" href="#">Privacidade</a>
+<a class="hover:text-primary" href="#">Cookies</a>
+</div>
+</div>
+</div>
+</footer>
+<script>
+        // Micro-interaction for add buttons
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                if (this.querySelector('.material-symbols-outlined')?.textContent === 'add') {
+                    const ripple = document.createElement('div');
+                    ripple.className = 'absolute inset-0 bg-white/20 rounded-lg animate-ping pointer-events-none';
+                    this.appendChild(ripple);
+                    setTimeout(() => ripple.remove(), 500);
+                }
+            });
+        });
+
+        // Simple sticky header effect
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('header');
+            if (window.scrollY > 20) {
+                header.classList.add('shadow-md');
+            } else {
+                header.classList.remove('shadow-md');
+            }
+        });
+    </script>
+</body></html>
