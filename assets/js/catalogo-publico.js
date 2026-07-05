@@ -601,6 +601,33 @@ function renderRedirectionFallback(bodyEl, url) {
         <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
         <line x1="1" y1="10" x2="23" y2="10"></line>
       </svg>
+      Pagar com Mercado Pago
+    </a>
+  `;
+}
+
+window.closePaymentModal = function() {
+  const modal = document.getElementById('paymentModal');
+  if (!modal) return;
+  modal.hidden = true;
+  document.body.classList.remove('modal-open');
+
+  clearInterval(pixCountdownInterval);
+  clearInterval(pixPollingInterval);
+
+  if (window.cardPaymentBrickController) {
+    try {
+      window.cardPaymentBrickController.unmount();
+      window.cardPaymentBrickController = null;
+    } catch (e) {
+      console.warn('Erro ao desmontar o Card Payment Brick:', e);
+    }
+  }
+};
+
+window.copyModalPixCode = async function() {
+  const modal = document.getElementById('paymentModal');
+  const pixCode = modal?.dataset.pixCode || '';
   if (!pixCode) return;
 
   try {
