@@ -23,6 +23,7 @@ const state = {
   checkoutStep: 'cart',
   searchQuery: '',
   categoriaAtiva: 'Todos',
+  subcategoriaNatal: 'Todos',
   calendarMonth: new Date(new Date().getFullYear(), new Date().getMonth(), 1)
 };
 
@@ -138,18 +139,38 @@ function renderCatalog() {
     filtered = filtered.filter(prod => {
       const name = (prod.nome || '').toLowerCase();
       const versao = (prod.versao || '').toLowerCase();
-      const text = `${name} ${versao}`.toLowerCase();
+      const sabor = (prod.sabor || '').toLowerCase();
+      const modelo = (prod.modelo || '').toLowerCase();
+      const text = `${name} ${versao} ${sabor} ${modelo}`.toLowerCase();
+      const isNatal = versao.includes('natal') || name.includes('natal') || text.includes('chocotone') || text.includes('taça especial') || text.includes('na travessa') || text.includes('pudim tradicional bemavi');
       
+      if (state.categoriaAtiva === 'Natal') {
+        if (!isNatal) return false;
+        if (state.subcategoriaNatal === 'Chocotones') {
+          return text.includes('chocotone');
+        }
+        if (state.subcategoriaNatal === 'Travessas') {
+          return text.includes('travessa');
+        }
+        if (state.subcategoriaNatal === 'Taças') {
+          return text.includes('taça');
+        }
+        if (state.subcategoriaNatal === 'Pudim') {
+          return text.includes('pudim');
+        }
+        return true;
+      }
+
       if (state.categoriaAtiva === 'Pães') {
-        return text.includes('pão') || text.includes('baguete') || text.includes('levain') || text.includes('focaccia') || text.includes('croissant') || text.includes('broinha');
+        return !isNatal && (text.includes('pão') || text.includes('baguete') || text.includes('levain') || text.includes('focaccia') || text.includes('croissant') || text.includes('broinha'));
       }
       if (state.categoriaAtiva === 'Bolos') {
-        return text.includes('bolo');
+        return !isNatal && text.includes('bolo');
       }
       if (state.categoriaAtiva === 'Outros') {
         const isBread = text.includes('pão') || text.includes('baguete') || text.includes('levain') || text.includes('focaccia') || text.includes('croissant') || text.includes('broinha');
         const isCake = text.includes('bolo');
-        return !isBread && !isCake;
+        return !isBread && !isCake && !isNatal;
       }
       return true;
     });
@@ -182,17 +203,32 @@ function renderCatalog() {
 
   grid.innerHTML = filtered.map(prod => {
     const quantidade = getCartQuantity(prod.id);
+    const versao = (prod.versao || '').toLowerCase();
+    const nome = (prod.nome || '').toLowerCase();
+    const isNatal = versao.includes('natal') || nome.includes('natal') || nome.includes('chocotone') || nome.includes('taça especial') || nome.includes('na travessa') || nome.includes('pudim tradicional bemavi');
+    const hasGiftBox = isNatal && (nome.includes('chocotone') || nome.includes('taça') || nome.includes('travessa'));
+
     return `
-    <article class="group bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden card-hover transition-all duration-300 flex flex-col justify-between">
+    <article class="group bg-surface-container-lowest border ${isNatal ? 'border-amber-400/40 hover:border-amber-500' : 'border-outline-variant'} rounded-2xl overflow-hidden card-hover transition-all duration-300 flex flex-col justify-between shadow-sm">
       <div>
         <div class="relative aspect-[4/3] overflow-hidden bg-surface-container-low">
           <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="${getProductImage(prod)}" alt="${escapeHtml(prod.nome)}" loading="lazy">
+          ${isNatal ? `
+            <span class="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-full bg-red-900/90 text-amber-200 text-[10px] font-extrabold uppercase tracking-wider backdrop-blur-xs flex items-center gap-1 shadow-md border border-amber-400/30">
+              <span>🎄</span> Especial de Natal
+            </span>
+          ` : ''}
         </div>
         <div class="p-5 flex-grow flex flex-col">
-          <span class="font-label-bold text-[10px] text-primary uppercase tracking-widest mb-1.5 block">${escapeHtml(prod.versao || 'Artesanal')}</span>
+          <span class="font-label-bold text-[10px] ${isNatal ? 'text-red-900 font-extrabold' : 'text-primary'} uppercase tracking-widest mb-1.5 block">${escapeHtml(prod.versao || 'Artesanal')}</span>
           <h4 class="font-headline-md text-lg text-on-surface font-bold mb-1 leading-tight">${escapeHtml(prod.nome)}</h4>
-          <p class="font-body-md text-xs text-on-surface-variant line-clamp-2 leading-relaxed mb-2">${escapeHtml(prod.sabor || 'Pão artesanal Bemavi')}</p>
+          <p class="font-body-md text-xs text-on-surface-variant line-clamp-3 leading-relaxed mb-2">${escapeHtml(prod.sabor || 'Pão artesanal Bemavi')}</p>
           <p class="font-body-md text-xs text-on-surface-variant font-semibold">${escapeHtml(prod.modelo || '')}</p>
+          ${hasGiftBox ? `
+            <div class="mt-2 text-[11px] text-amber-800 font-bold flex items-center gap-1">
+              <span>🎁</span> Acompanha sacola e caixa
+            </div>
+          ` : ''}
         </div>
       </div>
       <div class="px-5 pb-5 pt-2 flex items-center justify-between mt-auto">
@@ -201,11 +237,11 @@ function renderCatalog() {
         ${quantidade > 0 ? `
           <div class="flex items-center bg-surface-container rounded-xl p-1 border border-outline-variant/30 shadow-sm">
             <button type="button" class="material-symbols-outlined text-sm text-primary hover:bg-primary/10 rounded-full p-1 transition-all" onclick="changeCartQty('${prod.id}', -1)">remove</button>
-            <span class="font-label-bold text-sm px-3 text-on-surface">${quantidade}</span>
+            <span class="font-label-bold text-sm px-3 text-on-surface font-bold">${quantidade}</span>
             <button type="button" class="material-symbols-outlined text-sm text-primary hover:bg-primary/10 rounded-full p-1 transition-all" onclick="changeCartQty('${prod.id}', 1)">add</button>
           </div>
         ` : `
-          <button type="button" class="w-10 h-10 bg-primary text-on-primary rounded-xl flex items-center justify-center hover:bg-primary-container transition-all active:scale-90 shadow-sm" onclick="changeCartQty('${prod.id}', 1)">
+          <button type="button" class="w-10 h-10 ${isNatal ? 'bg-gradient-to-br from-red-800 to-red-700 hover:from-red-700 hover:to-red-600' : 'bg-primary hover:bg-primary-container'} text-white rounded-xl flex items-center justify-center transition-all active:scale-90 shadow-sm" onclick="changeCartQty('${prod.id}', 1)" title="Adicionar ao carrinho">
             <span class="material-symbols-outlined text-[20px]">add</span>
           </button>
         `}
@@ -220,8 +256,50 @@ function getProductImage(prod) {
 
   const text = `${prod.nome || ''} ${prod.versao || ''} ${prod.sabor || ''} ${prod.modelo || ''}`.toLowerCase();
 
-  if (text.includes('integral') || text.includes('grao') || text.includes('grão') || text.includes('sement')) {
-    return 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=900&q=80';
+  if (text.includes('chocotone')) {
+    return 'assets/images/natal/prod-chocotone.jpg';
+  }
+  if (text.includes('pudim')) {
+    return 'assets/images/natal/prod-pudim.jpg';
+  }
+  if (text.includes('ouro branco')) {
+    return 'assets/images/natal/prod-taca-ouro-branco.jpg';
+  }
+  if (text.includes('ferrero') && text.includes('taça')) {
+    return 'assets/images/natal/prod-taca-ferrero.jpg';
+  }
+  if (text.includes('abacaxi') && text.includes('taça')) {
+    return 'assets/images/natal/prod-taca-abacaxi.jpg';
+  }
+  if (text.includes('brownie com morango')) {
+    return 'assets/images/natal/prod-taca-brownie-morango.jpg';
+  }
+  if (text.includes('brownie com uva')) {
+    return 'assets/images/natal/prod-taca-brownie-uva.jpg';
+  }
+  if (text.includes('pavê') || text.includes('pave')) {
+    return 'assets/images/natal/prod-taca-pave-morango.jpg';
+  }
+  if (text.includes('delícia de morango') || text.includes('delicia de morango')) {
+    return 'assets/images/natal/prod-travessa-delicia-morango.jpg';
+  }
+  if (text.includes('moranguva')) {
+    return 'assets/images/natal/prod-travessa-moranguva.jpg';
+  }
+  if (text.includes('banoffee')) {
+    return 'assets/images/natal/prod-travessa-banoffee.jpg';
+  }
+  if (text.includes('tentação') || text.includes('tentacao')) {
+    return 'assets/images/natal/prod-travessa-tentacao.jpg';
+  }
+  if (text.includes('maracujá') || text.includes('maracuja')) {
+    return 'assets/images/natal/prod-travessa-maracuja-brownie.jpg';
+  }
+  if (text.includes('morangoffe')) {
+    return 'assets/images/natal/prod-travessa-morangoffe.jpg';
+  }
+  if (text.includes('ferrero') && text.includes('travessa')) {
+    return 'assets/images/natal/prod-travessa-ferrero.jpg';
   }
 
   if (text.includes('doce') || text.includes('chocolate') || text.includes('canela') || text.includes('reche')) {
@@ -256,6 +334,7 @@ window.changeCartQty = function(productId, delta) {
     state.carrinho.push({
       id: produto.id,
       nome: produto.nome,
+      versao: produto.versao || '',
       modelo: produto.modelo,
       preco: Number(produto.preco_base) || 0,
       quantidade: 1
@@ -1148,6 +1227,14 @@ window.enviarConfirmacaoWhatsapp = async function(pedidoId, horarioEstimado) {
   }
 };
 
+function hasNatalItems() {
+  return state.carrinho.some(item => {
+    const versao = (item.versao || '').toLowerCase();
+    const nome = (item.nome || '').toLowerCase();
+    return versao.includes('natal') || nome.includes('chocotone') || nome.includes('taça especial') || nome.includes('na travessa') || nome.includes('pudim tradicional');
+  });
+}
+
 window.navigateTo = function(step) {
   const viewCatalog = document.getElementById('viewCatalog');
   const viewCheckout = document.getElementById('viewCheckout');
@@ -1163,6 +1250,9 @@ window.navigateTo = function(step) {
     if (state.carrinho.length === 0) {
       showToast('Adicione pelo menos um item ao pedido.');
       return;
+    }
+    if (hasNatalItems()) {
+      selectDeliveryMethod('Retirada');
     }
     state.checkoutStep = 'identification';
     if (viewCatalog) viewCatalog.style.display = 'none';
@@ -1184,6 +1274,11 @@ window.toggleCheckoutView = function() {
 };
 
 window.selectDeliveryMethod = function(method) {
+  if (method === 'Entrega' && hasNatalItems()) {
+    showToast('🎄 Itens de Natal são exclusivos para Retirada na R. Pedro Carlos de Souza - Vitória/ES.');
+    method = 'Retirada';
+  }
+
   const select = document.getElementById('public_entrega');
   if (!select) return;
   select.value = method;
@@ -1199,8 +1294,15 @@ window.selectDeliveryMethod = function(method) {
 function updateDeliveryVisualCards(method) {
   const deliveryCard = document.getElementById('deliveryCard_Entrega');
   const pickupCard = document.getElementById('deliveryCard_Retirada');
+  const natalNotice = document.getElementById('natalDeliveryNotice');
 
-  if (method === 'Entrega') {
+  const containsNatal = hasNatalItems();
+
+  if (natalNotice) {
+    natalNotice.style.display = containsNatal ? 'flex' : 'none';
+  }
+
+  if (method === 'Entrega' && !containsNatal) {
     if (deliveryCard) {
       deliveryCard.className = "relative flex flex-col items-center justify-center p-5 border-2 border-primary-container bg-primary-container/5 rounded-xl cursor-pointer hover:bg-primary-container/10 transition-all group";
       const icon = deliveryCard.querySelector('.material-symbols-outlined');
@@ -1213,7 +1315,7 @@ function updateDeliveryVisualCards(method) {
     }
   } else {
     if (deliveryCard) {
-      deliveryCard.className = "relative flex flex-col items-center justify-center p-5 border border-outline-variant rounded-xl cursor-pointer hover:border-primary transition-all group";
+      deliveryCard.className = `relative flex flex-col items-center justify-center p-5 border border-outline-variant rounded-xl cursor-pointer hover:border-primary transition-all group ${containsNatal ? 'opacity-40 cursor-not-allowed' : ''}`;
       const icon = deliveryCard.querySelector('.material-symbols-outlined');
       if (icon) icon.className = "material-symbols-outlined text-4xl text-on-surface-variant group-hover:text-primary mb-2";
     }
@@ -1268,18 +1370,92 @@ window.filterCategory = function(category) {
   state.categoriaAtiva = category;
 
   // Update active state of category buttons
-  const categories = ['Todos', 'Pães', 'Bolos', 'Outros'];
+  const categories = ['Todos', 'Natal', 'Pães', 'Bolos', 'Outros'];
   categories.forEach(cat => {
     const btn = document.getElementById(`catBtn_${cat}`);
     if (!btn) return;
     if (cat === category) {
-      btn.className = "cat-btn flex items-center gap-xs px-5 py-2.5 bg-primary text-on-primary font-semibold rounded-full shadow-sm transition-all whitespace-nowrap";
+      if (cat === 'Natal') {
+        btn.className = "cat-btn flex items-center gap-xs px-5 py-2.5 bg-gradient-to-r from-red-800 to-rose-700 text-white font-bold rounded-full shadow-md transition-all whitespace-nowrap border border-amber-300/40";
+      } else {
+        btn.className = "cat-btn flex items-center gap-xs px-5 py-2.5 bg-primary text-on-primary font-semibold rounded-full shadow-sm transition-all whitespace-nowrap";
+      }
     } else {
       btn.className = "cat-btn flex items-center gap-xs px-5 py-2.5 bg-surface hover:bg-surface-container-high text-on-surface-variant font-semibold rounded-full transition-all whitespace-nowrap border border-outline-variant";
     }
   });
 
+  const natalBanner = document.getElementById('natalHeroBanner');
+  if (natalBanner) {
+    if (category === 'Natal') {
+      natalBanner.classList.remove('hidden');
+    } else {
+      natalBanner.classList.add('hidden');
+    }
+  }
+
+  const catTitle = document.getElementById('catalogMainTitle');
+  const catSubtitle = document.getElementById('catalogMainSubtitle');
+  if (catTitle && catSubtitle) {
+    if (category === 'Natal') {
+      catTitle.textContent = 'Especial de Natal Bemavi';
+      catSubtitle.textContent = 'Sobremesas artesanais, chocotones super recheados e taças para sua ceia';
+    } else if (category === 'Pães') {
+      catTitle.textContent = 'Pães Disponíveis';
+      catSubtitle.textContent = 'Saindo do forno de pedra para sua mesa';
+    } else if (category === 'Bolos') {
+      catTitle.textContent = 'Bolos Caseiros';
+      catSubtitle.textContent = 'Receitas afetivas e fofinhas';
+    } else {
+      catTitle.textContent = 'Produtos Disponíveis';
+      catSubtitle.textContent = 'Saindo da produção artesanal para sua mesa';
+    }
+  }
+
   renderCatalog();
+};
+
+window.filterNatalSubcategory = function(subcat) {
+  state.subcategoriaNatal = subcat;
+  const subcats = ['Todos', 'Chocotones', 'Travessas', 'Taças', 'Pudim'];
+  subcats.forEach(s => {
+    const btn = document.getElementById(`natalSub_${s}`);
+    if (!btn) return;
+    if (s === subcat) {
+      btn.className = "natal-sub-btn px-4 py-2 rounded-full bg-red-900 text-white font-bold text-xs shadow-sm transition-all whitespace-nowrap";
+    } else {
+      btn.className = "natal-sub-btn px-4 py-2 rounded-full bg-surface-container hover:bg-surface-container-high text-on-surface-variant font-semibold text-xs border border-outline-variant transition-all whitespace-nowrap";
+    }
+  });
+  renderCatalog();
+};
+
+window.openNatalVideoModal = function() {
+  const modal = document.getElementById('natalVideoModal');
+  const video = document.getElementById('natalVideoPlayer');
+  if (modal) {
+    modal.hidden = false;
+    if (video) video.play().catch(() => {});
+  }
+};
+
+window.closeNatalVideoModal = function() {
+  const modal = document.getElementById('natalVideoModal');
+  const video = document.getElementById('natalVideoPlayer');
+  if (modal) {
+    modal.hidden = true;
+    if (video) video.pause();
+  }
+};
+
+window.openNatalRulesModal = function() {
+  const modal = document.getElementById('natalRulesModal');
+  if (modal) modal.hidden = false;
+};
+
+window.closeNatalRulesModal = function() {
+  const modal = document.getElementById('natalRulesModal');
+  if (modal) modal.hidden = true;
 };
 
 window.scrollToCatalog = function() {

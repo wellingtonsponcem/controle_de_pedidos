@@ -234,7 +234,11 @@
       <!-- Actions -->
       <nav class="flex items-center gap-md">
         <div class="hidden sm:flex items-center gap-md">
-          <a href="#" onclick="navigateTo('cart'); return false;" class="font-label-bold text-label-bold text-primary hover:text-primary-container transition-colors">Catálogo</a>
+          <button type="button" onclick="filterCategory('Natal'); scrollToCatalog();" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-red-800 to-rose-700 text-white font-label-bold text-xs font-bold hover:brightness-110 transition-all shadow-sm border border-amber-300/30">
+            <span>🎄</span>
+            <span>Especial de Natal</span>
+          </button>
+          <a href="#" onclick="filterCategory('Todos'); navigateTo('cart'); return false;" class="font-label-bold text-label-bold text-primary hover:text-primary-container transition-colors">Catálogo</a>
           <a href="https://wa.me/5527992760190" target="_blank" rel="noopener" class="font-label-bold text-label-bold text-on-surface-variant hover:text-primary transition-colors flex items-center gap-xs">
             <span class="material-symbols-outlined text-[18px]">chat</span> WhatsApp
           </a>
@@ -291,6 +295,11 @@
               <span class="material-symbols-outlined text-[20px]">breakfast_dining</span>
               <span>Todos</span>
             </button>
+            <button onclick="filterCategory('Natal')" id="catBtn_Natal" class="cat-btn flex items-center gap-xs px-5 py-2.5 bg-surface hover:bg-surface-container-high text-on-surface-variant font-semibold rounded-full transition-all whitespace-nowrap border border-outline-variant">
+              <span class="text-xl">🎄</span>
+              <span class="font-bold">Especial de Natal</span>
+              <span class="text-[10px] bg-red-700 text-white font-extrabold px-2 py-0.5 rounded-full shadow-xs">NOVO</span>
+            </button>
             <button onclick="filterCategory('Pães')" id="catBtn_Pães" class="cat-btn flex items-center gap-xs px-5 py-2.5 bg-surface hover:bg-surface-container-high text-on-surface-variant font-semibold rounded-full transition-all whitespace-nowrap border border-outline-variant">
               <span class="material-symbols-outlined text-[20px]">bakery_dining</span>
               <span>Pães</span>
@@ -317,10 +326,114 @@
 
       <!-- Catalog Main Grid -->
       <section id="catalog-section" class="py-12 max-w-[1280px] mx-auto px-4 md:px-margin-desktop w-full">
+        <!-- Festive Natal Showcase & Rules (Displayed when Natal category is active) -->
+        <div id="natalHeroBanner" class="hidden mb-10 space-y-6">
+          <!-- Hero Card -->
+          <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-red-950 via-red-900 to-amber-950 text-white shadow-xl border-2 border-amber-400/40 p-6 md:p-10">
+            <!-- Decorative Festive Background Elements -->
+            <div class="absolute -right-16 -top-16 w-64 h-64 rounded-full bg-amber-400/10 blur-3xl pointer-events-none"></div>
+            <div class="absolute -left-16 -bottom-16 w-64 h-64 rounded-full bg-red-500/10 blur-3xl pointer-events-none"></div>
+            
+            <div class="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+              <div class="lg:col-span-7 space-y-4">
+                <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-400/20 border border-amber-300/40 text-amber-200 text-xs font-extrabold uppercase tracking-widest shadow-sm">
+                  <span>🎄</span> EDIÇÃO ESPECIAL DE FIM DE ANO
+                </div>
+                <h2 class="font-headline-xl text-3xl md:text-4xl lg:text-5xl font-extrabold text-white leading-tight">
+                  Especial de Natal Bemavi
+                </h2>
+                <p class="text-amber-100/90 text-sm md:text-base leading-relaxed font-medium max-w-xl">
+                  Doces momentos, mais amor na sua mesa! Chocotones super recheados, sobremesas artesanais na travessa, taças de 1,5kg e pudim tradicional para adoçar sua ceia de fim de ano.
+                </p>
+
+                <!-- Actions -->
+                <div class="flex flex-wrap gap-3 pt-2">
+                  <button type="button" onclick="openNatalVideoModal()" class="px-5 py-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-red-950 font-bold text-xs uppercase tracking-wider flex items-center gap-2 shadow-lg hover:scale-105 active:scale-95 transition-all">
+                    <span class="material-symbols-outlined text-[20px]">play_circle</span>
+                    Assistir Vídeo dos Doces
+                  </button>
+                  <button type="button" onclick="openNatalRulesModal()" class="px-5 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/30 font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-all">
+                    <span class="material-symbols-outlined text-[20px]">info</span>
+                    Regras de Encomenda
+                  </button>
+                </div>
+              </div>
+
+              <!-- Banner Right: Highlights photo -->
+              <div class="lg:col-span-5 flex justify-center">
+                <div class="relative w-full max-w-sm rounded-2xl overflow-hidden shadow-2xl border-2 border-amber-300/30 group">
+                  <img src="assets/images/natal/capa-natal.jpg" alt="Catálogo Especial de Natal Bemavi" class="w-full h-72 md:h-80 object-cover object-top group-hover:scale-105 transition-transform duration-700">
+                  <div class="absolute inset-0 bg-gradient-to-t from-red-950/80 via-transparent to-transparent flex items-end p-4">
+                    <p class="text-amber-200 text-xs font-bold flex items-center gap-1.5">
+                      <span class="material-symbols-outlined text-sm">favorite</span>
+                      Feito artesanalmente com muito amor
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Rules & Info Cards Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-surface-container-lowest border border-outline-variant p-4 rounded-2xl shadow-sm flex items-start gap-3">
+              <span class="text-2xl p-2 bg-red-800/10 text-red-800 rounded-xl">📅</span>
+              <div>
+                <strong class="text-xs font-bold text-on-surface uppercase block">Pedidos até 15/12</strong>
+                <p class="text-[11px] text-on-surface-variant leading-snug mt-0.5">Ou enquanto durar o estoque de fornadas.</p>
+              </div>
+            </div>
+
+            <div class="bg-surface-container-lowest border border-outline-variant p-4 rounded-2xl shadow-sm flex items-start gap-3">
+              <span class="text-2xl p-2 bg-amber-600/10 text-amber-700 rounded-xl">💳</span>
+              <div>
+                <strong class="text-xs font-bold text-on-surface uppercase block">Sinal de 50%</strong>
+                <p class="text-[11px] text-on-surface-variant leading-snug mt-0.5">Confirmação da encomenda; restante 24h antes.</p>
+              </div>
+            </div>
+
+            <div class="bg-surface-container-lowest border border-outline-variant p-4 rounded-2xl shadow-sm flex items-start gap-3">
+              <span class="text-2xl p-2 bg-red-800/10 text-red-800 rounded-xl">📍</span>
+              <div>
+                <strong class="text-xs font-bold text-on-surface uppercase block">Apenas Retirada</strong>
+                <p class="text-[11px] text-on-surface-variant leading-snug mt-0.5">R. Pedro Carlos de Souza - Vitória/ES (sem entregas).</p>
+              </div>
+            </div>
+
+            <div class="bg-surface-container-lowest border border-outline-variant p-4 rounded-2xl shadow-sm flex items-start gap-3">
+              <span class="text-2xl p-2 bg-amber-600/10 text-amber-700 rounded-xl">🎁</span>
+              <div>
+                <strong class="text-xs font-bold text-on-surface uppercase block">Kit Presente</strong>
+                <p class="text-[11px] text-on-surface-variant leading-snug mt-0.5">Sobremesas acompanham sacola e caixa de transporte.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Subcategory Filter Pills for Natal -->
+          <div class="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar pt-2">
+            <span class="text-xs font-bold text-on-surface-variant uppercase tracking-wider mr-2 hidden sm:inline">Filtrar:</span>
+            <button type="button" onclick="filterNatalSubcategory('Todos')" id="natalSub_Todos" class="natal-sub-btn px-4 py-2 rounded-full bg-red-900 text-white font-bold text-xs shadow-sm transition-all whitespace-nowrap">
+              🌟 Todos de Natal
+            </button>
+            <button type="button" onclick="filterNatalSubcategory('Chocotones')" id="natalSub_Chocotones" class="natal-sub-btn px-4 py-2 rounded-full bg-surface-container hover:bg-surface-container-high text-on-surface-variant font-semibold text-xs border border-outline-variant transition-all whitespace-nowrap">
+              🍫 Chocotones
+            </button>
+            <button type="button" onclick="filterNatalSubcategory('Travessas')" id="natalSub_Travessas" class="natal-sub-btn px-4 py-2 rounded-full bg-surface-container hover:bg-surface-container-high text-on-surface-variant font-semibold text-xs border border-outline-variant transition-all whitespace-nowrap">
+              🍨 Sobremesas na Travessa
+            </button>
+            <button type="button" onclick="filterNatalSubcategory('Taças')" id="natalSub_Taças" class="natal-sub-btn px-4 py-2 rounded-full bg-surface-container hover:bg-surface-container-high text-on-surface-variant font-semibold text-xs border border-outline-variant transition-all whitespace-nowrap">
+              🏆 Taças (1,5kg)
+            </button>
+            <button type="button" onclick="filterNatalSubcategory('Pudim')" id="natalSub_Pudim" class="natal-sub-btn px-4 py-2 rounded-full bg-surface-container hover:bg-surface-container-high text-on-surface-variant font-semibold text-xs border border-outline-variant transition-all whitespace-nowrap">
+              🍮 Pudim Tradicional
+            </button>
+          </div>
+        </div>
+
         <div class="flex justify-between items-end mb-8">
           <div>
-            <h3 class="font-headline-lg text-3xl text-on-background font-bold tracking-tight">Pães Disponíveis</h3>
-            <p class="font-body-md text-sm text-on-surface-variant mt-1">Saindo do forno de pedra para sua mesa</p>
+            <h3 id="catalogMainTitle" class="font-headline-lg text-3xl text-on-background font-bold tracking-tight">Pães Disponíveis</h3>
+            <p id="catalogMainSubtitle" class="font-body-md text-sm text-on-surface-variant mt-1">Saindo do forno de pedra para sua mesa</p>
           </div>
           <span id="catalogCount" class="bg-primary-container/20 text-primary font-bold text-xs px-3.5 py-1.5 rounded-full border border-primary-container/30">Carregando...</span>
         </div>
@@ -415,6 +528,15 @@
                 <option value="Entrega" selected>Entrega</option>
                 <option value="Retirada">Retirada</option>
               </select>
+
+              <!-- Natal Pick-up Exclusive Notice -->
+              <div id="natalDeliveryNotice" style="display: none;" class="p-4 bg-red-950/10 border-2 border-red-800/30 rounded-xl flex items-start gap-3 text-xs text-red-950 font-medium mb-4">
+                <span class="text-xl">🎄</span>
+                <div>
+                  <strong class="font-bold text-red-900 block text-sm mb-0.5">Aviso de Retirada - Especial de Natal</strong>
+                  Seu pedido contém doces do Especial de Natal. Conforme as regras oficiais, <strong>não realizamos entregas por motoboy para sobremesas natalinas</strong>. Seu pedido deve ser retirado na <strong>R. Pedro Carlos de Souza - Vitória/ES</strong> até a data agendada.
+                </div>
+              </div>
 
               <!-- Visual Delivery Cards -->
               <div class="grid grid-cols-2 gap-4">
@@ -685,6 +807,53 @@
         <button type="button" class="modal-secondary-btn py-3 px-6 border border-outline-variant text-on-surface-variant rounded-xl font-bold hover:bg-surface-container transition-all active:scale-[0.98] text-sm text-center flex-1" onclick="closePaymentModal()">
           Voltar ao Catálogo
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Vídeo Especial de Natal -->
+  <div id="natalVideoModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" hidden>
+    <div class="fixed inset-0 bg-on-background/70 backdrop-blur-sm" onclick="closeNatalVideoModal()"></div>
+    <div class="relative bg-surface-container-lowest border border-outline-variant rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden z-10" role="dialog" aria-modal="true">
+      <div class="flex items-center justify-between p-4 bg-surface-container border-b border-outline-variant">
+        <div class="flex items-center gap-2">
+          <span class="text-xl">🎄</span>
+          <h3 class="font-headline-md text-base font-bold text-on-surface">Bastidores & Sobremesas de Natal Bemavi</h3>
+        </div>
+        <button onclick="closeNatalVideoModal()" class="text-on-surface-variant hover:text-primary p-1 rounded-full hover:bg-surface">
+          <span class="material-symbols-outlined text-[24px]">close</span>
+        </button>
+      </div>
+      <div class="aspect-video bg-black flex items-center justify-center">
+        <video id="natalVideoPlayer" controls class="w-full h-full object-contain">
+          <source src="assets/images/natal/natal-video.mp4" type="video/mp4">
+          Seu navegador não suporta reprodução de vídeo.
+        </video>
+      </div>
+      <div class="p-4 bg-surface-container-low flex justify-between items-center text-xs text-on-surface-variant">
+        <span>Faça sua encomenda até 15/12 ou enquanto durar o estoque.</span>
+        <button onclick="closeNatalVideoModal(); filterCategory('Natal'); scrollToCatalog();" class="px-4 py-2 bg-primary text-on-primary font-bold rounded-xl text-xs hover:bg-primary-container">
+          Ver Sobremesas
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Regras & Informações de Natal -->
+  <div id="natalRulesModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" hidden>
+    <div class="fixed inset-0 bg-on-background/70 backdrop-blur-sm" onclick="closeNatalRulesModal()"></div>
+    <div class="relative bg-surface-container-lowest border border-outline-variant rounded-2xl shadow-2xl max-w-md w-full overflow-hidden max-h-[90vh] flex flex-col z-10" role="dialog" aria-modal="true">
+      <div class="flex items-center justify-between p-4 bg-surface-container border-b border-outline-variant">
+        <div class="flex items-center gap-2">
+          <span class="text-xl">ℹ️</span>
+          <h3 class="font-headline-md text-base font-bold text-on-surface">Regras e Políticas de Natal</h3>
+        </div>
+        <button onclick="closeNatalRulesModal()" class="text-on-surface-variant hover:text-primary p-1 rounded-full hover:bg-surface">
+          <span class="material-symbols-outlined text-[24px]">close</span>
+        </button>
+      </div>
+      <div class="p-4 overflow-y-auto custom-scrollbar flex flex-col items-center">
+        <img src="assets/images/natal/informacoes-natal.jpg" alt="Informações de Natal Bemavi" class="rounded-xl w-full shadow-sm mb-4">
       </div>
     </div>
   </div>

@@ -37,7 +37,11 @@ Mantém o histórico consolidado de decisões e progresso do projeto para portab
 - **Segurança & Webhook corrigido**: Detectamos que a URL de produção cadastrada no painel do Mercado Pago enviava o segredo amigável (`bemavi_mercadopago_webhook_20260524`), enquanto o banco de dados Neon Postgres de produção continha a chave hash da assinatura do Mercado Pago (`fb7855b6ee...`), causando erro `401 Unauthorized` nos testes e notificações. O backend (`mercado-pago-webhook.ts`) foi ajustado de forma robusta e flexível para validar e aceitar com sucesso ambos os segredos. Também adicionamos um bypass resiliente que responde `200 OK` de forma autônoma para o ID de teste fictício padrão do painel do Mercado Pago (`"123456"`), permitindo que a simulação passe e fique verde no painel.
 
 ### [2026-05-26 - Extra] - Exclusão Segura de Pedidos Cancelados (Concluído)
-- **Backend & Transação**: Ajustada a rota `DELETE /api/pedidos` com suporte a exclusão em cascata (remove dependências em `itens_pedido` e `transacoes_financeiras` e depois em `pedidos`). Lógica protegida por transações atômicas resilientes (`withTransaction`).
-- **Validação de Segurança**: Criado utilitário puro `api/_pedidos_utils.ts` contendo a validação `podeExcluirPedido` para garantir que apenas pedidos com status "Cancelado" possam ser excluídos do banco de dados (retorna 400 para outros status).
-- **Frontend Administrativo**: Adicionado o botão "🗑️ Excluir Definitivamente" visível apenas em pedidos com status "Cancelado" no painel. Implementada a função global `excluirPedidoCancelado` que interage com o backend via fetch e atualiza reativamente o dashboard administrativo.
-- **Qualidade**: Criados 3 novos testes baseados em propriedades com `fast-check` em `tests/pedidos.test.ts` (totalizando 29 testes 100% verdes no Jest). Validação estática sem erros no `npx tsc --noEmit`.
+- **Backend & Validação**: Ajustada rota `DELETE /api/pedidos` com cascata atômica e validação de segurança `podeExcluirPedido` para pedidos cancelados.
+- **Frontend & Testes**: Botão de exclusão reativo no painel e 3 novos testes baseados em propriedades com `fast-check` (29 testes 100% verdes).
+
+### [2026-11-12] - Especial de Natal Bemavi (Concluído)
+- **Produtos & Banco Neon**: Cadastrados 31 produtos festivos no Neon Postgres (`scripts/seed-natal-products.ts`): Chocotones Super Recheados (Tradicionais R$80 e Premium R$100), Sobremesas na Travessa (P R$69,90 e G R$169,90/R$179,90), Taças de 1,5kg (R$210) e Pudim Tradicional (R$60).
+- **Mídia & Artes**: Extraídas fotos reais dos produtos em `assets/images/natal/`, integrado vídeo artesanal (`natal-video.mp4`) e flyer de regras (`informacoes-natal.jpg`).
+- **Frontend & Catálogo**: Criada a aba comemorativa "🎄 Especial de Natal" no topo e categorias, banner festivo, sub-filtros dinâmicos, modais de vídeo/regras e sincronização em `index.html` e `catalogo.html`.
+- **Regras Logísticas de Natal**: Checkout reforça que doces de Natal são exclusivos para Retirada Física na R. Pedro Carlos de Souza - Vitória/ES com alerta e trava automática. Validação 100% aprovada no Jest e no TypeScript.
