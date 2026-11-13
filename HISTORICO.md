@@ -40,8 +40,9 @@ Mantém o histórico consolidado de decisões e progresso do projeto para portab
 - **Backend & Validação**: Ajustada rota `DELETE /api/pedidos` com cascata atômica e validação de segurança `podeExcluirPedido` para pedidos cancelados.
 - **Frontend & Testes**: Botão de exclusão reativo no painel e 3 novos testes baseados em propriedades com `fast-check` (29 testes 100% verdes).
 
-### [2026-11-12 a 2026-11-13] - Especial de Natal Bemavi & Modal Nativo (Concluído)
+### [2026-11-12 a 2026-11-13] - Especial de Natal & Agrupamento Inteligente (Concluído)
 - **Produtos & Banco Neon**: Cadastrados 31 produtos festivos no Neon Postgres (`scripts/seed-natal-products.ts`): Chocotones, Sobremesas na Travessa, Taças e Pudim.
-- **Mídia & Identidade**: Integradas fotos dos produtos, vídeo (`natal-video.mp4`), background natalino IA (`bg-regras-natal.jpg`) e extração oficial do logo Bemavi em alta fidelidade com transparência (`assets/images/natal/logo-bemavi.png`).
-- **Frontend & Modal com Animação**: Interface nativa com o logo oficial Bemavi, textos nítidos, ícones vetoriais (`event_available`, `credit_card`, `payments`, etc.), animações e botão "Compreendi". Sincronizado em `index.html` e `catalogo.html`.
-- **Regras Logísticas**: Retirada obrigatória em Vitória/ES para itens de Natal. Testes 100% verdes (29/29).
+- **Mídia & Identidade**: Integradas fotos, vídeo (`natal-video.mp4`), background IA (`bg-regras-natal.jpg`) e logotipo oficial Bemavi com transparência (`logo-bemavi.png`).
+- **Agrupamento Inteligente & Variações**: Unificados produtos com variações/tamanhos em cards únicos na vitrine com preço "A partir de R$..." e badge de opções (ex.: 10 Chocotones reunidos em 1 card "Chocotone Super Recheado", 14 Travessas unificadas em 7 cards por sabor com tamanhos P e G).
+- **Modal de Personalização de Produto**: Criado `#productOptionsModal` estilo iFood para escolha intuitiva de categorias (Tradicional/Premium), sabores e tamanhos (P/G), com preço em tempo real e adição atômica ao carrinho.
+- **Regras & Checkout**: Retirada obrigatória em Vitória/ES para Natal e compatibilidade total com Mercado Pago. Testes verdes (29/29).

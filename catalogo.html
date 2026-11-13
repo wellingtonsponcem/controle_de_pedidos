@@ -99,6 +99,7 @@
   </script>
 
   <style>
+    #productOptionsModal[hidden],
     #paymentModal[hidden],
     #natalRulesModal[hidden],
     #natalVideoModal[hidden],
@@ -1008,6 +1009,62 @@
         <button type="button" onclick="closeNatalRulesModal()" class="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-red-900 via-red-800 to-rose-900 hover:brightness-110 text-amber-100 font-extrabold text-sm rounded-xl shadow-lg border border-amber-400/40 transition-all active:scale-95 flex items-center justify-center gap-2 order-1 sm:order-2 cursor-pointer">
           <span class="material-symbols-outlined text-[20px] text-amber-300">check_circle</span>
           <span>Compreendi</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Modal de Opções e Personalização de Produto -->
+  <div id="productOptionsModal" class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4" hidden style="display: none;">
+    <div class="fixed inset-0 bg-on-background/70 backdrop-blur-sm transition-opacity" onclick="closeProductOptionsModal()"></div>
+    <div class="relative w-full max-w-lg rounded-3xl overflow-hidden max-h-[92vh] flex flex-col z-10 shadow-2xl border border-outline-variant/60 bg-surface-container-lowest animate-modal-pop" role="dialog" aria-modal="true" aria-labelledby="productOptionsModalTitle">
+      
+      <!-- Top Bar / Banner do Produto -->
+      <div class="relative h-44 sm:h-52 bg-surface-container-low overflow-hidden shrink-0">
+        <img id="productOptionsModalImage" src="" alt="" class="w-full h-full object-cover select-none">
+        <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent"></div>
+        
+        <!-- Botão Fechar -->
+        <button type="button" onclick="closeProductOptionsModal()" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/50 hover:bg-black/75 text-white flex items-center justify-center transition-all cursor-pointer backdrop-blur-xs shadow-md" aria-label="Fechar">
+          <span class="material-symbols-outlined text-[18px]">close</span>
+        </button>
+
+        <!-- Badge Categoria -->
+        <span id="productOptionsModalBadge" class="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-red-900/90 text-amber-200 text-[10px] font-extrabold uppercase tracking-wider backdrop-blur-xs flex items-center gap-1 shadow-md border border-amber-400/30">
+          <span>🎄</span> Especial de Natal
+        </span>
+
+        <!-- Título e Subtítulo sobrepostos na foto -->
+        <div class="absolute bottom-3 left-4 right-4 text-white">
+          <h3 id="productOptionsModalTitle" class="font-headline text-lg sm:text-2xl font-black leading-tight drop-shadow-sm"></h3>
+          <p id="productOptionsModalSubtitle" class="text-xs text-white/90 line-clamp-1 mt-0.5 font-medium"></p>
+        </div>
+      </div>
+
+      <!-- Corpo com Seleção de Variações / Sabores / Tamanhos -->
+      <div id="productOptionsModalBody" class="p-4 sm:p-5 overflow-y-auto custom-scrollbar flex-1 space-y-4 text-on-surface">
+        <!-- Renderizado dinamicamente via JS -->
+      </div>
+
+      <!-- Rodapé Fixo com Contador e Botão de Adicionar -->
+      <div class="p-3.5 sm:p-4 bg-surface-container border-t border-outline-variant/40 flex items-center gap-3 shrink-0">
+        <div class="flex items-center bg-surface-container-highest rounded-xl p-1 border border-outline-variant/40 shadow-xs">
+          <button type="button" class="w-8 h-8 flex items-center justify-center text-on-surface hover:bg-surface rounded-lg transition-all cursor-pointer active:scale-90" onclick="changeModalOptionQty(-1)" aria-label="Diminuir quantidade">
+            <span class="material-symbols-outlined text-[18px]">remove</span>
+          </button>
+          <span id="productOptionsModalQty" class="w-8 text-center font-bold text-sm text-on-surface select-none">1</span>
+          <button type="button" class="w-8 h-8 flex items-center justify-center text-on-surface hover:bg-surface rounded-lg transition-all cursor-pointer active:scale-90" onclick="changeModalOptionQty(1)" aria-label="Aumentar quantidade">
+            <span class="material-symbols-outlined text-[18px]">add</span>
+          </button>
+        </div>
+
+        <button type="button" id="productOptionsModalSubmitBtn" onclick="submitProductOptionsModal()" class="flex-1 py-3 px-4 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-red-900 to-red-800 hover:from-red-800 hover:to-red-700 shadow-md flex items-center justify-between transition-all active:scale-[0.98] cursor-pointer">
+          <span class="flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-[18px]">add_shopping_cart</span>
+            <span>Adicionar ao pedido</span>
+          </span>
+          <span id="productOptionsModalTotalPrice" class="font-extrabold text-amber-200 text-sm sm:text-base"></span>
         </button>
       </div>
 

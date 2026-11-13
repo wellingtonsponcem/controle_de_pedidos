@@ -127,63 +127,189 @@ async function loadPublicCatalog() {
   }
 }
 
+// Agrupamento Inteligente de Produtos com Variações (Chocotones, Sobremesas na Travessa, etc.)
+function createCatalogGroups(allProducts) {
+  const groupsMap = new Map();
+  const singleItems = [];
+
+  for (const prod of allProducts) {
+    const nome = (prod.nome || '').trim();
+    const nomeLower = nome.toLowerCase();
+
+    // 1. Chocotones (Natal)
+    if (nomeLower.includes('chocotone')) {
+      const key = 'chocotone_especial';
+      if (!groupsMap.has(key)) {
+        groupsMap.set(key, {
+          isGroup: true,
+          groupId: key,
+          nome: 'Chocotone Super Recheado',
+          versao: 'Especial de Natal',
+          sabor: 'Massa artesanal fofinha com recheio farto e generoso (800g a 1kg). Escolha entre 10 opções de Sabores Tradicionais e Premium.',
+          modelo: 'Super Recheado (800g a 1kg)',
+          imagem_url: prod.imagem_url || 'assets/images/natal/prod-chocotone.jpg',
+          hasGiftBox: true,
+          isNatal: true,
+          categoryType: 'chocotone',
+          variants: []
+        });
+      }
+      groupsMap.get(key).variants.push(prod);
+      continue;
+    }
+
+    // 2. Sobremesas na Travessa com sufixo de tamanho: (P) e (G)
+    const suffixMatch = nome.match(/^(.*?)\s*\((P|M|G|500g|1kg|Inteiro|Fatiado|Médio|Grande)\)$/i);
+    if (suffixMatch) {
+      const baseName = suffixMatch[1].trim();
+      const key = 'group_size_' + baseName.toLowerCase();
+      if (!groupsMap.has(key)) {
+        groupsMap.set(key, {
+          isGroup: true,
+          groupId: key,
+          nome: baseName,
+          versao: prod.versao || 'Artesanal',
+          sabor: prod.sabor || '',
+          modelo: 'Disponível nos tamanhos P (~4 pessoas) e G (~10 pessoas)',
+          imagem_url: prod.imagem_url,
+          hasGiftBox: nomeLower.includes('travessa') || nomeLower.includes('taça'),
+          isNatal: (prod.versao || '').toLowerCase().includes('natal') || nomeLower.includes('travessa'),
+          categoryType: nomeLower.includes('travessa') ? 'travessa' : 'generico',
+          variants: []
+        });
+      }
+      groupsMap.get(key).variants.push(prod);
+      continue;
+    }
+
+    // 3. Produto individual simples
+    const versaoLower = (prod.versao || '').toLowerCase();
+    const isNatal = versaoLower.includes('natal') || nomeLower.includes('natal') || nomeLower.includes('taça especial') || nomeLower.includes('pudim tradicional bemavi');
+    singleItems.push({
+      isGroup: false,
+      groupId: 'single_' + prod.id,
+      id: prod.id,
+      nome: prod.nome,
+      versao: prod.versao,
+      sabor: prod.sabor,
+      modelo: prod.modelo,
+      imagem_url: prod.imagem_url,
+      preco_base: Number(prod.preco_base) || 0,
+      preco_min: Number(prod.preco_base) || 0,
+      hasGiftBox: isNatal && (nomeLower.includes('chocotone') || nomeLower.includes('taça') || nomeLower.includes('travessa')),
+      isNatal,
+      variants: [prod]
+    });
+  }
+
+  const result = [...singleItems];
+  for (const group of groupsMap.values()) {
+    if (group.variants.length > 1) {
+      group.preco_min = Math.min(...group.variants.map(v => Number(v.preco_base) || 0));
+      group.preco_max = Math.max(...group.variants.map(v => Number(v.preco_base) || 0));
+      group.variants.sort((a, b) => (Number(a.preco_base) - Number(b.preco_base)) || a.nome.localeCompare(b.nome));
+      result.push(group);
+    } else {
+      const single = group.variants[0];
+      result.push({
+        isGroup: false,
+        groupId: 'single_' + single.id,
+        id: single.id,
+        nome: single.nome,
+        versao: single.versao,
+        sabor: single.sabor,
+        modelo: single.modelo,
+        imagem_url: single.imagem_url,
+        preco_base: Number(single.preco_base) || 0,
+        preco_min: Number(single.preco_base) || 0,
+        hasGiftBox: group.hasGiftBox,
+        isNatal: group.isNatal,
+        variants: [single]
+      });
+    }
+  }
+
+  return result;
+}
+
+function getGroupCartQuantity(item) {
+  if (!item.isGroup) {
+    return getCartQuantity(item.id);
+  }
+  const variantIds = new Set(item.variants.map(v => v.id));
+  return state.carrinho.reduce((sum, cartItem) => {
+    return variantIds.has(cartItem.id) ? sum + cartItem.quantidade : sum;
+  }, 0);
+}
+
 function renderCatalog() {
   const grid = document.getElementById('publicCatalogGrid');
   const count = document.getElementById('catalogCount');
   if (!grid) return;
 
-  // Filter products by category and search query
-  let filtered = state.produtos;
-  
-  if (state.categoriaAtiva !== 'Todos') {
-    filtered = filtered.filter(prod => {
-      const name = (prod.nome || '').toLowerCase();
-      const versao = (prod.versao || '').toLowerCase();
-      const sabor = (prod.sabor || '').toLowerCase();
-      const modelo = (prod.modelo || '').toLowerCase();
-      const text = `${name} ${versao} ${sabor} ${modelo}`.toLowerCase();
-      const isNatal = versao.includes('natal') || name.includes('natal') || text.includes('chocotone') || text.includes('taça especial') || text.includes('na travessa') || text.includes('pudim tradicional bemavi');
-      
-      if (state.categoriaAtiva === 'Natal') {
-        if (!isNatal) return false;
-        if (state.subcategoriaNatal === 'Chocotones') {
-          return text.includes('chocotone');
-        }
-        if (state.subcategoriaNatal === 'Travessas') {
-          return text.includes('travessa');
-        }
-        if (state.subcategoriaNatal === 'Taças') {
-          return text.includes('taça');
-        }
-        if (state.subcategoriaNatal === 'Pudim') {
-          return text.includes('pudim');
-        }
-        return true;
-      }
+  const allGrouped = createCatalogGroups(state.produtos);
 
-      if (state.categoriaAtiva === 'Pães') {
-        return !isNatal && (text.includes('pão') || text.includes('baguete') || text.includes('levain') || text.includes('focaccia') || text.includes('croissant') || text.includes('broinha'));
+  // Filtragem por categoria e subcategoria
+  let filtered = allGrouped.filter(item => {
+    const isNatal = item.isNatal;
+    const text = `${item.nome} ${item.versao || ''} ${item.sabor || ''} ${item.modelo || ''}`.toLowerCase();
+
+    if (state.categoriaAtiva === 'Natal') {
+      if (!isNatal) return false;
+      if (state.subcategoriaNatal === 'Chocotones') {
+        return text.includes('chocotone');
       }
-      if (state.categoriaAtiva === 'Bolos') {
-        return !isNatal && text.includes('bolo');
+      if (state.subcategoriaNatal === 'Travessas') {
+        return text.includes('travessa');
       }
-      if (state.categoriaAtiva === 'Outros') {
-        const isBread = text.includes('pão') || text.includes('baguete') || text.includes('levain') || text.includes('focaccia') || text.includes('croissant') || text.includes('broinha');
-        const isCake = text.includes('bolo');
-        return !isBread && !isCake && !isNatal;
+      if (state.subcategoriaNatal === 'Taças') {
+        return text.includes('taça');
+      }
+      if (state.subcategoriaNatal === 'Pudim') {
+        return text.includes('pudim');
       }
       return true;
+    }
+
+    if (state.categoriaAtiva === 'Pães') {
+      return !isNatal && (text.includes('pão') || text.includes('baguete') || text.includes('levain') || text.includes('focaccia') || text.includes('croissant') || text.includes('broinha'));
+    }
+    if (state.categoriaAtiva === 'Bolos') {
+      return !isNatal && text.includes('bolo');
+    }
+    if (state.categoriaAtiva === 'Outros') {
+      const isBread = text.includes('pão') || text.includes('baguete') || text.includes('levain') || text.includes('focaccia') || text.includes('croissant') || text.includes('broinha');
+      const isCake = text.includes('bolo');
+      return !isBread && !isCake && !isNatal;
+    }
+    return true;
+  });
+
+  // Busca textual (busca tanto nos dados do grupo quanto nas variações filhas)
+  if (state.searchQuery) {
+    const q = state.searchQuery.toLowerCase();
+    filtered = filtered.filter(item => {
+      const mainText = `${item.nome} ${item.sabor || ''} ${item.versao || ''} ${item.modelo || ''}`.toLowerCase();
+      if (mainText.includes(q)) return true;
+      if (item.variants && item.variants.some(v => `${v.nome} ${v.sabor || ''} ${v.modelo || ''}`.toLowerCase().includes(q))) {
+        return true;
+      }
+      return false;
     });
   }
 
-  if (state.searchQuery) {
-    const q = state.searchQuery.toLowerCase();
-    filtered = filtered.filter(prod => {
-      const nome = (prod.nome || '').toLowerCase();
-      const sabor = (prod.sabor || '').toLowerCase();
-      const versao = (prod.versao || '').toLowerCase();
-      const modelo = (prod.modelo || '').toLowerCase();
-      return nome.includes(q) || sabor.includes(q) || versao.includes(q) || modelo.includes(q);
+  // Ordenação preferencial no Natal: Chocotones -> Travessas -> Taças -> Pudim
+  if (state.categoriaAtiva === 'Natal' && state.subcategoriaNatal === 'Todos' && !state.searchQuery) {
+    filtered.sort((a, b) => {
+      const getPriority = (item) => {
+        const n = item.nome.toLowerCase();
+        if (n.includes('chocotone')) return 1;
+        if (n.includes('travessa')) return 2;
+        if (n.includes('taça')) return 3;
+        if (n.includes('pudim')) return 4;
+        return 5;
+      };
+      return getPriority(a) - getPriority(b);
     });
   }
 
@@ -201,29 +327,34 @@ function renderCatalog() {
     return;
   }
 
-  grid.innerHTML = filtered.map(prod => {
-    const quantidade = getCartQuantity(prod.id);
-    const versao = (prod.versao || '').toLowerCase();
-    const nome = (prod.nome || '').toLowerCase();
-    const isNatal = versao.includes('natal') || nome.includes('natal') || nome.includes('chocotone') || nome.includes('taça especial') || nome.includes('na travessa') || nome.includes('pudim tradicional bemavi');
-    const hasGiftBox = isNatal && (nome.includes('chocotone') || nome.includes('taça') || nome.includes('travessa'));
+  grid.innerHTML = filtered.map(item => {
+    const isGroup = item.isGroup;
+    const quantidade = isGroup ? getGroupCartQuantity(item) : getCartQuantity(item.id);
+    const isNatal = item.isNatal;
+    const hasGiftBox = item.hasGiftBox;
+    const imageSrc = getProductImage(item);
 
     return `
-    <article class="group bg-surface-container-lowest border ${isNatal ? 'border-amber-400/40 hover:border-amber-500' : 'border-outline-variant'} rounded-2xl overflow-hidden card-hover transition-all duration-300 flex flex-col justify-between shadow-sm">
+    <article class="group bg-surface-container-lowest border ${isNatal ? 'border-amber-400/40 hover:border-amber-500' : 'border-outline-variant'} rounded-2xl overflow-hidden card-hover transition-all duration-300 flex flex-col justify-between shadow-sm cursor-pointer" ${isGroup ? `onclick="openProductOptionsModal('${item.groupId}')"` : ''}>
       <div>
         <div class="relative aspect-[4/3] overflow-hidden bg-surface-container-low">
-          <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="${getProductImage(prod)}" alt="${escapeHtml(prod.nome)}" loading="lazy">
+          <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="${imageSrc}" alt="${escapeHtml(item.nome)}" loading="lazy">
           ${isNatal ? `
             <span class="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-full bg-red-900/90 text-amber-200 text-[10px] font-extrabold uppercase tracking-wider backdrop-blur-xs flex items-center gap-1 shadow-md border border-amber-400/30">
               <span>🎄</span> Especial de Natal
             </span>
           ` : ''}
+          ${isGroup ? `
+            <span class="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-full bg-black/65 text-amber-200 text-[10px] font-bold backdrop-blur-xs flex items-center gap-1 shadow-sm border border-white/20">
+              <span class="material-symbols-outlined text-[13px]">layers</span> ${item.variants.length} opções
+            </span>
+          ` : ''}
         </div>
         <div class="p-5 flex-grow flex flex-col">
-          <span class="font-label-bold text-[10px] ${isNatal ? 'text-red-900 font-extrabold' : 'text-primary'} uppercase tracking-widest mb-1.5 block">${escapeHtml(prod.versao || 'Artesanal')}</span>
-          <h4 class="font-headline-md text-lg text-on-surface font-bold mb-1 leading-tight">${escapeHtml(prod.nome)}</h4>
-          <p class="font-body-md text-xs text-on-surface-variant line-clamp-3 leading-relaxed mb-2">${escapeHtml(prod.sabor || 'Pão artesanal Bemavi')}</p>
-          <p class="font-body-md text-xs text-on-surface-variant font-semibold">${escapeHtml(prod.modelo || '')}</p>
+          <span class="font-label-bold text-[10px] ${isNatal ? 'text-red-900 font-extrabold' : 'text-primary'} uppercase tracking-widest mb-1.5 block">${escapeHtml(item.versao || 'Artesanal')}</span>
+          <h4 class="font-headline-md text-lg text-on-surface font-bold mb-1 leading-tight">${escapeHtml(item.nome)}</h4>
+          <p class="font-body-md text-xs text-on-surface-variant line-clamp-3 leading-relaxed mb-2">${escapeHtml(item.sabor || 'Pão artesanal Bemavi')}</p>
+          <p class="font-body-md text-xs text-on-surface-variant font-semibold">${escapeHtml(item.modelo || '')}</p>
           ${hasGiftBox ? `
             <div class="mt-2 text-[11px] text-amber-800 font-bold flex items-center gap-1">
               <span>🎁</span> Acompanha sacola e caixa
@@ -231,19 +362,36 @@ function renderCatalog() {
           ` : ''}
         </div>
       </div>
-      <div class="px-5 pb-5 pt-2 flex items-center justify-between mt-auto">
-        <span class="font-price-display text-lg text-on-background font-extrabold">${money.format(Number(prod.preco_base) || 0)}</span>
-        
-        ${quantidade > 0 ? `
-          <div class="flex items-center bg-surface-container rounded-xl p-1 border border-outline-variant/30 shadow-sm">
-            <button type="button" class="material-symbols-outlined text-sm text-primary hover:bg-primary/10 rounded-full p-1 transition-all" onclick="changeCartQty('${prod.id}', -1)">remove</button>
-            <span class="font-label-bold text-sm px-3 text-on-surface font-bold">${quantidade}</span>
-            <button type="button" class="material-symbols-outlined text-sm text-primary hover:bg-primary/10 rounded-full p-1 transition-all" onclick="changeCartQty('${prod.id}', 1)">add</button>
+      <div class="px-5 pb-5 pt-2 flex items-center justify-between mt-auto" onclick="event.stopPropagation()">
+        ${isGroup ? `
+          <div class="flex flex-col">
+            <span class="text-[10px] font-extrabold text-amber-800 uppercase tracking-wider leading-none mb-1">A partir de</span>
+            <span class="font-price-display text-lg text-on-background font-extrabold">${money.format(item.preco_min)}</span>
           </div>
+          ${quantidade > 0 ? `
+            <button type="button" class="px-3.5 py-2.5 ${isNatal ? 'bg-gradient-to-br from-red-900 to-red-800 text-amber-200 border border-amber-400/40 hover:from-red-800 hover:to-red-700' : 'bg-primary text-white hover:bg-primary-container'} rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm active:scale-95 transition-all cursor-pointer" onclick="openProductOptionsModal('${item.groupId}')" title="Ver opções e sabores">
+              <span class="material-symbols-outlined text-[16px]">shopping_bag</span>
+              <span>${quantidade} no pedido</span>
+            </button>
+          ` : `
+            <button type="button" class="px-3.5 py-2.5 ${isNatal ? 'bg-gradient-to-br from-red-900 to-red-800 text-amber-100 hover:from-red-800 hover:to-red-700 border border-amber-400/30' : 'bg-primary text-white hover:bg-primary-container'} rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm active:scale-95 transition-all cursor-pointer" onclick="openProductOptionsModal('${item.groupId}')" title="Escolher opções">
+              <span class="material-symbols-outlined text-[16px]">tune</span>
+              <span>Escolher</span>
+            </button>
+          `}
         ` : `
-          <button type="button" class="w-10 h-10 ${isNatal ? 'bg-gradient-to-br from-red-800 to-red-700 hover:from-red-700 hover:to-red-600' : 'bg-primary hover:bg-primary-container'} text-white rounded-xl flex items-center justify-center transition-all active:scale-90 shadow-sm" onclick="changeCartQty('${prod.id}', 1)" title="Adicionar ao carrinho">
-            <span class="material-symbols-outlined text-[20px]">add</span>
-          </button>
+          <span class="font-price-display text-lg text-on-background font-extrabold">${money.format(Number(item.preco_base) || 0)}</span>
+          ${quantidade > 0 ? `
+            <div class="flex items-center bg-surface-container rounded-xl p-1 border border-outline-variant/30 shadow-sm">
+              <button type="button" class="material-symbols-outlined text-sm text-primary hover:bg-primary/10 rounded-full p-1 transition-all" onclick="changeCartQty('${item.id}', -1)">remove</button>
+              <span class="font-label-bold text-sm px-3 text-on-surface font-bold">${quantidade}</span>
+              <button type="button" class="material-symbols-outlined text-sm text-primary hover:bg-primary/10 rounded-full p-1 transition-all" onclick="changeCartQty('${item.id}', 1)">add</button>
+            </div>
+          ` : `
+            <button type="button" class="w-10 h-10 ${isNatal ? 'bg-gradient-to-br from-red-800 to-red-700 hover:from-red-700 hover:to-red-600' : 'bg-primary hover:bg-primary-container'} text-white rounded-xl flex items-center justify-center transition-all active:scale-90 shadow-sm" onclick="changeCartQty('${item.id}', 1)" title="Adicionar ao carrinho">
+              <span class="material-symbols-outlined text-[20px]">add</span>
+            </button>
+          `}
         `}
       </div>
     </article>
@@ -1470,8 +1618,272 @@ window.closeNatalRulesModal = function() {
   }
 };
 
+// ============================================================================
+// MODAL DE PERSONALIZAÇÃO E ESCOLHA DE OPÇÕES DO PRODUTO (VARIAÇÕES)
+// ============================================================================
+let currentModalGroup = null;
+let currentModalSelectedVariantId = null;
+let currentModalQuantity = 1;
+let currentModalSelectedCategory = 'Tradicional';
+
+window.openProductOptionsModal = function(groupId) {
+  const allGrouped = createCatalogGroups(state.produtos);
+  const group = allGrouped.find(g => g.groupId === groupId);
+  if (!group || !group.variants || group.variants.length === 0) return;
+
+  currentModalGroup = group;
+  currentModalQuantity = 1;
+
+  if (group.categoryType === 'chocotone') {
+    currentModalSelectedCategory = 'Tradicional';
+    const firstTrad = group.variants.find(v => (v.nome || '').toLowerCase().includes('tradicional')) || group.variants[0];
+    currentModalSelectedVariantId = firstTrad.id;
+  } else {
+    currentModalSelectedVariantId = group.variants[0].id;
+  }
+
+  renderProductOptionsModal();
+
+  const modal = document.getElementById('productOptionsModal');
+  if (modal) {
+    modal.removeAttribute('hidden');
+    modal.style.setProperty('display', 'flex', 'important');
+    document.body.style.overflow = 'hidden';
+  }
+};
+
+window.closeProductOptionsModal = function() {
+  const modal = document.getElementById('productOptionsModal');
+  if (modal) {
+    modal.setAttribute('hidden', '');
+    modal.style.setProperty('display', 'none', 'important');
+    document.body.style.overflow = '';
+  }
+  currentModalGroup = null;
+  currentModalSelectedVariantId = null;
+  currentModalQuantity = 1;
+};
+
+window.changeModalOptionQty = function(delta) {
+  currentModalQuantity = Math.max(1, currentModalQuantity + delta);
+  const qtyEl = document.getElementById('productOptionsModalQty');
+  if (qtyEl) qtyEl.textContent = currentModalQuantity;
+  updateProductOptionsModalPrice();
+};
+
+window.selectModalCategory = function(cat) {
+  currentModalSelectedCategory = cat;
+  if (!currentModalGroup) return;
+  const matching = currentModalGroup.variants.find(v => (v.nome || '').toLowerCase().includes(cat.toLowerCase()));
+  if (matching) {
+    currentModalSelectedVariantId = matching.id;
+  }
+  renderProductOptionsModal();
+};
+
+window.selectModalVariant = function(variantId) {
+  currentModalSelectedVariantId = variantId;
+  renderProductOptionsModal();
+};
+
+window.submitProductOptionsModal = function() {
+  if (!currentModalGroup || !currentModalSelectedVariantId) return;
+  const variant = currentModalGroup.variants.find(v => v.id === currentModalSelectedVariantId);
+  if (!variant) return;
+
+  const item = state.carrinho.find(cartItem => cartItem.id === variant.id);
+  if (!item) {
+    state.carrinho.push({
+      id: variant.id,
+      nome: variant.nome,
+      versao: variant.versao || '',
+      modelo: variant.modelo,
+      preco: Number(variant.preco_base) || 0,
+      quantidade: currentModalQuantity
+    });
+  } else {
+    item.quantidade += currentModalQuantity;
+  }
+
+  state.abacateCheckout = null;
+  clearAbacateCheckout();
+  renderCart();
+  renderCatalog();
+
+  const flavorName = variant.nome.split(' - ')[1] || variant.nome;
+  showToast(`${currentModalQuantity}x ${flavorName} adicionado ao pedido!`);
+  closeProductOptionsModal();
+};
+
+function renderProductOptionsModal() {
+  if (!currentModalGroup) return;
+  const group = currentModalGroup;
+
+  const imgEl = document.getElementById('productOptionsModalImage');
+  const titleEl = document.getElementById('productOptionsModalTitle');
+  const subtitleEl = document.getElementById('productOptionsModalSubtitle');
+  const badgeEl = document.getElementById('productOptionsModalBadge');
+  const bodyEl = document.getElementById('productOptionsModalBody');
+  const qtyEl = document.getElementById('productOptionsModalQty');
+
+  if (imgEl) imgEl.src = getProductImage(group);
+  if (titleEl) titleEl.textContent = group.nome;
+  if (subtitleEl) subtitleEl.textContent = group.modelo || group.sabor || '';
+  if (badgeEl) {
+    badgeEl.innerHTML = group.isNatal ? '<span>🎄</span> Especial de Natal' : escapeHtml(group.versao || 'Artesanal');
+  }
+  if (qtyEl) qtyEl.textContent = currentModalQuantity;
+
+  let bodyHtml = '';
+
+  if (group.categoryType === 'chocotone') {
+    const isTradSelected = currentModalSelectedCategory === 'Tradicional';
+    const isPremSelected = currentModalSelectedCategory === 'Premium';
+
+    const variantsInCategory = group.variants.filter(v => 
+      (v.nome || '').toLowerCase().includes(currentModalSelectedCategory.toLowerCase())
+    );
+
+    bodyHtml = `
+      <div class="space-y-3">
+        <div>
+          <span class="text-xs font-bold uppercase tracking-wider text-red-950 flex items-center gap-1.5 mb-2">
+            <span class="w-2 h-2 rounded-full bg-red-800"></span> 1. Escolha a Categoria do Recheio:
+          </span>
+          <div class="grid grid-cols-2 gap-2.5">
+            <button type="button" onclick="selectModalCategory('Tradicional')" class="p-3 rounded-2xl border text-left transition-all cursor-pointer ${isTradSelected ? 'border-red-900 bg-red-900/10 text-red-950 ring-2 ring-red-900/30 shadow-xs' : 'border-outline-variant bg-surface-container-low hover:bg-surface-container text-on-surface'}">
+              <div class="flex items-center justify-between mb-1">
+                <span class="font-extrabold text-sm">Tradicionais</span>
+                <span class="text-xs font-black text-red-900 bg-red-100 px-2 py-0.5 rounded-full">R$ 80,00</span>
+              </div>
+              <p class="text-[11px] text-on-surface-variant leading-tight">Recheios clássicos fartos</p>
+            </button>
+            <button type="button" onclick="selectModalCategory('Premium')" class="p-3 rounded-2xl border text-left transition-all cursor-pointer ${isPremSelected ? 'border-red-900 bg-red-900/10 text-red-950 ring-2 ring-red-900/30 shadow-xs' : 'border-outline-variant bg-surface-container-low hover:bg-surface-container text-on-surface'}">
+              <div class="flex items-center justify-between mb-1">
+                <span class="font-extrabold text-sm">Premium</span>
+                <span class="text-xs font-black text-red-900 bg-red-100 px-2 py-0.5 rounded-full">R$ 100,00</span>
+              </div>
+              <p class="text-[11px] text-on-surface-variant leading-tight">Nutella, Kinder, Ferrero, Nozes</p>
+            </button>
+          </div>
+        </div>
+
+        <div class="pt-2">
+          <span class="text-xs font-bold uppercase tracking-wider text-red-950 flex items-center justify-between mb-2">
+            <span class="flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-red-800"></span> 2. Escolha o Sabor do Recheio:
+            </span>
+            <span class="text-[10px] text-amber-900 font-extrabold bg-amber-100 px-2.5 py-0.5 rounded-full border border-amber-300/60">Obrigatório</span>
+          </span>
+          <div class="space-y-2">
+            ${variantsInCategory.map(v => {
+              const isSelected = v.id === currentModalSelectedVariantId;
+              const flavorName = v.nome.split(' - ')[1] || v.nome;
+              return `
+                <label class="flex items-center justify-between p-3 sm:p-3.5 rounded-2xl border ${isSelected ? 'border-red-900 bg-red-50/90 ring-1 ring-red-900/40 shadow-xs' : 'border-outline-variant hover:border-outline bg-surface-container-lowest'} cursor-pointer transition-all">
+                  <div class="flex items-start gap-3 flex-1 pr-2">
+                    <input type="radio" name="modalVariant" value="${v.id}" ${isSelected ? 'checked' : ''} onchange="selectModalVariant('${v.id}')" class="mt-1 text-red-900 focus:ring-red-800 cursor-pointer">
+                    <div>
+                      <span class="font-bold text-sm text-on-surface block leading-tight">${escapeHtml(flavorName)}</span>
+                      <span class="text-xs text-on-surface-variant block mt-0.5 leading-snug">${escapeHtml(v.sabor || '')}</span>
+                    </div>
+                  </div>
+                  <span class="font-extrabold text-sm text-red-900 shrink-0 bg-red-100/60 px-2.5 py-1 rounded-xl">${money.format(v.preco_base)}</span>
+                </label>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      </div>
+    `;
+  } else if (group.categoryType === 'travessa') {
+    bodyHtml = `
+      <div class="space-y-3">
+        <div class="bg-amber-50/80 border border-amber-200/90 rounded-2xl p-3.5 text-xs text-on-surface-variant leading-relaxed">
+          <strong class="text-red-950 font-bold block mb-1 flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-[16px] text-amber-700">restaurant</span> Ingredientes artesanais:
+          </strong>
+          ${escapeHtml(group.sabor || 'Sobremesa artesanal especial Bemavi')}
+        </div>
+
+        <div>
+          <span class="text-xs font-bold uppercase tracking-wider text-red-950 flex items-center justify-between mb-2">
+            <span class="flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-red-800"></span> Escolha o Tamanho da Travessa:
+            </span>
+            <span class="text-[10px] text-amber-900 font-extrabold bg-amber-100 px-2.5 py-0.5 rounded-full border border-amber-300/60">Obrigatório</span>
+          </span>
+          <div class="space-y-2">
+            ${group.variants.map(v => {
+              const isSelected = v.id === currentModalSelectedVariantId;
+              const isP = (v.nome || '').includes('(P)');
+              const sizeTitle = isP ? 'Travessa P (Serve ~4 pessoas)' : 'Travessa G (Serve ~10 pessoas)';
+              const sizeDesc = isP ? 'Ideal para pequenas reuniões ou degustação familiar.' : 'Perfeito para a ceia de Natal com toda a família.';
+              return `
+                <label class="flex items-center justify-between p-3 sm:p-3.5 rounded-2xl border ${isSelected ? 'border-red-900 bg-red-50/90 ring-1 ring-red-900/40 shadow-xs' : 'border-outline-variant hover:border-outline bg-surface-container-lowest'} cursor-pointer transition-all">
+                  <div class="flex items-start gap-3 flex-1 pr-2">
+                    <input type="radio" name="modalVariant" value="${v.id}" ${isSelected ? 'checked' : ''} onchange="selectModalVariant('${v.id}')" class="mt-1 text-red-900 focus:ring-red-800 cursor-pointer">
+                    <div>
+                      <span class="font-bold text-sm text-on-surface block leading-tight">${sizeTitle}</span>
+                      <span class="text-xs text-on-surface-variant block mt-0.5 leading-snug">${sizeDesc}</span>
+                    </div>
+                  </div>
+                  <span class="font-extrabold text-sm text-red-900 shrink-0 bg-red-100/60 px-2.5 py-1 rounded-xl">${money.format(v.preco_base)}</span>
+                </label>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      </div>
+    `;
+  } else {
+    bodyHtml = `
+      <div class="space-y-3">
+        <div>
+          <span class="text-xs font-bold uppercase tracking-wider text-red-950 flex items-center justify-between mb-2">
+            <span class="flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-red-800"></span> Escolha uma opção:
+            </span>
+            <span class="text-[10px] text-amber-900 font-extrabold bg-amber-100 px-2.5 py-0.5 rounded-full border border-amber-300/60">Obrigatório</span>
+          </span>
+          <div class="space-y-2">
+            ${group.variants.map(v => {
+              const isSelected = v.id === currentModalSelectedVariantId;
+              return `
+                <label class="flex items-center justify-between p-3 sm:p-3.5 rounded-2xl border ${isSelected ? 'border-red-900 bg-red-50/90 ring-1 ring-red-900/40 shadow-xs' : 'border-outline-variant hover:border-outline bg-surface-container-lowest'} cursor-pointer transition-all">
+                  <div class="flex items-start gap-3 flex-1 pr-2">
+                    <input type="radio" name="modalVariant" value="${v.id}" ${isSelected ? 'checked' : ''} onchange="selectModalVariant('${v.id}')" class="mt-1 text-red-900 focus:ring-red-800 cursor-pointer">
+                    <div>
+                      <span class="font-bold text-sm text-on-surface block leading-tight">${escapeHtml(v.nome)}</span>
+                      <span class="text-xs text-on-surface-variant block mt-0.5 leading-snug">${escapeHtml(v.sabor || v.modelo || '')}</span>
+                    </div>
+                  </div>
+                  <span class="font-extrabold text-sm text-red-900 shrink-0 bg-red-100/60 px-2.5 py-1 rounded-xl">${money.format(v.preco_base)}</span>
+                </label>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  if (bodyEl) bodyEl.innerHTML = bodyHtml;
+  updateProductOptionsModalPrice();
+}
+
+function updateProductOptionsModalPrice() {
+  if (!currentModalGroup || !currentModalSelectedVariantId) return;
+  const variant = currentModalGroup.variants.find(v => v.id === currentModalSelectedVariantId);
+  if (!variant) return;
+  const total = Number(variant.preco_base) * currentModalQuantity;
+  const priceEl = document.getElementById('productOptionsModalTotalPrice');
+  if (priceEl) priceEl.textContent = money.format(total);
+}
+
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
+    window.closeProductOptionsModal();
     window.closeNatalRulesModal();
     window.closeNatalVideoModal();
     if (typeof window.closePaymentModal === 'function') {
