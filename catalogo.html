@@ -209,6 +209,55 @@
     .datepicker-wrapper {
       position: relative;
     }
+    @keyframes natalCardEntrance {
+      0% {
+        opacity: 0;
+        transform: translateY(14px) scale(0.98);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+    @keyframes modalPop {
+      0% {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+    @keyframes festivePulse {
+      0%, 100% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.15);
+      }
+    }
+    .animate-modal-pop {
+      animation: modalPop 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .natal-rule-card {
+      animation: natalCardEntrance 0.45s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+      transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    }
+    .natal-rule-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px -5px rgba(130, 24, 34, 0.12);
+      border-color: rgba(217, 119, 6, 0.5);
+    }
+    .natal-rule-card:nth-of-type(1) { animation-delay: 0.05s; }
+    .natal-rule-card:nth-of-type(2) { animation-delay: 0.12s; }
+    .natal-rule-card:nth-of-type(3) { animation-delay: 0.19s; }
+    .natal-rule-card:nth-of-type(4) { animation-delay: 0.26s; }
+    .natal-rule-card:nth-of-type(5) { animation-delay: 0.33s; }
+    .festive-pulse {
+      display: inline-block;
+      animation: festivePulse 2.5s infinite ease-in-out;
+    }
   </style>
 </head>
 <body class="bg-background text-on-background font-body-md antialiased min-h-screen flex flex-col">
@@ -840,21 +889,133 @@
   </div>
 
   <!-- Modal Regras & Informações de Natal -->
-  <div id="natalRulesModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" hidden>
-    <div class="fixed inset-0 bg-on-background/70 backdrop-blur-sm" onclick="closeNatalRulesModal()"></div>
-    <div class="relative bg-surface-container-lowest border border-outline-variant rounded-2xl shadow-2xl max-w-md w-full overflow-hidden max-h-[90vh] flex flex-col z-10" role="dialog" aria-modal="true">
-      <div class="flex items-center justify-between p-4 bg-surface-container border-b border-outline-variant">
+  <div id="natalRulesModal" class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4" hidden>
+    <div class="fixed inset-0 bg-on-background/70 backdrop-blur-sm transition-opacity" onclick="closeNatalRulesModal()"></div>
+    <div class="relative w-full max-w-lg rounded-3xl overflow-hidden max-h-[92vh] flex flex-col z-10 shadow-2xl border-2 border-amber-400/40 animate-modal-pop" style="background-color: #fbf5ee;" role="dialog" aria-modal="true" aria-labelledby="natalRulesTitle">
+      
+      <!-- Top Bar Sticky Header -->
+      <div class="sticky top-0 z-20 flex items-center justify-between px-5 py-3.5 bg-gradient-to-r from-red-950 via-red-900 to-amber-950 text-white border-b border-amber-400/30 shadow-md">
         <div class="flex items-center gap-2">
-          <span class="text-xl">ℹ️</span>
-          <h3 class="font-headline-md text-base font-bold text-on-surface">Regras e Políticas de Natal</h3>
+          <span class="text-xl festive-pulse">🎄</span>
+          <h3 id="natalRulesTitle" class="font-headline-md text-sm sm:text-base font-extrabold text-amber-200 tracking-wide uppercase">
+            Regras & Políticas de Natal
+          </h3>
         </div>
-        <button onclick="closeNatalRulesModal()" class="text-on-surface-variant hover:text-primary p-1 rounded-full hover:bg-surface">
-          <span class="material-symbols-outlined text-[24px]">close</span>
+        <button onclick="closeNatalRulesModal()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all active:scale-95" aria-label="Fechar">
+          <span class="material-symbols-outlined text-[20px]">close</span>
         </button>
       </div>
-      <div class="p-4 overflow-y-auto custom-scrollbar flex flex-col items-center">
-        <img src="assets/images/natal/informacoes-natal.jpg" alt="Informações de Natal Bemavi" class="rounded-xl w-full shadow-sm mb-4">
+
+      <!-- Modal Body com Background Natalino IA e Cards de Texto + Ícones -->
+      <div class="relative overflow-y-auto custom-scrollbar flex-1 p-4 sm:p-6 space-y-3.5" style="background-image: linear-gradient(to bottom, rgba(254, 250, 246, 0.88), rgba(254, 248, 242, 0.94)), url('assets/images/natal/bg-regras-natal.jpg'); background-size: cover; background-position: center;">
+        
+        <!-- Bemavi Brand Header -->
+        <div class="text-center pb-2 pt-1">
+          <div class="inline-flex flex-col items-center">
+            <div class="flex items-center gap-1.5 text-red-900 mb-0.5">
+              <span class="material-symbols-outlined text-[26px]">home</span>
+              <span class="material-symbols-outlined text-[16px] -ml-2 text-rose-600">favorite</span>
+            </div>
+            <h2 class="font-headline-xl text-2xl font-black text-red-950 tracking-tight leading-none">Bemavi</h2>
+            <span class="text-[9px] font-bold text-amber-800 tracking-widest uppercase mt-0.5">Pães Artesanais</span>
+            
+            <div class="mt-2 flex items-center gap-2">
+              <div class="h-px w-8 bg-gradient-to-r from-transparent to-red-900/40"></div>
+              <h4 class="font-headline-lg text-2xl font-bold text-red-900 tracking-tight italic" style="font-family: Georgia, serif;">Informações</h4>
+              <div class="h-px w-8 bg-gradient-to-l from-transparent to-red-900/40"></div>
+            </div>
+            <span class="text-xs text-red-800/80 mt-0.5">♡</span>
+          </div>
+        </div>
+
+        <!-- 1. Prazo de Pedidos -->
+        <div class="natal-rule-card bg-surface-container-lowest/95 backdrop-blur-xs border border-amber-200/80 rounded-2xl p-4 shadow-sm flex items-start gap-3.5">
+          <div class="w-11 h-11 rounded-full bg-gradient-to-br from-red-900 to-red-800 text-amber-100 flex items-center justify-center shrink-0 shadow-md">
+            <span class="material-symbols-outlined text-[24px]">event_available</span>
+          </div>
+          <div class="flex-1 text-xs sm:text-sm text-on-surface leading-relaxed pt-1">
+            Aceitaremos pedidos até o dia <strong class="text-red-900 font-extrabold text-sm sm:text-base">15/12</strong> ou enquanto durar nosso estoque.
+          </div>
+        </div>
+
+        <!-- 2. Sinal de 50% e Confirmação -->
+        <div class="natal-rule-card bg-surface-container-lowest/95 backdrop-blur-xs border border-amber-200/80 rounded-2xl p-4 shadow-sm flex items-start gap-3.5">
+          <div class="w-11 h-11 rounded-full bg-gradient-to-br from-red-900 to-red-800 text-amber-100 flex items-center justify-center shrink-0 shadow-md">
+            <span class="material-symbols-outlined text-[24px]">credit_card</span>
+          </div>
+          <div class="flex-1 text-xs sm:text-sm text-on-surface leading-relaxed space-y-2">
+            <div>
+              A encomenda só será confirmada após o pagamento do sinal de <strong class="text-red-900 font-extrabold">50% do valor</strong>; o restante pedimos para acertar <strong>24h antes da retirada</strong>.
+            </div>
+            <div class="bg-red-100/90 border border-red-300/70 rounded-xl px-3 py-2 flex items-center gap-2 text-[10px] sm:text-[11px] text-red-950 font-bold shadow-2xs">
+              <span class="material-symbols-outlined text-red-700 text-[18px] shrink-0">error</span>
+              <span>CASO O PEDIDO SEJA CANCELADO, O VALOR NÃO SERÁ REEMBOLSADO.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Formas de Pagamento e Taxas -->
+        <div class="natal-rule-card bg-surface-container-lowest/95 backdrop-blur-xs border border-amber-200/80 rounded-2xl p-4 shadow-sm flex items-start gap-3.5">
+          <div class="w-11 h-11 rounded-full bg-gradient-to-br from-red-900 to-red-800 text-amber-100 flex items-center justify-center shrink-0 shadow-md">
+            <span class="material-symbols-outlined text-[24px]">payments</span>
+          </div>
+          <div class="flex-1 text-xs sm:text-sm text-on-surface leading-relaxed space-y-2">
+            <div>
+              Aceitamos <strong>dinheiro</strong>, <strong>cartão</strong> (débito e crédito) e <strong>Pix</strong>.
+            </div>
+            <div class="bg-red-100/90 border border-red-300/70 rounded-xl px-3 py-2 flex items-start gap-2 text-[10px] sm:text-[11px] text-red-950 font-bold shadow-2xs leading-snug">
+              <span class="material-symbols-outlined text-red-700 text-[18px] shrink-0">info</span>
+              <span>CONSULTE A CHAVE PIX APÓS A CONFIRMAÇÃO DO ORÇAMENTO. PAGAMENTOS NO CARTÃO TÊM TAXA DA MÁQUINA (CONSULTE SIMULAÇÃO).</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Sem Entregas / Apenas Retirada Física -->
+        <div class="natal-rule-card bg-surface-container-lowest/95 backdrop-blur-xs border border-amber-200/80 rounded-2xl p-4 shadow-sm flex items-start gap-3.5">
+          <div class="w-11 h-11 rounded-full bg-gradient-to-br from-red-900 to-red-800 text-amber-100 flex items-center justify-center shrink-0 shadow-md">
+            <span class="material-symbols-outlined text-[24px]">no_crash</span>
+          </div>
+          <div class="flex-1 text-xs sm:text-sm text-on-surface leading-relaxed">
+            <strong class="text-red-950 font-black text-sm sm:text-base block mb-0.5">Não temos entregas.</strong>
+            Seu pedido deve ser retirado na <strong class="text-red-900 underline decoration-amber-500 underline-offset-2">R. Pedro Carlos de Souza - Vitória/ES</strong>.
+          </div>
+        </div>
+
+        <!-- 5. Qualidade e Validade de Frutas Frescas -->
+        <div class="natal-rule-card bg-surface-container-lowest/95 backdrop-blur-xs border border-amber-200/80 rounded-2xl p-4 shadow-sm flex items-start gap-3.5">
+          <div class="w-11 h-11 rounded-full bg-gradient-to-br from-red-900 to-red-800 text-amber-100 flex items-center justify-center shrink-0 shadow-md">
+            <span class="material-symbols-outlined text-[24px]">verified</span>
+          </div>
+          <div class="flex-1 text-xs sm:text-sm text-on-surface leading-relaxed">
+            Todos nossos produtos são feitos com ingredientes de altíssima qualidade. Produtos com frutas frescas soltam água naturalmente; a validade é de <strong class="text-red-900 font-extrabold">2 dias na geladeira</strong>.
+          </div>
+        </div>
+
+        <!-- Rodapé Aconchegante de Agradecimento -->
+        <div class="pt-2 pb-1 text-center">
+          <div class="inline-block px-6 py-2.5 rounded-full bg-gradient-to-r from-red-950 via-red-900 to-amber-950 text-amber-200 border border-amber-400/40 shadow-md">
+            <p class="font-serif italic text-xs sm:text-sm font-semibold tracking-wide flex items-center justify-center gap-1.5">
+              <span>Obrigada por escolher a Bemavi!</span>
+              <span class="text-rose-400 text-base">♡</span>
+            </p>
+          </div>
+        </div>
+
       </div>
+
+      <!-- Modal Action Footer -->
+      <div class="p-3.5 bg-surface-container border-t border-outline-variant flex justify-between items-center gap-3">
+        <span class="text-[11px] text-on-surface-variant font-medium hidden sm:inline">Dúvidas? Fale pelo WhatsApp da Bemavi.</span>
+        <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+          <a href="https://wa.me/5527992760190" target="_blank" rel="noopener" class="flex-1 sm:flex-initial px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm transition-all">
+            <span class="material-symbols-outlined text-[16px]">chat</span> WhatsApp
+          </a>
+          <button type="button" onclick="closeNatalRulesModal()" class="flex-1 sm:flex-initial px-5 py-2 bg-red-900 hover:bg-red-950 text-white rounded-xl font-bold text-xs shadow-sm transition-all">
+            Entendido
+          </button>
+        </div>
+      </div>
+
     </div>
   </div>
 

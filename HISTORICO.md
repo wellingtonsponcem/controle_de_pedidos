@@ -40,8 +40,8 @@ Mantém o histórico consolidado de decisões e progresso do projeto para portab
 - **Backend & Validação**: Ajustada rota `DELETE /api/pedidos` com cascata atômica e validação de segurança `podeExcluirPedido` para pedidos cancelados.
 - **Frontend & Testes**: Botão de exclusão reativo no painel e 3 novos testes baseados em propriedades com `fast-check` (29 testes 100% verdes).
 
-### [2026-11-12] - Especial de Natal Bemavi (Concluído)
-- **Produtos & Banco Neon**: Cadastrados 31 produtos festivos no Neon Postgres (`scripts/seed-natal-products.ts`): Chocotones Super Recheados (Tradicionais R$80 e Premium R$100), Sobremesas na Travessa (P R$69,90 e G R$169,90/R$179,90), Taças de 1,5kg (R$210) e Pudim Tradicional (R$60).
-- **Mídia & Artes**: Extraídas fotos reais dos produtos em `assets/images/natal/`, integrado vídeo artesanal (`natal-video.mp4`) e flyer de regras (`informacoes-natal.jpg`).
-- **Frontend & Catálogo**: Criada a aba comemorativa "🎄 Especial de Natal" no topo e categorias, banner festivo, sub-filtros dinâmicos, modais de vídeo/regras e sincronização em `index.html` e `catalogo.html`.
-- **Regras Logísticas de Natal**: Checkout reforça que doces de Natal são exclusivos para Retirada Física na R. Pedro Carlos de Souza - Vitória/ES com alerta e trava automática. Validação 100% aprovada no Jest e no TypeScript.
+### [2026-11-12 a 2026-11-13] - Especial de Natal Bemavi & Modal Nativo (Concluído)
+- **Produtos & Banco Neon**: Cadastrados 31 produtos festivos no Neon Postgres (`scripts/seed-natal-products.ts`): Chocotones, Sobremesas na Travessa, Taças e Pudim.
+- **Mídia & Fundo IA**: Integradas fotos dos produtos, vídeo (`natal-video.mp4`) e gerado background natalino com IA em `assets/images/natal/bg-regras-natal.jpg`.
+- **Frontend & Modal com Animação**: O flyer estático foi substituído por interface nativa com textos nítidos, ícones vetoriais (`event_available`, `credit_card`, `payments`, `no_crash`, `verified`), alertas destacados, animações escalonadas (`natal-rule-card`) e efeito `festive-pulse`. Sincronizado em `index.html` e `catalogo.html`.
+- **Regras Logísticas**: Retirada obrigatória em Vitória/ES para itens de Natal. Testes 100% verdes.
