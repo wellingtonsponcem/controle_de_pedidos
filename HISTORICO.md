@@ -42,6 +42,6 @@ Mantém o histórico consolidado de decisões e progresso do projeto para portab
 
 ### [2026-11-12 a 2026-11-13] - Especial de Natal Bemavi & Modal Nativo (Concluído)
 - **Produtos & Banco Neon**: Cadastrados 31 produtos festivos no Neon Postgres (`scripts/seed-natal-products.ts`): Chocotones, Sobremesas na Travessa, Taças e Pudim.
-- **Mídia & Fundo IA**: Integradas fotos dos produtos, vídeo (`natal-video.mp4`) e gerado background natalino com IA em `assets/images/natal/bg-regras-natal.jpg`.
-- **Frontend & Modal com Animação**: O flyer estático foi substituído por interface nativa com textos nítidos, ícones vetoriais (`event_available`, `credit_card`, `payments`, `no_crash`, `verified`), alertas destacados, animações escalonadas (`natal-rule-card`) e efeito `festive-pulse`. Sincronizado em `index.html` e `catalogo.html`.
-- **Regras Logísticas**: Retirada obrigatória em Vitória/ES para itens de Natal. Testes 100% verdes.
+- **Mídia & Identidade**: Integradas fotos dos produtos, vídeo (`natal-video.mp4`), background natalino IA (`bg-regras-natal.jpg`) e extração oficial do logo Bemavi em alta fidelidade com transparência (`assets/images/natal/logo-bemavi.png`).
+- **Frontend & Modal com Animação**: Interface nativa com o logo oficial Bemavi, textos nítidos, ícones vetoriais (`event_available`, `credit_card`, `payments`, etc.), animações e botão "Compreendi". Sincronizado em `index.html` e `catalogo.html`.
+- **Regras Logísticas**: Retirada obrigatória em Vitória/ES para itens de Natal. Testes 100% verdes (29/29).
