@@ -99,7 +99,10 @@
   </script>
 
   <style>
-    #paymentModal[hidden] {
+    #paymentModal[hidden],
+    #natalRulesModal[hidden],
+    #natalVideoModal[hidden],
+    [hidden] {
       display: none !important;
     }
     .material-symbols-outlined {
@@ -861,7 +864,7 @@
   </div>
 
   <!-- Modal Vídeo Especial de Natal -->
-  <div id="natalVideoModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" hidden>
+  <div id="natalVideoModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" hidden style="display: none;">
     <div class="fixed inset-0 bg-on-background/70 backdrop-blur-sm" onclick="closeNatalVideoModal()"></div>
     <div class="relative bg-surface-container-lowest border border-outline-variant rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden z-10" role="dialog" aria-modal="true">
       <div class="flex items-center justify-between p-4 bg-surface-container border-b border-outline-variant">
@@ -869,8 +872,8 @@
           <span class="text-xl">🎄</span>
           <h3 class="font-headline-md text-base font-bold text-on-surface">Bastidores & Sobremesas de Natal Bemavi</h3>
         </div>
-        <button onclick="closeNatalVideoModal()" class="text-on-surface-variant hover:text-primary p-1 rounded-full hover:bg-surface">
-          <span class="material-symbols-outlined text-[24px]">close</span>
+        <button type="button" onclick="closeNatalVideoModal()" class="flex items-center gap-1 px-3 py-1.5 rounded-full bg-surface-container-high hover:bg-surface text-on-surface text-xs font-bold transition-all border border-outline-variant cursor-pointer">
+          <span class="material-symbols-outlined text-[18px]">close</span> Fechar
         </button>
       </div>
       <div class="aspect-video bg-black flex items-center justify-center">
@@ -889,20 +892,21 @@
   </div>
 
   <!-- Modal Regras & Informações de Natal -->
-  <div id="natalRulesModal" class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4" hidden>
+  <div id="natalRulesModal" class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4" hidden style="display: none;">
     <div class="fixed inset-0 bg-on-background/70 backdrop-blur-sm transition-opacity" onclick="closeNatalRulesModal()"></div>
     <div class="relative w-full max-w-lg rounded-3xl overflow-hidden max-h-[92vh] flex flex-col z-10 shadow-2xl border-2 border-amber-400/40 animate-modal-pop" style="background-color: #fbf5ee;" role="dialog" aria-modal="true" aria-labelledby="natalRulesTitle">
       
       <!-- Top Bar Sticky Header -->
-      <div class="sticky top-0 z-20 flex items-center justify-between px-5 py-3.5 bg-gradient-to-r from-red-950 via-red-900 to-amber-950 text-white border-b border-amber-400/30 shadow-md">
+      <div class="sticky top-0 z-20 flex items-center justify-between px-4 sm:px-6 py-3.5 bg-gradient-to-r from-red-950 via-red-900 to-amber-950 text-white border-b border-amber-400/30 shadow-md">
         <div class="flex items-center gap-2">
           <span class="text-xl festive-pulse">🎄</span>
           <h3 id="natalRulesTitle" class="font-headline-md text-sm sm:text-base font-extrabold text-amber-200 tracking-wide uppercase">
             Regras & Políticas de Natal
           </h3>
         </div>
-        <button onclick="closeNatalRulesModal()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all active:scale-95" aria-label="Fechar">
-          <span class="material-symbols-outlined text-[20px]">close</span>
+        <button type="button" onclick="closeNatalRulesModal()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/15 hover:bg-white/25 text-white text-xs font-bold transition-all active:scale-95 border border-white/20 shadow-sm cursor-pointer" aria-label="Fechar">
+          <span class="material-symbols-outlined text-[18px]">close</span>
+          <span>Fechar</span>
         </button>
       </div>
 
@@ -993,7 +997,7 @@
 
         <!-- Rodapé Aconchegante de Agradecimento -->
         <div class="pt-2 pb-1 text-center">
-          <div class="inline-block px-6 py-2.5 rounded-full bg-gradient-to-r from-red-950 via-red-900 to-amber-950 text-amber-200 border border-amber-400/40 shadow-md">
+          <div class="inline-block px-6 py-2 rounded-full bg-gradient-to-r from-red-950 via-red-900 to-amber-950 text-amber-200 border border-amber-400/40 shadow-md">
             <p class="font-serif italic text-xs sm:text-sm font-semibold tracking-wide flex items-center justify-center gap-1.5">
               <span>Obrigada por escolher a Bemavi!</span>
               <span class="text-rose-400 text-base">♡</span>
@@ -1003,17 +1007,15 @@
 
       </div>
 
-      <!-- Modal Action Footer -->
-      <div class="p-3.5 bg-surface-container border-t border-outline-variant flex justify-between items-center gap-3">
-        <span class="text-[11px] text-on-surface-variant font-medium hidden sm:inline">Dúvidas? Fale pelo WhatsApp da Bemavi.</span>
-        <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
-          <a href="https://wa.me/5527992760190" target="_blank" rel="noopener" class="flex-1 sm:flex-initial px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm transition-all">
-            <span class="material-symbols-outlined text-[16px]">chat</span> WhatsApp
-          </a>
-          <button type="button" onclick="closeNatalRulesModal()" class="flex-1 sm:flex-initial px-5 py-2 bg-red-900 hover:bg-red-950 text-white rounded-xl font-bold text-xs shadow-sm transition-all">
-            Entendido
-          </button>
-        </div>
+      <!-- Modal Action Footer com Botão Compreendi em Destaque -->
+      <div class="p-4 bg-surface-container border-t border-outline-variant flex flex-col sm:flex-row justify-between items-center gap-3">
+        <a href="https://wa.me/5527992760190" target="_blank" rel="noopener" class="w-full sm:w-auto px-4 py-3 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm transition-all active:scale-95 order-2 sm:order-1">
+          <span class="material-symbols-outlined text-[18px]">chat</span> Dúvidas? WhatsApp
+        </a>
+        <button type="button" onclick="closeNatalRulesModal()" class="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-red-900 via-red-800 to-rose-900 hover:brightness-110 text-amber-100 font-extrabold text-sm rounded-xl shadow-lg border border-amber-400/40 transition-all active:scale-95 flex items-center justify-center gap-2 order-1 sm:order-2 cursor-pointer">
+          <span class="material-symbols-outlined text-[20px] text-amber-300">check_circle</span>
+          <span>Compreendi</span>
+        </button>
       </div>
 
     </div>

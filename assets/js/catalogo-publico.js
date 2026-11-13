@@ -1434,7 +1434,9 @@ window.openNatalVideoModal = function() {
   const modal = document.getElementById('natalVideoModal');
   const video = document.getElementById('natalVideoPlayer');
   if (modal) {
-    modal.hidden = false;
+    modal.removeAttribute('hidden');
+    modal.style.setProperty('display', 'flex', 'important');
+    document.body.style.overflow = 'hidden';
     if (video) video.play().catch(() => {});
   }
 };
@@ -1443,20 +1445,40 @@ window.closeNatalVideoModal = function() {
   const modal = document.getElementById('natalVideoModal');
   const video = document.getElementById('natalVideoPlayer');
   if (modal) {
-    modal.hidden = true;
+    modal.setAttribute('hidden', '');
+    modal.style.setProperty('display', 'none', 'important');
+    document.body.style.overflow = '';
     if (video) video.pause();
   }
 };
 
 window.openNatalRulesModal = function() {
   const modal = document.getElementById('natalRulesModal');
-  if (modal) modal.hidden = false;
+  if (modal) {
+    modal.removeAttribute('hidden');
+    modal.style.setProperty('display', 'flex', 'important');
+    document.body.style.overflow = 'hidden';
+  }
 };
 
 window.closeNatalRulesModal = function() {
   const modal = document.getElementById('natalRulesModal');
-  if (modal) modal.hidden = true;
+  if (modal) {
+    modal.setAttribute('hidden', '');
+    modal.style.setProperty('display', 'none', 'important');
+    document.body.style.overflow = '';
+  }
 };
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    window.closeNatalRulesModal();
+    window.closeNatalVideoModal();
+    if (typeof window.closePaymentModal === 'function') {
+      window.closePaymentModal();
+    }
+  }
+});
 
 window.scrollToCatalog = function() {
   const section = document.getElementById('catalog-section');
