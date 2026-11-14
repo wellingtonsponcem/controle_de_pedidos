@@ -1404,9 +1404,6 @@ window.navigateTo = function(step) {
       showToast('Adicione pelo menos um item ao pedido.');
       return;
     }
-    if (hasNatalItems()) {
-      selectDeliveryMethod('Retirada');
-    }
     state.checkoutStep = 'identification';
     if (viewCatalog) viewCatalog.style.display = 'none';
     if (viewCheckout) viewCheckout.classList.remove('hidden');
@@ -1427,11 +1424,6 @@ window.toggleCheckoutView = function() {
 };
 
 window.selectDeliveryMethod = function(method) {
-  if (method === 'Entrega' && hasNatalItems()) {
-    showToast('🎄 Itens de Natal são exclusivos para Retirada na R. Pedro Carlos de Souza - Vitória/ES.');
-    method = 'Retirada';
-  }
-
   const select = document.getElementById('public_entrega');
   if (!select) return;
   select.value = method;
@@ -1455,7 +1447,7 @@ function updateDeliveryVisualCards(method) {
     natalNotice.style.display = containsNatal ? 'flex' : 'none';
   }
 
-  if (method === 'Entrega' && !containsNatal) {
+  if (method === 'Entrega') {
     if (deliveryCard) {
       deliveryCard.className = "relative flex flex-col items-center justify-center p-5 border-2 border-primary-container bg-primary-container/5 rounded-xl cursor-pointer hover:bg-primary-container/10 transition-all group";
       const icon = deliveryCard.querySelector('.material-symbols-outlined');
@@ -1468,7 +1460,7 @@ function updateDeliveryVisualCards(method) {
     }
   } else {
     if (deliveryCard) {
-      deliveryCard.className = `relative flex flex-col items-center justify-center p-5 border border-outline-variant rounded-xl cursor-pointer hover:border-primary transition-all group ${containsNatal ? 'opacity-40 cursor-not-allowed' : ''}`;
+      deliveryCard.className = `relative flex flex-col items-center justify-center p-5 border border-outline-variant rounded-xl cursor-pointer hover:border-primary transition-all group`;
       const icon = deliveryCard.querySelector('.material-symbols-outlined');
       if (icon) icon.className = "material-symbols-outlined text-4xl text-on-surface-variant group-hover:text-primary mb-2";
     }
@@ -1978,7 +1970,7 @@ function updateNatalCountdown() {
 
   if (bar) {
     if (days === 0) {
-      bar.textContent = 'Último dia para encomendar o seu Natal! · Retirada em Vitória/ES';
+      bar.textContent = 'Último dia para encomendar o seu Natal! · Entregamos em Vitória e região';
     } else if (days <= 7) {
       bar.textContent = `Últimos ${days + 1} dias de encomendas de Natal · Pedidos até 15/12`;
     } else {

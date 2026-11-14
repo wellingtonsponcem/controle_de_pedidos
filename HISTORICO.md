@@ -45,4 +45,4 @@ Mantém o histórico consolidado de decisões e progresso do projeto para portab
 - **Mídia & Identidade**: Integradas fotos, vídeo (`natal-video.mp4`), background IA (`bg-regras-natal.jpg`) e logotipo oficial Bemavi com transparência (`logo-bemavi.png`).
 - **Agrupamento Inteligente & Variações**: Unificados produtos com variações/tamanhos em cards únicos na vitrine com preço "A partir de R$..." e badge de opções (ex.: 10 Chocotones reunidos em 1 card "Chocotone Super Recheado", 14 Travessas unificadas em 7 cards por sabor com tamanhos P e G).
 - **Modal de Personalização de Produto**: Criado `#productOptionsModal` estilo iFood para escolha intuitiva de categorias (Tradicional/Premium), sabores e tamanhos (P/G), com preço em tempo real e adição atômica ao carrinho.
-- **Regras & Checkout**: Retirada obrigatória em Vitória/ES para Natal e compatibilidade total com Mercado Pago. Testes verdes (29/29).
+- **Regras & Checkout**: Natal com entrega em Vitória e região ou retirada na Serra/ES (antes: retirada obrigatória em Vitória). Compatível com Mercado Pago. Testes verdes (29/29).

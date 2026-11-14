@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Especial de Natal Bemavi: chocotones super recheados, sobremesas na travessa, taças e pudim artesanais. Encomendas até 15/12 com retirada em Vitória/ES.">
+  <meta name="description" content="Especial de Natal Bemavi: chocotones super recheados, sobremesas na travessa, taças e pudim artesanais. Encomendas até 15/12 com entrega em Vitória e região ou retirada na Serra/ES.">
   <meta name="theme-color" content="#5c0f17">
   <meta property="og:title" content="Especial de Natal Bemavi">
   <meta property="og:description" content="Chocotones, sobremesas na travessa, taças e pudim artesanais. Encomendas até 15/12.">
@@ -328,7 +328,7 @@
     <!-- Faixa de aviso da temporada de Natal (texto atualizado via JS) -->
     <button type="button" id="natalAnnouncementBar" data-natal-season onclick="openNatalCatalog()" class="w-full h-9 natal-ribbon text-amber-100 text-[11px] sm:text-xs font-bold tracking-wide flex items-center justify-center gap-2 px-4 hover:brightness-110 transition-all">
       <span aria-hidden="true">🎄</span>
-      <span id="natalAnnouncementText" class="truncate">Encomendas de Natal abertas até 15/12 · Retirada em Vitória/ES</span>
+      <span id="natalAnnouncementText" class="truncate">Encomendas de Natal abertas até 15/12 · Entregamos em Vitória e região</span>
       <span class="hidden sm:inline-flex items-center gap-0.5 text-amber-300 underline underline-offset-2 shrink-0">Ver cardápio <span class="material-symbols-outlined text-[14px]">arrow_forward</span></span>
     </button>
     <div class="max-w-[1280px] mx-auto flex justify-between items-center px-4 md:px-margin-desktop h-20">
@@ -414,7 +414,7 @@
 
             <ul class="flex flex-wrap justify-center lg:justify-start gap-x-5 gap-y-2 pt-2 text-xs text-amber-50/80 font-semibold">
               <li class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[16px] text-amber-300">event_available</span> Pedidos até 15/12</li>
-              <li class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[16px] text-amber-300">storefront</span> Retirada em Vitória/ES</li>
+              <li class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[16px] text-amber-300">local_shipping</span> Entrega em Vitória e região ou retirada na Serra</li>
               <li class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[16px] text-amber-300">redeem</span> Sacola e caixa de presente</li>
               <li><button type="button" onclick="openNatalRulesModal()" class="flex items-center gap-1 underline underline-offset-2 hover:text-white"><span class="material-symbols-outlined text-[16px] text-amber-300">info</span> Regras de encomenda</button></li>
             </ul>
@@ -616,8 +616,8 @@
             <div class="bg-surface-container-lowest border border-outline-variant p-4 rounded-2xl shadow-sm flex items-start gap-3">
               <span class="text-2xl p-2 bg-red-800/10 text-red-800 rounded-xl">📍</span>
               <div>
-                <strong class="text-xs font-bold text-on-surface uppercase block">Apenas Retirada</strong>
-                <p class="text-[11px] text-on-surface-variant leading-snug mt-0.5">R. Pedro Carlos de Souza - Vitória/ES (sem entregas).</p>
+                <strong class="text-xs font-bold text-on-surface uppercase block">Entrega ou Retirada</strong>
+                <p class="text-[11px] text-on-surface-variant leading-snug mt-0.5">Entregamos em Vitória e região. Retirada na Serra/ES.</p>
               </div>
             </div>
 
@@ -754,8 +754,8 @@
               <div id="natalDeliveryNotice" style="display: none;" class="p-4 bg-red-950/10 border-2 border-red-800/30 rounded-xl flex items-start gap-3 text-xs text-red-950 font-medium mb-4">
                 <span class="text-xl">🎄</span>
                 <div>
-                  <strong class="font-bold text-red-900 block text-sm mb-0.5">Aviso de Retirada - Especial de Natal</strong>
-                  Seu pedido contém doces do Especial de Natal. Conforme as regras oficiais, <strong>não realizamos entregas por motoboy para sobremesas natalinas</strong>. Seu pedido deve ser retirado na <strong>R. Pedro Carlos de Souza - Vitória/ES</strong> até a data agendada.
+                  <strong class="font-bold text-red-900 block text-sm mb-0.5">Especial de Natal - Entrega ou Retirada</strong>
+                  Seu pedido contém doces do Especial de Natal. Você pode receber em casa (<strong>entregamos em Vitória e região</strong>) ou retirar na <strong>Serra/ES</strong> na data agendada.
                 </div>
               </div>
 
@@ -769,7 +769,7 @@
                 <div id="deliveryCard_Retirada" onclick="selectDeliveryMethod('Retirada')" class="relative flex flex-col items-center justify-center p-5 border border-outline-variant rounded-xl cursor-pointer hover:border-primary transition-all group">
                   <span class="material-symbols-outlined text-4xl text-on-surface-variant group-hover:text-primary mb-2">storefront</span>
                   <span class="font-label-bold text-sm font-bold">Retirada Física</span>
-                  <span class="text-[10px] text-on-surface-variant mt-0.5">Grátis na padaria</span>
+                  <span class="text-[10px] text-on-surface-variant mt-0.5">Grátis na Serra/ES</span>
                 </div>
               </div>
 
@@ -1112,7 +1112,7 @@
           </div>
           <div class="flex-1 text-xs sm:text-sm text-on-surface leading-relaxed space-y-2">
             <div>
-              A encomenda só será confirmada após o pagamento do sinal de <strong class="text-red-900 font-extrabold">50% do valor</strong>; o restante pedimos para acertar <strong>24h antes da retirada</strong>.
+              A encomenda só será confirmada após o pagamento do sinal de <strong class="text-red-900 font-extrabold">50% do valor</strong>; o restante pedimos para acertar <strong>24h antes da entrega ou retirada</strong>.
             </div>
             <div class="bg-red-100/90 border border-red-300/70 rounded-xl px-3 py-2 flex items-center gap-2 text-[10px] sm:text-[11px] text-red-950 font-bold shadow-2xs">
               <span class="material-symbols-outlined text-red-700 text-[18px] shrink-0">error</span>
@@ -1137,14 +1137,14 @@
           </div>
         </div>
 
-        <!-- 4. Sem Entregas / Apenas Retirada Física -->
+        <!-- 4. Entrega em Vitória e região / Retirada na Serra -->
         <div class="natal-rule-card bg-surface-container-lowest/95 backdrop-blur-xs border border-amber-200/80 rounded-2xl p-4 shadow-sm flex items-start gap-3.5">
           <div class="w-11 h-11 rounded-full bg-gradient-to-br from-red-900 to-red-800 text-amber-100 flex items-center justify-center shrink-0 shadow-md">
-            <span class="material-symbols-outlined text-[24px]">no_crash</span>
+            <span class="material-symbols-outlined text-[24px]">local_shipping</span>
           </div>
           <div class="flex-1 text-xs sm:text-sm text-on-surface leading-relaxed">
-            <strong class="text-red-950 font-black text-sm sm:text-base block mb-0.5">Não temos entregas.</strong>
-            Seu pedido deve ser retirado na <strong class="text-red-900 underline decoration-amber-500 underline-offset-2">R. Pedro Carlos de Souza - Vitória/ES</strong>.
+            <strong class="text-red-950 font-black text-sm sm:text-base block mb-0.5">Entregamos em Vitória e região.</strong>
+            Se preferir, retire seu pedido na <strong class="text-red-900 underline decoration-amber-500 underline-offset-2">Serra/ES</strong>.
           </div>
         </div>
 
