@@ -20,7 +20,7 @@ const state = {
   isOnline: navigator.onLine,
   novoClienteCoords: null,
   editClienteCoords: null,
-  rotaPartidaCoords: { latitude: -20.3168, longitude: -40.3117 },
+  rotaPartidaCoords: { latitude: -20.2141, longitude: -40.2405 }, // Av. Brasil, Novo Horizonte - Serra/ES
   loteRotaCalculada: [],
   taxasMaquininha: { debito: 2.27, credito: 3.99 },
   aiInsights: {
@@ -2002,8 +2002,8 @@ window.planejarMelhorRota = function() {
   const pedidosOrdenados = [];
   
   // Posição inicial: Bento Ferreira (ou de onde o usuário digitar e resolver pelo Nominatim)
-  let latAtual = state.rotaPartidaCoords.latitude || -20.3168;
-  let lonAtual = state.rotaPartidaCoords.longitude || -40.3117;
+  let latAtual = state.rotaPartidaCoords.latitude || -20.2141;
+  let lonAtual = state.rotaPartidaCoords.longitude || -40.2405;
   
   while (pedidosNaoVisitados.length > 0) {
     let indiceProximo = -1;
@@ -2028,8 +2028,8 @@ window.planejarMelhorRota = function() {
   }
 
   // Reiniciar para Bento Ferreira para calcular os tempos a partir da partida
-  latAtual = state.rotaPartidaCoords.latitude || -20.3168;
-  lonAtual = state.rotaPartidaCoords.longitude || -40.3117;
+  latAtual = state.rotaPartidaCoords.latitude || -20.2141;
+  lonAtual = state.rotaPartidaCoords.longitude || -40.2405;
   
   // Configurar hora atual a partir do horário de saída
   const [saidaHora, saidaMin] = horarioInput.value.split(':');
