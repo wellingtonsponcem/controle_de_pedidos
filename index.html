@@ -3,8 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Catálogo público da Bemavi Pão Artesanal para pedidos por WhatsApp.">
-  <title>Bemavi | Catálogo de Pedidos</title>
+  <meta name="description" content="Especial de Natal Bemavi: chocotones super recheados, sobremesas na travessa, taças e pudim artesanais. Encomendas até 15/12 com retirada em Vitória/ES.">
+  <meta name="theme-color" content="#5c0f17">
+  <meta property="og:title" content="Especial de Natal Bemavi">
+  <meta property="og:description" content="Chocotones, sobremesas na travessa, taças e pudim artesanais. Encomendas até 15/12.">
+  <meta property="og:image" content="assets/images/natal/capa-natal.jpg">
+  <title>Bemavi | Especial de Natal</title>
   
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -262,12 +266,71 @@
       display: inline-block;
       animation: festivePulse 2.5s infinite ease-in-out;
     }
+
+    /* ===== Temporada de Natal ===== */
+    .natal-hero {
+      background:
+        radial-gradient(ellipse at 85% 20%, rgba(251, 191, 36, 0.18), transparent 55%),
+        radial-gradient(ellipse at 10% 90%, rgba(190, 18, 60, 0.35), transparent 60%),
+        linear-gradient(135deg, #3d0910 0%, #5c0f17 45%, #7a1622 100%);
+    }
+    .natal-snow {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .natal-snow span {
+      position: absolute;
+      top: -12px;
+      width: 6px;
+      height: 6px;
+      border-radius: 9999px;
+      background: rgba(255, 244, 214, 0.85);
+      filter: blur(0.5px);
+      animation: natalSnowFall linear infinite;
+    }
+    @keyframes natalSnowFall {
+      0% { transform: translate3d(0, -10px, 0); opacity: 0; }
+      10% { opacity: 1; }
+      100% { transform: translate3d(30px, 560px, 0); opacity: 0; }
+    }
+    .natal-photo-frame {
+      transform: rotate(2deg);
+      transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .natal-photo-frame:hover {
+      transform: rotate(0deg) scale(1.02);
+    }
+    .natal-countdown-num {
+      font-variant-numeric: tabular-nums;
+    }
+    .natal-showcase-card img {
+      transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .natal-showcase-card:hover img {
+      transform: scale(1.07);
+    }
+    .natal-ribbon {
+      background: repeating-linear-gradient(90deg, #5c0f17 0 18px, #7a1622 18px 36px);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .natal-snow { display: none; }
+      .festive-pulse, .natal-rule-card { animation: none; }
+      .natal-photo-frame, .natal-showcase-card img { transition: none; }
+    }
   </style>
 </head>
 <body class="bg-background text-on-background font-body-md antialiased min-h-screen flex flex-col">
 
   <!-- Header -->
   <header class="fixed top-0 w-full z-40 glass-header bg-surface/90 border-b border-outline-variant">
+    <!-- Faixa de aviso da temporada de Natal (texto atualizado via JS) -->
+    <button type="button" id="natalAnnouncementBar" data-natal-season onclick="openNatalCatalog()" class="w-full h-9 natal-ribbon text-amber-100 text-[11px] sm:text-xs font-bold tracking-wide flex items-center justify-center gap-2 px-4 hover:brightness-110 transition-all">
+      <span aria-hidden="true">🎄</span>
+      <span id="natalAnnouncementText" class="truncate">Encomendas de Natal abertas até 15/12 · Retirada em Vitória/ES</span>
+      <span class="hidden sm:inline-flex items-center gap-0.5 text-amber-300 underline underline-offset-2 shrink-0">Ver cardápio <span class="material-symbols-outlined text-[14px]">arrow_forward</span></span>
+    </button>
     <div class="max-w-[1280px] mx-auto flex justify-between items-center px-4 md:px-margin-desktop h-20">
       <!-- Brand/Logo -->
       <a href="#" onclick="navigateTo('cart'); return false;" class="flex items-center gap-sm group">
@@ -287,7 +350,7 @@
       <!-- Actions -->
       <nav class="flex items-center gap-md">
         <div class="hidden sm:flex items-center gap-md">
-          <button type="button" onclick="filterCategory('Natal'); scrollToCatalog();" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-red-800 to-rose-700 text-white font-label-bold text-xs font-bold hover:brightness-110 transition-all shadow-sm border border-amber-300/30">
+          <button type="button" onclick="openNatalCatalog()" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-red-800 to-rose-700 text-white font-label-bold text-xs font-bold hover:brightness-110 transition-all shadow-sm border border-amber-300/30">
             <span>🎄</span>
             <span>Especial de Natal</span>
           </button>
@@ -307,12 +370,67 @@
   </header>
 
   <!-- Shell Wrapper -->
-  <main class="pt-20 flex-1 flex flex-col">
+  <main id="mainShell" class="pt-[116px] flex-1 flex flex-col">
 
     <!-- VIEW 1: CATALOGO VIEW -->
     <div id="viewCatalog" class="flex-col flex">
-      <!-- Hero Section -->
-      <section class="relative min-h-[480px] md:h-[500px] w-full overflow-hidden flex items-center bg-surface-container-low">
+      <!-- Hero de Natal (exibido durante a temporada festiva) -->
+      <section id="heroNatal" data-natal-season class="natal-hero relative w-full overflow-hidden text-white">
+        <div class="natal-snow" id="natalSnow" aria-hidden="true"></div>
+        <div class="relative z-10 max-w-[1280px] mx-auto px-4 md:px-margin-desktop py-10 md:py-14 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+          <div class="lg:col-span-7 space-y-5 text-center lg:text-left">
+            <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-400/15 border border-amber-300/40 text-amber-200 text-[11px] font-extrabold uppercase tracking-[0.18em]">
+              <span class="festive-pulse" aria-hidden="true">✨</span> Edição limitada de fim de ano
+            </span>
+            <h2 class="font-headline-xl text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-[1.05] tracking-tight">
+              O Natal mais doce<br class="hidden sm:block"> chegou à <span class="text-amber-300 italic" style="font-family: Georgia, 'Playfair Display', serif;">Bemavi</span>
+            </h2>
+            <p class="text-amber-50/85 text-base md:text-lg leading-relaxed font-medium max-w-xl mx-auto lg:mx-0">
+              Chocotones super recheados, sobremesas na travessa, taças de 1,5kg e pudim tradicional — feitos à mão para a sua ceia.
+            </p>
+
+            <!-- Contagem regressiva para o fim das encomendas -->
+            <div id="natalCountdown" class="inline-flex flex-col sm:flex-row items-center gap-3 sm:gap-4 bg-black/20 border border-amber-300/25 rounded-2xl px-5 py-3.5">
+              <span id="natalCountdownLabel" class="text-[11px] font-extrabold uppercase tracking-widest text-amber-200/90">Encomendas encerram em</span>
+              <div id="natalCountdownValues" class="flex items-center gap-3">
+                <div class="text-center"><strong id="natalCdDays" class="natal-countdown-num block text-2xl font-extrabold text-white leading-none">--</strong><span class="text-[10px] uppercase tracking-wider text-amber-100/70">dias</span></div>
+                <span class="text-amber-300/60 font-bold">:</span>
+                <div class="text-center"><strong id="natalCdHours" class="natal-countdown-num block text-2xl font-extrabold text-white leading-none">--</strong><span class="text-[10px] uppercase tracking-wider text-amber-100/70">horas</span></div>
+                <span class="text-amber-300/60 font-bold">:</span>
+                <div class="text-center"><strong id="natalCdMinutes" class="natal-countdown-num block text-2xl font-extrabold text-white leading-none">--</strong><span class="text-[10px] uppercase tracking-wider text-amber-100/70">min</span></div>
+              </div>
+            </div>
+
+            <div class="flex flex-wrap justify-center lg:justify-start gap-3 pt-1">
+              <button type="button" onclick="openNatalCatalog()" class="px-7 py-3.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-red-950 font-extrabold text-sm uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-black/20 hover:scale-[1.03] active:scale-95 transition-all">
+                <span class="material-symbols-outlined text-[20px]">redeem</span>
+                Encomendar meu Natal
+              </button>
+              <button type="button" onclick="openNatalVideoModal()" class="px-6 py-3.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/30 text-white font-bold text-sm uppercase tracking-wider flex items-center gap-2 transition-all active:scale-95">
+                <span class="material-symbols-outlined text-[20px]">play_circle</span>
+                Ver vídeo
+              </button>
+            </div>
+
+            <ul class="flex flex-wrap justify-center lg:justify-start gap-x-5 gap-y-2 pt-2 text-xs text-amber-50/80 font-semibold">
+              <li class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[16px] text-amber-300">event_available</span> Pedidos até 15/12</li>
+              <li class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[16px] text-amber-300">storefront</span> Retirada em Vitória/ES</li>
+              <li class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[16px] text-amber-300">redeem</span> Sacola e caixa de presente</li>
+              <li><button type="button" onclick="openNatalRulesModal()" class="flex items-center gap-1 underline underline-offset-2 hover:text-white"><span class="material-symbols-outlined text-[16px] text-amber-300">info</span> Regras de encomenda</button></li>
+            </ul>
+          </div>
+
+          <div class="lg:col-span-5 flex justify-center">
+            <div class="natal-photo-frame relative w-64 sm:w-72 lg:w-80 rounded-[28px] overflow-hidden border-4 border-amber-300/60 shadow-2xl shadow-black/40">
+              <img src="assets/images/natal/capa-natal.jpg" alt="Catálogo Especial de Natal Bemavi" class="w-full aspect-[2/3] object-cover" fetchpriority="high">
+              <span class="absolute bottom-3 left-3 px-3 py-1 rounded-full bg-red-900/90 text-amber-200 text-[10px] font-extrabold uppercase tracking-wider border border-amber-400/40 shadow-md">Novo 2026</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Hero padrão (fora da temporada de Natal) -->
+      <section id="heroDefault" hidden class="relative min-h-[480px] md:h-[500px] w-full overflow-hidden flex items-center bg-surface-container-low">
         <div class="absolute inset-0 z-0">
           <div class="w-full h-full bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=1600&q=80')"></div>
           <div class="absolute inset-0 hero-gradient"></div>
@@ -364,6 +482,56 @@
             <button onclick="filterCategory('Outros')" id="catBtn_Outros" class="cat-btn flex items-center gap-xs px-5 py-2.5 bg-surface hover:bg-surface-container-high text-on-surface-variant font-semibold rounded-full transition-all whitespace-nowrap border border-outline-variant">
               <span class="material-symbols-outlined text-[20px]">local_mall</span>
               <span>Outros</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Vitrine das linhas de Natal (home, temporada festiva) -->
+      <section id="natalShowcase" data-natal-season class="py-10 bg-background">
+        <div class="max-w-[1280px] mx-auto px-4 md:px-margin-desktop">
+          <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-6">
+            <div>
+              <span class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-red-800">🎄 Especial de Natal</span>
+              <h3 class="font-headline-lg text-2xl md:text-3xl font-bold text-on-background tracking-tight mt-1">Monte a sua ceia</h3>
+              <p class="text-sm text-on-surface-variant mt-1">Escolha uma linha e veja todos os sabores e tamanhos.</p>
+            </div>
+            <button type="button" onclick="openNatalCatalog()" class="self-start sm:self-auto text-sm font-bold text-red-800 hover:text-red-900 flex items-center gap-1">
+              Ver tudo de Natal <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+            </button>
+          </div>
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-gutter">
+            <button type="button" onclick="openNatalCatalog('Chocotones')" class="natal-showcase-card group relative aspect-[4/5] rounded-2xl overflow-hidden text-left shadow-sm border border-amber-400/30">
+              <img src="assets/images/natal/prod-chocotone.jpg" alt="" loading="lazy" class="absolute inset-0 w-full h-full object-cover">
+              <span class="absolute inset-0 bg-gradient-to-t from-red-950/90 via-red-950/30 to-transparent"></span>
+              <span class="absolute bottom-0 left-0 right-0 p-4 text-white">
+                <strong class="block font-headline-md text-base sm:text-lg leading-tight">Chocotones</strong>
+                <span class="text-[11px] text-amber-200 font-semibold">Super recheados</span>
+              </span>
+            </button>
+            <button type="button" onclick="openNatalCatalog('Travessas')" class="natal-showcase-card group relative aspect-[4/5] rounded-2xl overflow-hidden text-left shadow-sm border border-amber-400/30">
+              <img src="assets/images/natal/prod-travessa-delicia-morango.jpg" alt="" loading="lazy" class="absolute inset-0 w-full h-full object-cover">
+              <span class="absolute inset-0 bg-gradient-to-t from-red-950/90 via-red-950/30 to-transparent"></span>
+              <span class="absolute bottom-0 left-0 right-0 p-4 text-white">
+                <strong class="block font-headline-md text-base sm:text-lg leading-tight">Sobremesas na Travessa</strong>
+                <span class="text-[11px] text-amber-200 font-semibold">Tamanhos P e G</span>
+              </span>
+            </button>
+            <button type="button" onclick="openNatalCatalog('Taças')" class="natal-showcase-card group relative aspect-[4/5] rounded-2xl overflow-hidden text-left shadow-sm border border-amber-400/30">
+              <img src="assets/images/natal/prod-taca-ferrero.jpg" alt="" loading="lazy" class="absolute inset-0 w-full h-full object-cover">
+              <span class="absolute inset-0 bg-gradient-to-t from-red-950/90 via-red-950/30 to-transparent"></span>
+              <span class="absolute bottom-0 left-0 right-0 p-4 text-white">
+                <strong class="block font-headline-md text-base sm:text-lg leading-tight">Taças Especiais</strong>
+                <span class="text-[11px] text-amber-200 font-semibold">1,5kg de pura festa</span>
+              </span>
+            </button>
+            <button type="button" onclick="openNatalCatalog('Pudim')" class="natal-showcase-card group relative aspect-[4/5] rounded-2xl overflow-hidden text-left shadow-sm border border-amber-400/30">
+              <img src="assets/images/natal/prod-pudim.jpg" alt="" loading="lazy" class="absolute inset-0 w-full h-full object-cover object-bottom">
+              <span class="absolute inset-0 bg-gradient-to-t from-red-950/90 via-red-950/30 to-transparent"></span>
+              <span class="absolute bottom-0 left-0 right-0 p-4 text-white">
+                <strong class="block font-headline-md text-base sm:text-lg leading-tight">Pudim Tradicional</strong>
+                <span class="text-[11px] text-amber-200 font-semibold">Clássico da ceia</span>
+              </span>
             </button>
           </div>
         </div>
@@ -810,6 +978,7 @@
         <div>
           <h5 class="font-label-bold text-xs font-bold text-on-surface mb-4 uppercase tracking-wider">Produtos</h5>
           <ul class="space-y-2 text-sm text-on-surface-variant font-medium">
+            <li><a class="text-red-800 font-bold hover:text-red-900 transition-colors" href="#" onclick="openNatalCatalog(); return false;">🎄 Especial de Natal</a></li>
             <li><a class="hover:text-primary transition-colors" href="#" onclick="filterCategory('Pães'); scrollToCatalog(); return false;">Pães Artesanais</a></li>
             <li><a class="hover:text-primary transition-colors" href="#" onclick="filterCategory('Bolos'); scrollToCatalog(); return false;">Bolos Especiais</a></li>
             <li><a class="hover:text-primary transition-colors" href="#" onclick="filterCategory('Todos'); scrollToCatalog(); return false;">Ver Todos</a></li>
@@ -878,7 +1047,7 @@
         </button>
       </div>
       <div class="aspect-video bg-black flex items-center justify-center">
-        <video id="natalVideoPlayer" controls class="w-full h-full object-contain">
+        <video id="natalVideoPlayer" controls preload="none" poster="assets/images/natal/capa-natal.jpg" class="w-full h-full object-contain">
           <source src="assets/images/natal/natal-video.mp4" type="video/mp4">
           Seu navegador não suporta reprodução de vídeo.
         </video>

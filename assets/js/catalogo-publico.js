@@ -313,6 +313,11 @@ function renderCatalog() {
     });
   }
 
+  // Na temporada festiva, os produtos de Natal aparecem primeiro em "Todos"
+  if (state.categoriaAtiva === 'Todos' && state.natalSeasonActive && !state.searchQuery) {
+    filtered.sort((a, b) => Number(Boolean(b.isNatal)) - Number(Boolean(a.isNatal)));
+  }
+
   if (count) {
     count.textContent = `${filtered.length} ${filtered.length === 1 ? 'item' : 'itens'}`;
   }
@@ -1542,6 +1547,12 @@ window.filterCategory = function(category) {
     }
   }
 
+  // A vitrine de Natal da home some quando o próprio catálogo de Natal está aberto
+  const natalShowcase = document.getElementById('natalShowcase');
+  if (natalShowcase) {
+    natalShowcase.hidden = category === 'Natal' || !state.natalSeasonActive;
+  }
+
   const catTitle = document.getElementById('catalogMainTitle');
   const catSubtitle = document.getElementById('catalogMainSubtitle');
   if (catTitle && catSubtitle) {
@@ -1892,10 +1903,125 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
+// ===== Temporada de Natal =====
+// Datas no fuso de Vitória/ES (UTC-3). Encomendas até 15/12; vitrine festiva até 25/12.
+const NATAL_SEASON = (() => {
+  const year = new Date().getFullYear();
+  return {
+    start: new Date(`${year}-11-01T00:00:00-03:00`),
+    orderDeadline: new Date(`${year}-12-15T23:59:59-03:00`),
+    end: new Date(`${year}-12-26T00:00:00-03:00`)
+  };
+})();
+
+function isNatalSeason(now = new Date()) {
+  const override = new URLSearchParams(window.location.search).get('natal');
+  if (override === '1') return true;
+  if (override === '0') return false;
+  return now >= NATAL_SEASON.start && now < NATAL_SEASON.end;
+}
+
+function setupNatalSeason() {
+  const active = isNatalSeason();
+  state.natalSeasonActive = active;
+
+  document.querySelectorAll('[data-natal-season]').forEach(el => {
+    el.hidden = !active;
+  });
+  const heroDefault = document.getElementById('heroDefault');
+  if (heroDefault) heroDefault.hidden = active;
+
+  const shell = document.getElementById('mainShell');
+  if (shell) {
+    shell.classList.toggle('pt-[116px]', active);
+    shell.classList.toggle('pt-20', !active);
+  }
+
+  if (!active) return;
+
+  const catTitle = document.getElementById('catalogMainTitle');
+  const catSubtitle = document.getElementById('catalogMainSubtitle');
+  if (catTitle && state.categoriaAtiva === 'Todos') catTitle.textContent = 'Cardápio de Natal & Pães';
+  if (catSubtitle && state.categoriaAtiva === 'Todos') catSubtitle.textContent = 'Doces natalinos em destaque, pães artesanais todos os dias';
+
+  spawnNatalSnow();
+  updateNatalCountdown();
+  setInterval(updateNatalCountdown, 30 * 1000);
+}
+
+function updateNatalCountdown() {
+  const now = new Date();
+  const diff = NATAL_SEASON.orderDeadline - now;
+  const label = document.getElementById('natalCountdownLabel');
+  const values = document.getElementById('natalCountdownValues');
+  const bar = document.getElementById('natalAnnouncementText');
+
+  if (diff <= 0) {
+    if (label) label.textContent = 'Encomendas encerradas · consulte disponibilidade no WhatsApp';
+    if (values) values.hidden = true;
+    if (bar) bar.textContent = 'Encomendas de Natal encerradas · consulte pronta-entrega pelo WhatsApp';
+    return;
+  }
+
+  const totalMinutes = Math.floor(diff / 60000);
+  const days = Math.floor(totalMinutes / 1440);
+  const hours = Math.floor((totalMinutes % 1440) / 60);
+  const minutes = totalMinutes % 60;
+  const pad = (n) => String(n).padStart(2, '0');
+
+  const d = document.getElementById('natalCdDays');
+  const h = document.getElementById('natalCdHours');
+  const m = document.getElementById('natalCdMinutes');
+  if (d) d.textContent = pad(days);
+  if (h) h.textContent = pad(hours);
+  if (m) m.textContent = pad(minutes);
+
+  if (bar) {
+    if (days === 0) {
+      bar.textContent = 'Último dia para encomendar o seu Natal! · Retirada em Vitória/ES';
+    } else if (days <= 7) {
+      bar.textContent = `Últimos ${days + 1} dias de encomendas de Natal · Pedidos até 15/12`;
+    } else {
+      bar.textContent = `Encomendas de Natal até 15/12 · faltam ${days} dias`;
+    }
+  }
+}
+
+function spawnNatalSnow() {
+  const container = document.getElementById('natalSnow');
+  if (!container || container.childElementCount > 0) return;
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  const flakes = window.innerWidth < 640 ? 18 : 36;
+  for (let i = 0; i < flakes; i++) {
+    const flake = document.createElement('span');
+    const size = 3 + Math.random() * 5;
+    flake.style.left = `${Math.random() * 100}%`;
+    flake.style.width = `${size}px`;
+    flake.style.height = `${size}px`;
+    flake.style.opacity = String(0.4 + Math.random() * 0.6);
+    flake.style.animationDuration = `${8 + Math.random() * 10}s`;
+    flake.style.animationDelay = `${-Math.random() * 18}s`;
+    container.appendChild(flake);
+  }
+}
+
+window.openNatalCatalog = function(subcategory = 'Todos') {
+  if (state.checkoutStep !== 'cart' && typeof window.navigateTo === 'function') {
+    window.navigateTo('cart');
+  }
+  window.filterCategory('Natal');
+  window.filterNatalSubcategory(subcategory);
+  window.scrollToCatalog();
+};
+
+document.addEventListener('DOMContentLoaded', setupNatalSeason);
+
 window.scrollToCatalog = function() {
   const section = document.getElementById('catalog-section');
   if (section) {
-    const offset = 100;
+    const header = document.querySelector('header');
+    const offset = (header ? header.offsetHeight : 80) + 16;
     const bodyRect = document.body.getBoundingClientRect().top;
     const elementRect = section.getBoundingClientRect().top;
     const elementPosition = elementRect - bodyRect;
