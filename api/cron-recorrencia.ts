@@ -1,4 +1,5 @@
 import pool, { withTransaction } from './_db';
+import { requireCronOrAdmin } from './_auth';
 
 /**
  * Handler Serverless para o endpoint /api/cron-recorrencia
@@ -16,6 +17,8 @@ import pool, { withTransaction } from './_db';
  * - O novo pedido é criado em status 'Rascunho' para que o administrador aprove.
  */
 export default async function handler(req: any, res: any) {
+  if (!requireCronOrAdmin(req, res)) return;
+
   // Para fins de segurança, aceitamos apenas POST (comum em Vercel Cron Jobs) ou GET para testes manuais
   if (req.method !== 'POST' && req.method !== 'GET') {
     res.setHeader('Allow', ['GET', 'POST']);

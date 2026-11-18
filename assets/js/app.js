@@ -6,6 +6,108 @@
 // 1. Estado Global da Aplicação
 const API_BASE_URL = window.location.protocol === 'file:' ? 'https://bemavi.vercel.app' : '';
 
+// ============================================================================
+// AUTENTICAÇÃO DO PAINEL
+// Todas as chamadas para /api/* recebem o token de sessão. Uma resposta 401
+// (sessão ausente/expirada) abre a tela de login. A senha fica só na Vercel
+// (variável ADMIN_PASSWORD) — nunca no código.
+// ============================================================================
+const ADMIN_TOKEN_KEY = 'bemavi_admin_session';
+
+function readAdminSession() {
+  try {
+    const session = JSON.parse(localStorage.getItem(ADMIN_TOKEN_KEY) || 'null');
+    if (session && session.token && Number(session.expiresAt) > Date.now()) return session;
+  } catch (error) { /* armazenamento indisponível */ }
+  return null;
+}
+
+function saveAdminSession(session) {
+  try { localStorage.setItem(ADMIN_TOKEN_KEY, JSON.stringify(session)); } catch (error) { /* ignora */ }
+}
+
+window.adminLogout = function() {
+  try { localStorage.removeItem(ADMIN_TOKEN_KEY); } catch (error) { /* ignora */ }
+  window.location.reload();
+};
+
+function isOwnApiUrl(url) {
+  return url.startsWith('/api/') || (API_BASE_URL && url.startsWith(`${API_BASE_URL}/api/`)) || url.startsWith(`${window.location.origin}/api/`);
+}
+
+const nativeFetch = window.fetch.bind(window);
+window.fetch = async function(input, init = {}) {
+  const url = typeof input === 'string' ? input : (input && input.url) || '';
+  if (!isOwnApiUrl(url)) return nativeFetch(input, init);
+
+  const session = readAdminSession();
+  const headers = new Headers(init.headers || (typeof input !== 'string' && input.headers) || {});
+  if (session) headers.set('Authorization', `Bearer ${session.token}`);
+
+  const response = await nativeFetch(input, { ...init, headers });
+  if (response.status === 401 || response.status === 503) {
+    const body = await response.clone().json().catch(() => ({}));
+    if (response.status === 401 || /ADMIN_PASSWORD/.test(body.error || '')) {
+      showAdminLogin(body.error);
+    }
+  }
+  return response;
+};
+
+function showAdminLogin(message) {
+  if (document.getElementById('adminLoginOverlay')) return;
+  const overlay = document.createElement('div');
+  overlay.id = 'adminLoginOverlay';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.setAttribute('aria-labelledby', 'adminLoginTitle');
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:1rem;background:rgba(10,8,6,0.92);backdrop-filter:blur(6px);';
+  overlay.innerHTML = `
+    <form id="adminLoginForm" style="width:100%;max-width:360px;background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:16px;padding:1.75rem;box-shadow:0 20px 50px rgba(0,0,0,0.5);color:var(--text-main);font-family:inherit;">
+      <h2 id="adminLoginTitle" style="margin:0 0 0.25rem;font-size:1.25rem;">Painel Bemavi</h2>
+      <p style="margin:0 0 1.25rem;color:var(--text-muted);font-size:0.9rem;">Entre com a senha de administrador.</p>
+      <label for="adminLoginPassword" style="display:block;font-size:0.8rem;font-weight:600;color:var(--text-muted);margin-bottom:0.4rem;">Senha</label>
+      <input id="adminLoginPassword" type="password" autocomplete="current-password" required style="width:100%;box-sizing:border-box;padding:0.75rem 1rem;border-radius:10px;border:1px solid var(--border-subtle);background:rgba(0,0,0,0.25);color:var(--text-main);font-size:1rem;">
+      <p id="adminLoginError" role="alert" style="min-height:1.2em;margin:0.6rem 0 0;color:hsl(0,80%,65%);font-size:0.85rem;"></p>
+      <button type="submit" style="margin-top:0.75rem;width:100%;padding:0.8rem;border:none;border-radius:10px;background:var(--primary);color:var(--text-dark);font-weight:700;font-size:0.95rem;cursor:pointer;">Entrar</button>
+    </form>`;
+  document.body.appendChild(overlay);
+
+  const form = overlay.querySelector('#adminLoginForm');
+  const input = overlay.querySelector('#adminLoginPassword');
+  const errorEl = overlay.querySelector('#adminLoginError');
+  const submit = form.querySelector('button');
+  if (message && !/Sessão administrativa/.test(message)) errorEl.textContent = message;
+  setTimeout(() => input.focus(), 50);
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    submit.disabled = true;
+    submit.textContent = 'Entrando...';
+    errorEl.textContent = '';
+    try {
+      const response = await nativeFetch(`${API_BASE_URL}/api/configuracoes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'login', senha: input.value })
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.token) throw new Error(data.error || 'Não foi possível entrar.');
+      saveAdminSession({ token: data.token, expiresAt: data.expiresAt });
+      window.location.reload();
+    } catch (error) {
+      errorEl.textContent = error.message;
+      submit.disabled = false;
+      submit.textContent = 'Entrar';
+      input.select();
+    }
+  });
+}
+
+if (!readAdminSession()) {
+  document.addEventListener('DOMContentLoaded', () => showAdminLogin());
+}
+
 const state = {
   activeTab: 'dashboard',
   activeSubTab: 'pendentes',

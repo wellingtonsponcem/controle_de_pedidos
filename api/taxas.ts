@@ -1,4 +1,5 @@
 import pool, { withTransaction } from './_db';
+import { requireAdmin } from './_auth';
 
 /**
  * Handler Serverless para o endpoint /api/taxas
@@ -10,6 +11,8 @@ import pool, { withTransaction } from './_db';
  */
 export default async function handler(req: any, res: any) {
   const { method } = req;
+  // Leitura das taxas é pública (catálogo); alterações exigem login administrativo
+  if (method !== 'GET' && !requireAdmin(req, res)) return;
 
   // ============================================================================
   // MÉTODO GET: Listar taxas de entrega do banco

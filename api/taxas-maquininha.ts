@@ -1,4 +1,5 @@
 import pool, { withTransaction } from './_db';
+import { requireAdmin } from './_auth';
 
 /**
  * Handler Serverless para o endpoint /api/taxas-maquininha
@@ -9,6 +10,7 @@ import pool, { withTransaction } from './_db';
  * - Utiliza transações para garantir atomicidade ao atualizar múltiplas taxas.
  */
 export default async function handler(req: any, res: any) {
+  if (!requireAdmin(req, res)) return;
   const { method } = req;
 
   // ============================================================================

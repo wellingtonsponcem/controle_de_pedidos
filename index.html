@@ -7,100 +7,49 @@
   <meta name="theme-color" content="#5c0f17">
   <meta property="og:title" content="Especial de Natal Bemavi">
   <meta property="og:description" content="Chocotones, sobremesas na travessa, taças e pudim artesanais. Encomendas até 15/12.">
-  <meta property="og:image" content="assets/images/natal/capa-natal.jpg">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://bemavi.vercel.app/">
+  <meta property="og:locale" content="pt_BR">
+  <meta property="og:site_name" content="Bemavi Pães Artesanais">
+  <meta property="og:image" content="https://bemavi.vercel.app/assets/images/natal/capa-natal.jpg">
+  <meta property="og:image:width" content="682">
+  <meta property="og:image:height" content="1024">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://bemavi.vercel.app/">
+  <link rel="icon" type="image/png" sizes="48x48" href="assets/images/icons/favicon-48.png">
+  <link rel="apple-touch-icon" href="assets/images/icons/apple-touch-icon.png">
+  <link rel="manifest" href="manifest.json">
   <title>Bemavi | Especial de Natal</title>
   
-  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
-
-  <script id="tailwind-config">
-    tailwind.config = {
-      darkMode: "class",
-      theme: {
-        extend: {
-          colors: {
-            "on-secondary": "#ffffff",
-            "on-background": "#201b11",
-            "on-tertiary-fixed": "#001e2d",
-            "tertiary-fixed-dim": "#82cfff",
-            "surface-variant": "#ede1d1",
-            "surface-container": "#f8ecdc",
-            "primary-fixed": "#ffdead",
-            "on-tertiary-container": "#004b6a",
-            "primary-container": "#eda70b",
-            "on-tertiary": "#ffffff",
-            "on-secondary-fixed": "#271900",
-            "surface-tint": "#7f5700",
-            "primary": "#7f5700",
-            "inverse-primary": "#ffba3a",
-            "secondary": "#775925",
-            "surface-container-high": "#f3e6d7",
-            "on-secondary-container": "#795c27",
-            "on-surface-variant": "#514533",
-            "on-primary": "#ffffff",
-            "tertiary-container": "#3ebfff",
-            "on-primary-fixed": "#281900",
-            "on-error": "#ffffff",
-            "primary-fixed-dim": "#ffba3a",
-            "error-container": "#ffdad6",
-            "background": "#fff8f3",
-            "surface-container-lowest": "#ffffff",
-            "surface-container-low": "#fef2e2",
-            "on-surface": "#201b11",
-            "surface-dim": "#e4d8c9",
-            "secondary-container": "#ffd797",
-            "outline-variant": "#d5c4ad",
-            "secondary-fixed-dim": "#e8c182",
-            "surface": "#fff8f3",
-            "inverse-surface": "#362f25",
-            "tertiary-fixed": "#c6e7ff",
-            "secondary-fixed": "#ffdeab",
-            "surface-container-highest": "#ede1d1",
-            "error": "#ba1a1a",
-            "on-error-container": "#93000a",
-            "outline": "#837561",
-            "surface-bright": "#fff8f3",
-            "on-tertiary-fixed-variant": "#004c6b",
-            "on-primary-fixed-variant": "#604100",
-            "tertiary": "#00658d",
-            "on-secondary-fixed-variant": "#5d420f",
-            "on-primary-container": "#5f4000",
-            "inverse-on-surface": "#fbefdf"
-          },
-          borderRadius: {
-            "DEFAULT": "0.25rem",
-            "lg": "0.5rem",
-            "xl": "0.75rem",
-            "2xl": "1rem",
-            "full": "9999px"
-          },
-          spacing: {
-            "xl": "64px",
-            "sm": "12px",
-            "xs": "4px",
-            "margin-mobile": "16px",
-            "gutter": "20px",
-            "margin-desktop": "40px",
-            "lg": "48px",
-            "md": "24px",
-            "base": "8px"
-          },
-          fontFamily: {
-            "headline-xl": ["Epilogue", "sans-serif"],
-            "headline-lg": ["Epilogue", "sans-serif"],
-            "headline-md": ["Epilogue", "sans-serif"],
-            "body-md": ["Plus Jakarta Sans", "sans-serif"],
-            "body-lg": ["Plus Jakarta Sans", "sans-serif"],
-            "label-bold": ["Plus Jakarta Sans", "sans-serif"],
-            "price-display": ["Epilogue", "sans-serif"]
-          }
-        }
-      }
-    };
+  <!-- Apenas os ícones usados no catálogo (lista em ordem alfabética, exigida pelo Google Fonts) -->
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0&icon_names=add,add_shopping_cart,arrow_back,arrow_forward,bakery_dining,breakfast_dining,cake,calendar_today,chat,check_circle,close,credit_card,description,error,event_available,favorite,home,info,layers,local_atm,local_mall,local_shipping,location_on,mail,payments,person,play_circle,qr_code_2,redeem,remove,restaurant,search,search_off,shopping_bag,shopping_basket,storefront,tune,verified,verified_user,workspace_premium&display=block" rel="stylesheet">
+  <link rel="preload" as="image" href="assets/images/natal/capa-natal-480.webp" imagesrcset="assets/images/natal/capa-natal-480.webp 480w, assets/images/natal/capa-natal.webp 682w" imagesizes="(min-width: 1024px) 320px, 288px" fetchpriority="high">
+  <link rel="stylesheet" href="assets/css/catalogo.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Bakery",
+    "name": "Bemavi Pães Artesanais",
+    "url": "https://bemavi.vercel.app/",
+    "image": "https://bemavi.vercel.app/assets/images/natal/capa-natal.jpg",
+    "logo": "https://bemavi.vercel.app/assets/images/natal/logo-bemavi.png",
+    "telephone": "+55-27-99276-0190",
+    "email": "contato@bemavi.com.br",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "Av. Brasil, nº 17, Qd. 39",
+      "addressLocality": "Serra",
+      "addressRegion": "ES",
+      "addressCountry": "BR"
+    },
+    "areaServed": ["Vitória", "Vila Velha", "Serra"],
+    "servesCuisine": "Pães artesanais e sobremesas"
+  }
   </script>
+
 
   <style>
     #productOptionsModal[hidden],
@@ -267,6 +216,16 @@
       animation: festivePulse 2.5s infinite ease-in-out;
     }
 
+    /* ===== Acessibilidade: foco visível para quem navega pelo teclado ===== */
+    :focus-visible {
+      outline: 3px solid #d97706;
+      outline-offset: 2px;
+    }
+    .natal-hero :focus-visible,
+    #natalAnnouncementBar:focus-visible {
+      outline-color: #fcd34d;
+    }
+
     /* ===== Temporada de Natal ===== */
     .natal-hero {
       background:
@@ -326,35 +285,31 @@
   <!-- Header -->
   <header class="fixed top-0 w-full z-40 glass-header bg-surface/90 border-b border-outline-variant">
     <!-- Faixa de aviso da temporada de Natal (texto atualizado via JS) -->
-    <button type="button" id="natalAnnouncementBar" data-natal-season onclick="openNatalCatalog()" class="w-full h-9 natal-ribbon text-amber-100 text-[11px] sm:text-xs font-bold tracking-wide flex items-center justify-center gap-2 px-4 hover:brightness-110 transition-all">
+    <button type="button" id="natalAnnouncementBar" data-natal-season onclick="openNatalCatalog()" class="w-full h-9 natal-ribbon text-amber-100 text-xs sm:text-xs font-bold tracking-wide flex items-center justify-center gap-2 px-4 hover:brightness-110 transition">
       <span aria-hidden="true">🎄</span>
       <span id="natalAnnouncementText" class="truncate">Encomendas de Natal abertas até 15/12 · Entregamos em Vitória e região</span>
       <span class="hidden sm:inline-flex items-center gap-0.5 text-amber-300 underline underline-offset-2 shrink-0">Ver cardápio <span class="material-symbols-outlined text-[14px]">arrow_forward</span></span>
     </button>
     <div class="max-w-[1280px] mx-auto flex justify-between items-center px-4 md:px-margin-desktop h-20">
       <!-- Brand/Logo -->
-      <a href="#" onclick="navigateTo('cart'); return false;" class="flex items-center gap-sm group">
-        <img src="https://cdn-icons-png.flaticon.com/512/992/992747.png" alt="Logo Bemavi" class="w-10 h-10 object-contain group-hover:scale-105 transition-transform">
-        <div>
-          <strong class="font-headline-md text-[22px] text-primary tracking-tight block leading-tight">Bemavi</strong>
-          <span class="text-[10px] text-on-surface-variant uppercase tracking-widest block font-medium">Pão Artesanal</span>
-        </div>
+      <a href="/" onclick="navigateTo('cart'); return false;" class="flex items-center group rounded-lg" aria-label="Bemavi Pães Artesanais - início">
+        <img src="assets/images/natal/logo-bemavi.png" alt="Bemavi Pães Artesanais" width="225" height="95" class="h-12 w-auto object-contain group-hover:scale-[1.03] transition-transform">
       </a>
 
       <!-- Search Bar -->
       <div id="headerSearchBar" class="hidden md:flex flex-1 max-w-md mx-8 relative">
         <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline">search</span>
-        <input id="searchInput" class="w-full pl-12 pr-4 py-2.5 bg-surface-container-low border border-outline-variant rounded-full focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none text-body-md placeholder-on-surface-variant/60" placeholder="Buscar pães artesanais..." type="text">
+        <input id="searchInput" class="w-full pl-12 pr-4 py-2.5 bg-surface-container-low border border-outline-variant rounded-full focus:ring-2 focus:ring-primary focus:border-primary transition outline-none text-body-md placeholder-on-surface-variant/60" placeholder="Buscar pães artesanais..." type="text">
       </div>
 
       <!-- Actions -->
       <nav class="flex items-center gap-md">
         <div class="hidden sm:flex items-center gap-md">
-          <button type="button" onclick="openNatalCatalog()" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-red-800 to-rose-700 text-white font-label-bold text-xs font-bold hover:brightness-110 transition-all shadow-sm border border-amber-300/30">
+          <button type="button" onclick="openNatalCatalog()" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-red-800 to-rose-700 text-white font-label-bold text-xs font-bold hover:brightness-110 transition shadow-sm border border-amber-300/30">
             <span>🎄</span>
             <span>Especial de Natal</span>
           </button>
-          <a href="#" onclick="filterCategory('Todos'); navigateTo('cart'); return false;" class="font-label-bold text-label-bold text-primary hover:text-primary-container transition-colors">Catálogo</a>
+          <button type="button" onclick="filterCategory('Todos'); scrollToCatalog();" class="font-label-bold text-label-bold text-primary hover:text-primary-container transition-colors">Catálogo</button>
           <a href="https://wa.me/5527992760190" target="_blank" rel="noopener" class="font-label-bold text-label-bold text-on-surface-variant hover:text-primary transition-colors flex items-center gap-xs">
             <span class="material-symbols-outlined text-[18px]">chat</span> WhatsApp
           </a>
@@ -363,7 +318,7 @@
         <!-- Cart Basket Icon Button -->
         <button onclick="toggleCheckoutView()" class="relative p-2.5 text-on-surface hover:bg-primary-container/20 rounded-full transition-transform active:scale-95 flex items-center justify-center">
           <span class="material-symbols-outlined text-[26px]">shopping_basket</span>
-          <span id="cartCountBadge" class="absolute top-0 right-0 bg-primary text-on-primary text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-surface shadow-sm">0</span>
+          <span id="cartCountBadge" class="absolute top-0 right-0 bg-primary text-on-primary text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-surface shadow-sm">0</span>
         </button>
       </nav>
     </div>
@@ -377,36 +332,36 @@
       <!-- Hero de Natal (exibido durante a temporada festiva) -->
       <section id="heroNatal" data-natal-season class="natal-hero relative w-full overflow-hidden text-white">
         <div class="natal-snow" id="natalSnow" aria-hidden="true"></div>
-        <div class="relative z-10 max-w-[1280px] mx-auto px-4 md:px-margin-desktop py-10 md:py-14 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+        <div class="relative z-10 max-w-[1280px] mx-auto px-4 md:px-margin-desktop py-8 md:py-14 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
           <div class="lg:col-span-7 space-y-5 text-center lg:text-left">
-            <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-400/15 border border-amber-300/40 text-amber-200 text-[11px] font-extrabold uppercase tracking-[0.18em]">
+            <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-400/15 border border-amber-300/40 text-amber-200 text-xs font-extrabold uppercase tracking-[0.18em]">
               <span class="festive-pulse" aria-hidden="true">✨</span> Edição limitada de fim de ano
             </span>
-            <h2 class="font-headline-xl text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-[1.05] tracking-tight">
+            <h1 class="font-headline-xl font-extrabold leading-[1.05] tracking-tight" style="font-size: clamp(2.1rem, 1.4rem + 3.2vw, 3.75rem);">
               O Natal mais doce<br class="hidden sm:block"> chegou à <span class="text-amber-300 italic" style="font-family: Georgia, 'Playfair Display', serif;">Bemavi</span>
-            </h2>
+            </h1>
             <p class="text-amber-50/85 text-base md:text-lg leading-relaxed font-medium max-w-xl mx-auto lg:mx-0">
               Chocotones super recheados, sobremesas na travessa, taças de 1,5kg e pudim tradicional — feitos à mão para a sua ceia.
             </p>
 
             <!-- Contagem regressiva para o fim das encomendas -->
             <div id="natalCountdown" class="inline-flex flex-col sm:flex-row items-center gap-3 sm:gap-4 bg-black/20 border border-amber-300/25 rounded-2xl px-5 py-3.5">
-              <span id="natalCountdownLabel" class="text-[11px] font-extrabold uppercase tracking-widest text-amber-200/90">Encomendas encerram em</span>
+              <span id="natalCountdownLabel" class="text-xs font-extrabold uppercase tracking-widest text-amber-200/90">Encomendas encerram em</span>
               <div id="natalCountdownValues" class="flex items-center gap-3">
-                <div class="text-center"><strong id="natalCdDays" class="natal-countdown-num block text-2xl font-extrabold text-white leading-none">--</strong><span class="text-[10px] uppercase tracking-wider text-amber-100/70">dias</span></div>
+                <div class="text-center"><strong id="natalCdDays" class="natal-countdown-num block text-2xl font-extrabold text-white leading-none">--</strong><span class="text-xs uppercase tracking-wider text-amber-100/70">dias</span></div>
                 <span class="text-amber-300/60 font-bold">:</span>
-                <div class="text-center"><strong id="natalCdHours" class="natal-countdown-num block text-2xl font-extrabold text-white leading-none">--</strong><span class="text-[10px] uppercase tracking-wider text-amber-100/70">horas</span></div>
+                <div class="text-center"><strong id="natalCdHours" class="natal-countdown-num block text-2xl font-extrabold text-white leading-none">--</strong><span class="text-xs uppercase tracking-wider text-amber-100/70">horas</span></div>
                 <span class="text-amber-300/60 font-bold">:</span>
-                <div class="text-center"><strong id="natalCdMinutes" class="natal-countdown-num block text-2xl font-extrabold text-white leading-none">--</strong><span class="text-[10px] uppercase tracking-wider text-amber-100/70">min</span></div>
+                <div class="text-center"><strong id="natalCdMinutes" class="natal-countdown-num block text-2xl font-extrabold text-white leading-none">--</strong><span class="text-xs uppercase tracking-wider text-amber-100/70">min</span></div>
               </div>
             </div>
 
             <div class="flex flex-wrap justify-center lg:justify-start gap-3 pt-1">
-              <button type="button" onclick="openNatalCatalog()" class="px-7 py-3.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-red-950 font-extrabold text-sm uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-black/20 hover:scale-[1.03] active:scale-95 transition-all">
+              <button type="button" onclick="openNatalCatalog()" class="px-7 py-3.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-red-950 font-extrabold text-sm uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-black/20 hover:scale-[1.03] active:scale-95 transition">
                 <span class="material-symbols-outlined text-[20px]">redeem</span>
                 Encomendar meu Natal
               </button>
-              <button type="button" onclick="openNatalVideoModal()" class="px-6 py-3.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/30 text-white font-bold text-sm uppercase tracking-wider flex items-center gap-2 transition-all active:scale-95">
+              <button type="button" onclick="openNatalVideoModal()" class="px-6 py-3.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/30 text-white font-bold text-sm uppercase tracking-wider flex items-center gap-2 transition active:scale-95">
                 <span class="material-symbols-outlined text-[20px]">play_circle</span>
                 Ver vídeo
               </button>
@@ -420,10 +375,14 @@
             </ul>
           </div>
 
-          <div class="lg:col-span-5 flex justify-center">
+          <!-- No celular a foto sai do hero para os produtos aparecerem antes -->
+          <div class="hidden lg:flex lg:col-span-5 justify-center">
             <div class="natal-photo-frame relative w-64 sm:w-72 lg:w-80 rounded-[28px] overflow-hidden border-4 border-amber-300/60 shadow-2xl shadow-black/40">
-              <img src="assets/images/natal/capa-natal.jpg" alt="Catálogo Especial de Natal Bemavi" class="w-full aspect-[2/3] object-cover" fetchpriority="high">
-              <span class="absolute bottom-3 left-3 px-3 py-1 rounded-full bg-red-900/90 text-amber-200 text-[10px] font-extrabold uppercase tracking-wider border border-amber-400/40 shadow-md">Novo 2026</span>
+              <picture>
+                <source type="image/webp" srcset="assets/images/natal/capa-natal-480.webp 480w, assets/images/natal/capa-natal.webp 682w" sizes="(min-width: 1024px) 320px, 288px">
+                <img src="assets/images/natal/capa-natal.jpg" alt="Catálogo Especial de Natal Bemavi" width="682" height="1024" class="w-full aspect-[2/3] object-cover" fetchpriority="high" decoding="async">
+              </picture>
+              <span class="absolute bottom-3 left-3 px-3 py-1 rounded-full bg-red-900/90 text-amber-200 text-xs font-extrabold uppercase tracking-wider border border-amber-400/40 shadow-md">Novo 2026</span>
             </div>
           </div>
         </div>
@@ -440,17 +399,17 @@
             <span class="inline-block px-4 py-1.5 bg-primary-container text-on-primary-container font-label-bold text-xs font-bold rounded-full mb-md shadow-sm">
               FERMENTAÇÃO NATURAL
             </span>
-            <h2 class="font-headline-xl text-4xl md:text-5xl text-on-background mb-4 font-extrabold leading-tight">
+            <h1 class="font-headline-xl text-on-background mb-4 font-extrabold leading-tight" style="font-size: clamp(2.1rem, 1.5rem + 2.4vw, 3rem);">
               O despertar dos sentidos em cada fatia.
-            </h2>
+            </h1>
             <p class="font-body-lg text-lg text-on-surface-variant mb-6 leading-relaxed max-w-xl font-medium">
               Pães de fermentação lenta, produzidos diariamente com grãos selecionados e a paciência que a verdadeira arte exige.
             </p>
             <div class="flex flex-wrap gap-4">
-              <button onclick="scrollToCatalog()" class="px-8 py-3.5 bg-primary text-on-primary font-label-bold text-sm font-bold rounded-xl shadow-lg hover:bg-primary-container hover:scale-[1.02] transition-all active:scale-95">
+              <button onclick="scrollToCatalog()" class="px-8 py-3.5 bg-primary text-on-primary font-label-bold text-sm font-bold rounded-xl shadow-lg hover:bg-primary-container hover:scale-[1.02] transition active:scale-95">
                 VER PÃES DISPONÍVEIS
               </button>
-              <a href="https://wa.me/5527992760190" target="_blank" rel="noopener" class="px-8 py-3.5 border-2 border-secondary text-secondary font-label-bold text-sm font-bold rounded-xl hover:bg-secondary-container/10 transition-all active:scale-95 text-center">
+              <a href="https://wa.me/5527992760190" target="_blank" rel="noopener" class="px-8 py-3.5 border-2 border-secondary text-secondary font-label-bold text-sm font-bold rounded-xl hover:bg-secondary-container/10 transition active:scale-95 text-center">
                 FALAR COM PADEIRO
               </a>
             </div>
@@ -462,24 +421,24 @@
       <section class="py-6 bg-surface-container-low border-b border-outline-variant">
         <div class="max-w-[1280px] mx-auto px-4 md:px-margin-desktop">
           <div class="flex items-center gap-md overflow-x-auto pb-2 no-scrollbar">
-            <button onclick="filterCategory('Todos')" id="catBtn_Todos" class="cat-btn flex items-center gap-xs px-5 py-2.5 bg-primary text-on-primary font-semibold rounded-full shadow-sm transition-all whitespace-nowrap">
+            <button onclick="filterCategory('Todos')" id="catBtn_Todos" class="cat-btn flex items-center gap-xs px-5 py-2.5 bg-primary text-on-primary font-semibold rounded-full shadow-sm transition whitespace-nowrap">
               <span class="material-symbols-outlined text-[20px]">breakfast_dining</span>
               <span>Todos</span>
             </button>
-            <button onclick="filterCategory('Natal')" id="catBtn_Natal" class="cat-btn flex items-center gap-xs px-5 py-2.5 bg-surface hover:bg-surface-container-high text-on-surface-variant font-semibold rounded-full transition-all whitespace-nowrap border border-outline-variant">
+            <button onclick="filterCategory('Natal')" id="catBtn_Natal" class="cat-btn flex items-center gap-xs px-5 py-2.5 bg-surface hover:bg-surface-container-high text-on-surface-variant font-semibold rounded-full transition whitespace-nowrap border border-outline-variant">
               <span class="text-xl">🎄</span>
               <span class="font-bold">Especial de Natal</span>
-              <span class="text-[10px] bg-red-700 text-white font-extrabold px-2 py-0.5 rounded-full shadow-xs">NOVO</span>
+              <span class="text-xs bg-red-700 text-white font-extrabold px-2 py-0.5 rounded-full shadow-xs">NOVO</span>
             </button>
-            <button onclick="filterCategory('Pães')" id="catBtn_Pães" class="cat-btn flex items-center gap-xs px-5 py-2.5 bg-surface hover:bg-surface-container-high text-on-surface-variant font-semibold rounded-full transition-all whitespace-nowrap border border-outline-variant">
+            <button onclick="filterCategory('Pães')" id="catBtn_Pães" class="cat-btn flex items-center gap-xs px-5 py-2.5 bg-surface hover:bg-surface-container-high text-on-surface-variant font-semibold rounded-full transition whitespace-nowrap border border-outline-variant">
               <span class="material-symbols-outlined text-[20px]">bakery_dining</span>
               <span>Pães</span>
             </button>
-            <button onclick="filterCategory('Bolos')" id="catBtn_Bolos" class="cat-btn flex items-center gap-xs px-5 py-2.5 bg-surface hover:bg-surface-container-high text-on-surface-variant font-semibold rounded-full transition-all whitespace-nowrap border border-outline-variant">
+            <button onclick="filterCategory('Bolos')" id="catBtn_Bolos" class="cat-btn flex items-center gap-xs px-5 py-2.5 bg-surface hover:bg-surface-container-high text-on-surface-variant font-semibold rounded-full transition whitespace-nowrap border border-outline-variant">
               <span class="material-symbols-outlined text-[20px]">cake</span>
               <span>Bolos</span>
             </button>
-            <button onclick="filterCategory('Outros')" id="catBtn_Outros" class="cat-btn flex items-center gap-xs px-5 py-2.5 bg-surface hover:bg-surface-container-high text-on-surface-variant font-semibold rounded-full transition-all whitespace-nowrap border border-outline-variant">
+            <button onclick="filterCategory('Outros')" id="catBtn_Outros" class="cat-btn flex items-center gap-xs px-5 py-2.5 bg-surface hover:bg-surface-container-high text-on-surface-variant font-semibold rounded-full transition whitespace-nowrap border border-outline-variant">
               <span class="material-symbols-outlined text-[20px]">local_mall</span>
               <span>Outros</span>
             </button>
@@ -492,8 +451,8 @@
         <div class="max-w-[1280px] mx-auto px-4 md:px-margin-desktop">
           <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-6">
             <div>
-              <span class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-red-800">🎄 Especial de Natal</span>
-              <h3 class="font-headline-lg text-2xl md:text-3xl font-bold text-on-background tracking-tight mt-1">Monte a sua ceia</h3>
+              <span class="text-xs font-extrabold uppercase tracking-[0.18em] text-red-800">🎄 Especial de Natal</span>
+              <h2 class="font-headline-lg text-2xl md:text-3xl font-bold text-on-background tracking-tight mt-1">Monte a sua ceia</h2>
               <p class="text-sm text-on-surface-variant mt-1">Escolha uma linha e veja todos os sabores e tamanhos.</p>
             </div>
             <button type="button" onclick="openNatalCatalog()" class="self-start sm:self-auto text-sm font-bold text-red-800 hover:text-red-900 flex items-center gap-1">
@@ -506,7 +465,7 @@
               <span class="absolute inset-0 bg-gradient-to-t from-red-950/90 via-red-950/30 to-transparent"></span>
               <span class="absolute bottom-0 left-0 right-0 p-4 text-white">
                 <strong class="block font-headline-md text-base sm:text-lg leading-tight">Chocotones</strong>
-                <span class="text-[11px] text-amber-200 font-semibold">Super recheados</span>
+                <span class="text-xs text-amber-200 font-semibold">Super recheados</span>
               </span>
             </button>
             <button type="button" onclick="openNatalCatalog('Travessas')" class="natal-showcase-card group relative aspect-[4/5] rounded-2xl overflow-hidden text-left shadow-sm border border-amber-400/30">
@@ -514,7 +473,7 @@
               <span class="absolute inset-0 bg-gradient-to-t from-red-950/90 via-red-950/30 to-transparent"></span>
               <span class="absolute bottom-0 left-0 right-0 p-4 text-white">
                 <strong class="block font-headline-md text-base sm:text-lg leading-tight">Sobremesas na Travessa</strong>
-                <span class="text-[11px] text-amber-200 font-semibold">Tamanhos P e G</span>
+                <span class="text-xs text-amber-200 font-semibold">Tamanhos P e G</span>
               </span>
             </button>
             <button type="button" onclick="openNatalCatalog('Taças')" class="natal-showcase-card group relative aspect-[4/5] rounded-2xl overflow-hidden text-left shadow-sm border border-amber-400/30">
@@ -522,7 +481,7 @@
               <span class="absolute inset-0 bg-gradient-to-t from-red-950/90 via-red-950/30 to-transparent"></span>
               <span class="absolute bottom-0 left-0 right-0 p-4 text-white">
                 <strong class="block font-headline-md text-base sm:text-lg leading-tight">Taças Especiais</strong>
-                <span class="text-[11px] text-amber-200 font-semibold">1,5kg de pura festa</span>
+                <span class="text-xs text-amber-200 font-semibold">1,5kg de pura festa</span>
               </span>
             </button>
             <button type="button" onclick="openNatalCatalog('Pudim')" class="natal-showcase-card group relative aspect-[4/5] rounded-2xl overflow-hidden text-left shadow-sm border border-amber-400/30">
@@ -530,7 +489,7 @@
               <span class="absolute inset-0 bg-gradient-to-t from-red-950/90 via-red-950/30 to-transparent"></span>
               <span class="absolute bottom-0 left-0 right-0 p-4 text-white">
                 <strong class="block font-headline-md text-base sm:text-lg leading-tight">Pudim Tradicional</strong>
-                <span class="text-[11px] text-amber-200 font-semibold">Clássico da ceia</span>
+                <span class="text-xs text-amber-200 font-semibold">Clássico da ceia</span>
               </span>
             </button>
           </div>
@@ -541,7 +500,7 @@
       <div class="px-4 py-4 md:hidden bg-background border-b border-outline-variant">
         <div class="relative w-full">
           <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline">search</span>
-          <input id="mobileSearchInput" class="w-full pl-12 pr-4 py-2.5 bg-surface-container-low border border-outline-variant rounded-full focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none text-body-md" placeholder="Buscar pães artesanais..." type="text">
+          <input id="mobileSearchInput" class="w-full pl-12 pr-4 py-2.5 bg-surface-container-low border border-outline-variant rounded-full focus:ring-2 focus:ring-primary focus:border-primary transition outline-none text-body-md" placeholder="Buscar pães artesanais..." type="text">
         </div>
       </div>
 
@@ -569,11 +528,11 @@
 
                 <!-- Actions -->
                 <div class="flex flex-wrap gap-3 pt-2">
-                  <button type="button" onclick="openNatalVideoModal()" class="px-5 py-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-red-950 font-bold text-xs uppercase tracking-wider flex items-center gap-2 shadow-lg hover:scale-105 active:scale-95 transition-all">
+                  <button type="button" onclick="openNatalVideoModal()" class="px-5 py-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-red-950 font-bold text-xs uppercase tracking-wider flex items-center gap-2 shadow-lg hover:scale-105 active:scale-95 transition">
                     <span class="material-symbols-outlined text-[20px]">play_circle</span>
                     Assistir Vídeo dos Doces
                   </button>
-                  <button type="button" onclick="openNatalRulesModal()" class="px-5 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/30 font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-all">
+                  <button type="button" onclick="openNatalRulesModal()" class="px-5 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/30 font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition">
                     <span class="material-symbols-outlined text-[20px]">info</span>
                     Regras de Encomenda
                   </button>
@@ -583,7 +542,10 @@
               <!-- Banner Right: Highlights photo -->
               <div class="lg:col-span-5 flex justify-center">
                 <div class="relative w-full max-w-sm rounded-2xl overflow-hidden shadow-2xl border-2 border-amber-300/30 group">
-                  <img src="assets/images/natal/capa-natal.jpg" alt="Catálogo Especial de Natal Bemavi" class="w-full h-72 md:h-80 object-cover object-top group-hover:scale-105 transition-transform duration-700">
+                  <picture>
+                    <source type="image/webp" srcset="assets/images/natal/capa-natal-480.webp 480w, assets/images/natal/capa-natal.webp 682w" sizes="384px">
+                    <img src="assets/images/natal/capa-natal.jpg" alt="Catálogo Especial de Natal Bemavi" width="682" height="1024" loading="lazy" decoding="async" class="w-full h-72 md:h-80 object-cover object-top group-hover:scale-105 transition-transform duration-700">
+                  </picture>
                   <div class="absolute inset-0 bg-gradient-to-t from-red-950/80 via-transparent to-transparent flex items-end p-4">
                     <p class="text-amber-200 text-xs font-bold flex items-center gap-1.5">
                       <span class="material-symbols-outlined text-sm">favorite</span>
@@ -601,7 +563,7 @@
               <span class="text-2xl p-2 bg-red-800/10 text-red-800 rounded-xl">📅</span>
               <div>
                 <strong class="text-xs font-bold text-on-surface uppercase block">Pedidos até 15/12</strong>
-                <p class="text-[11px] text-on-surface-variant leading-snug mt-0.5">Ou enquanto durar o estoque de fornadas.</p>
+                <p class="text-xs text-on-surface-variant leading-snug mt-0.5">Ou enquanto durar o estoque de fornadas.</p>
               </div>
             </div>
 
@@ -609,7 +571,7 @@
               <span class="text-2xl p-2 bg-amber-600/10 text-amber-700 rounded-xl">💳</span>
               <div>
                 <strong class="text-xs font-bold text-on-surface uppercase block">Sinal de 50%</strong>
-                <p class="text-[11px] text-on-surface-variant leading-snug mt-0.5">Confirmação da encomenda; restante 24h antes.</p>
+                <p class="text-xs text-on-surface-variant leading-snug mt-0.5">Confirmação da encomenda; restante 24h antes.</p>
               </div>
             </div>
 
@@ -617,7 +579,7 @@
               <span class="text-2xl p-2 bg-red-800/10 text-red-800 rounded-xl">📍</span>
               <div>
                 <strong class="text-xs font-bold text-on-surface uppercase block">Entrega ou Retirada</strong>
-                <p class="text-[11px] text-on-surface-variant leading-snug mt-0.5">Entregamos em Vitória e região. Retirada: Av. Brasil, nº 17, Qd. 39 - Novo Horizonte, Serra/ES.</p>
+                <p class="text-xs text-on-surface-variant leading-snug mt-0.5">Entregamos em Vitória e região. Retirada: Av. Brasil, nº 17, Qd. 39 - Novo Horizonte, Serra/ES.</p>
               </div>
             </div>
 
@@ -625,7 +587,7 @@
               <span class="text-2xl p-2 bg-amber-600/10 text-amber-700 rounded-xl">🎁</span>
               <div>
                 <strong class="text-xs font-bold text-on-surface uppercase block">Kit Presente</strong>
-                <p class="text-[11px] text-on-surface-variant leading-snug mt-0.5">Sobremesas acompanham sacola e caixa de transporte.</p>
+                <p class="text-xs text-on-surface-variant leading-snug mt-0.5">Sobremesas acompanham sacola e caixa de transporte.</p>
               </div>
             </div>
           </div>
@@ -633,19 +595,19 @@
           <!-- Subcategory Filter Pills for Natal -->
           <div class="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar pt-2">
             <span class="text-xs font-bold text-on-surface-variant uppercase tracking-wider mr-2 hidden sm:inline">Filtrar:</span>
-            <button type="button" onclick="filterNatalSubcategory('Todos')" id="natalSub_Todos" class="natal-sub-btn px-4 py-2 rounded-full bg-red-900 text-white font-bold text-xs shadow-sm transition-all whitespace-nowrap">
+            <button type="button" onclick="filterNatalSubcategory('Todos')" id="natalSub_Todos" class="natal-sub-btn px-4 py-2 rounded-full bg-red-900 text-white font-bold text-xs shadow-sm transition whitespace-nowrap">
               🌟 Todos de Natal
             </button>
-            <button type="button" onclick="filterNatalSubcategory('Chocotones')" id="natalSub_Chocotones" class="natal-sub-btn px-4 py-2 rounded-full bg-surface-container hover:bg-surface-container-high text-on-surface-variant font-semibold text-xs border border-outline-variant transition-all whitespace-nowrap">
+            <button type="button" onclick="filterNatalSubcategory('Chocotones')" id="natalSub_Chocotones" class="natal-sub-btn px-4 py-2 rounded-full bg-surface-container hover:bg-surface-container-high text-on-surface-variant font-semibold text-xs border border-outline-variant transition whitespace-nowrap">
               🍫 Chocotones
             </button>
-            <button type="button" onclick="filterNatalSubcategory('Travessas')" id="natalSub_Travessas" class="natal-sub-btn px-4 py-2 rounded-full bg-surface-container hover:bg-surface-container-high text-on-surface-variant font-semibold text-xs border border-outline-variant transition-all whitespace-nowrap">
+            <button type="button" onclick="filterNatalSubcategory('Travessas')" id="natalSub_Travessas" class="natal-sub-btn px-4 py-2 rounded-full bg-surface-container hover:bg-surface-container-high text-on-surface-variant font-semibold text-xs border border-outline-variant transition whitespace-nowrap">
               🍨 Sobremesas na Travessa
             </button>
-            <button type="button" onclick="filterNatalSubcategory('Taças')" id="natalSub_Taças" class="natal-sub-btn px-4 py-2 rounded-full bg-surface-container hover:bg-surface-container-high text-on-surface-variant font-semibold text-xs border border-outline-variant transition-all whitespace-nowrap">
+            <button type="button" onclick="filterNatalSubcategory('Taças')" id="natalSub_Taças" class="natal-sub-btn px-4 py-2 rounded-full bg-surface-container hover:bg-surface-container-high text-on-surface-variant font-semibold text-xs border border-outline-variant transition whitespace-nowrap">
               🏆 Taças (1,5kg)
             </button>
-            <button type="button" onclick="filterNatalSubcategory('Pudim')" id="natalSub_Pudim" class="natal-sub-btn px-4 py-2 rounded-full bg-surface-container hover:bg-surface-container-high text-on-surface-variant font-semibold text-xs border border-outline-variant transition-all whitespace-nowrap">
+            <button type="button" onclick="filterNatalSubcategory('Pudim')" id="natalSub_Pudim" class="natal-sub-btn px-4 py-2 rounded-full bg-surface-container hover:bg-surface-container-high text-on-surface-variant font-semibold text-xs border border-outline-variant transition whitespace-nowrap">
               🍮 Pudim Tradicional
             </button>
           </div>
@@ -653,7 +615,7 @@
 
         <div class="flex justify-between items-end mb-8">
           <div>
-            <h3 id="catalogMainTitle" class="font-headline-lg text-3xl text-on-background font-bold tracking-tight">Pães Disponíveis</h3>
+            <h2 id="catalogMainTitle" class="font-headline-lg text-3xl text-on-background font-bold tracking-tight">Pães Disponíveis</h2>
             <p id="catalogMainSubtitle" class="font-body-md text-sm text-on-surface-variant mt-1">Saindo do forno de pedra para sua mesa</p>
           </div>
           <span id="catalogCount" class="bg-primary-container/20 text-primary font-bold text-xs px-3.5 py-1.5 rounded-full border border-primary-container/30">Carregando...</span>
@@ -676,23 +638,23 @@
               <div class="absolute inset-0 bg-cover bg-center group-hover:scale-[1.02] transition-transform duration-700" style="background-image: url('https://images.unsplash.com/photo-1586444248902-2f64eddc13df?auto=format&fit=crop&w=1200&q=80')"></div>
               <div class="absolute inset-0 bg-gradient-to-t from-on-background/80 via-on-background/30 to-transparent"></div>
               <div class="relative z-10">
-                <h3 class="font-headline-lg text-2xl md:text-3xl text-on-primary font-bold mb-2">Pedidos Sob Encomenda</h3>
+                <h2 class="font-headline-lg text-2xl md:text-3xl text-on-primary font-bold mb-2">Pedidos Sob Encomenda</h2>
                 <p class="text-on-primary/80 font-body-md text-sm md:text-base max-w-md mb-4">Escolha seus pães favoritos pelo catálogo e reserve com entrega agendada e pagamento online.</p>
-                <button onclick="scrollToCatalog()" class="px-6 py-2.5 bg-secondary-container text-on-secondary-container font-bold text-xs rounded-xl uppercase transition-all hover:brightness-110 active:scale-95 shadow-sm">Encomendar Agora</button>
+                <button onclick="scrollToCatalog()" class="px-6 py-2.5 bg-secondary-container text-on-secondary-container font-bold text-xs rounded-xl uppercase transition hover:brightness-110 active:scale-95 shadow-sm">Encomendar Agora</button>
               </div>
             </div>
             <div class="flex flex-col gap-md">
               <div class="flex-1 bg-primary text-on-primary p-6 rounded-2xl flex flex-col justify-between shadow-sm">
                 <span class="material-symbols-outlined text-[42px] text-white">local_shipping</span>
                 <div class="mt-4">
-                  <h4 class="font-headline-md text-lg font-bold mb-1">Entregas no ES</h4>
+                  <h3 class="font-headline-md text-lg font-bold mb-1">Entregas no ES</h3>
                   <p class="text-on-primary/85 text-xs">Entregas programadas nas cidades de Vitória, Vila Velha e Serra.</p>
                 </div>
               </div>
               <div class="flex-1 bg-surface-container-highest border border-outline-variant p-6 rounded-2xl flex flex-col justify-between shadow-sm">
                 <span class="material-symbols-outlined text-primary text-[42px]">workspace_premium</span>
                 <div class="mt-4">
-                  <h4 class="font-headline-md text-lg text-on-surface font-bold mb-1">Qualidade Artesanal</h4>
+                  <h3 class="font-headline-md text-lg text-on-surface font-bold mb-1">Qualidade Artesanal</h3>
                   <p class="text-on-surface-variant text-xs">Sem conservantes, aditivos ou produtos químicos. 100% natural.</p>
                 </div>
               </div>
@@ -728,11 +690,11 @@
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="flex flex-col gap-1.5">
                   <label for="public_nome" class="font-label-bold text-xs font-bold text-on-surface-variant uppercase tracking-wider">Nome Completo *</label>
-                  <input id="public_nome" type="text" autocomplete="name" required placeholder="Seu nome completo" class="w-full bg-surface border-outline-variant rounded-xl p-3 text-body-md focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all">
+                  <input id="public_nome" type="text" autocomplete="name" required placeholder="Seu nome completo" class="w-full bg-surface border-outline-variant rounded-xl p-3 text-body-md focus:ring-2 focus:ring-primary focus:border-primary outline-none transition">
                 </div>
                 <div class="flex flex-col gap-1.5">
                   <label for="public_telefone" class="font-label-bold text-xs font-bold text-on-surface-variant uppercase tracking-wider">WhatsApp *</label>
-                  <input id="public_telefone" type="tel" autocomplete="tel" required placeholder="(27) 99999-9999" class="w-full bg-surface border-outline-variant rounded-xl p-3 text-body-md focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all">
+                  <input id="public_telefone" type="tel" autocomplete="tel" required placeholder="(27) 99999-9999" class="w-full bg-surface border-outline-variant rounded-xl p-3 text-body-md focus:ring-2 focus:ring-primary focus:border-primary outline-none transition">
                 </div>
               </div>
             </section>
@@ -761,15 +723,15 @@
 
               <!-- Visual Delivery Cards -->
               <div class="grid grid-cols-2 gap-4">
-                <div id="deliveryCard_Entrega" onclick="selectDeliveryMethod('Entrega')" class="relative flex flex-col items-center justify-center p-5 border-2 border-primary-container bg-primary-container/5 rounded-xl cursor-pointer hover:bg-primary-container/10 transition-all group">
+                <div id="deliveryCard_Entrega" role="button" tabindex="0" onclick="selectDeliveryMethod('Entrega')" class="relative flex flex-col items-center justify-center p-5 border-2 border-primary-container bg-primary-container/5 rounded-xl cursor-pointer hover:bg-primary-container/10 transition group">
                   <span class="material-symbols-outlined text-4xl text-primary mb-2">home</span>
                   <span class="font-label-bold text-sm font-bold">Receber em Casa</span>
-                  <span class="text-[10px] text-on-surface-variant mt-0.5">Entrega programada</span>
+                  <span class="text-xs text-on-surface-variant mt-0.5">Entrega programada</span>
                 </div>
-                <div id="deliveryCard_Retirada" onclick="selectDeliveryMethod('Retirada')" class="relative flex flex-col items-center justify-center p-5 border border-outline-variant rounded-xl cursor-pointer hover:border-primary transition-all group">
+                <div id="deliveryCard_Retirada" role="button" tabindex="0" onclick="selectDeliveryMethod('Retirada')" class="relative flex flex-col items-center justify-center p-5 border border-outline-variant rounded-xl cursor-pointer hover:border-primary transition group">
                   <span class="material-symbols-outlined text-4xl text-on-surface-variant group-hover:text-primary mb-2">storefront</span>
                   <span class="font-label-bold text-sm font-bold">Retirada Física</span>
-                  <span class="text-[10px] text-on-surface-variant mt-0.5">Grátis · Novo Horizonte, Serra</span>
+                  <span class="text-xs text-on-surface-variant mt-0.5">Grátis · Novo Horizonte, Serra</span>
                 </div>
               </div>
 
@@ -778,7 +740,7 @@
                 <div class="flex flex-col gap-1.5">
                   <label for="public_data_display" class="font-label-bold text-xs font-bold text-on-surface-variant uppercase tracking-wider">Data de Entrega desejada *</label>
                   <div class="datepicker-wrapper">
-                    <input id="public_data_display" type="text" readonly required placeholder="Selecione a data..." class="w-full bg-surface border-outline-variant rounded-xl p-3 text-body-md cursor-pointer focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all pr-10">
+                    <input id="public_data_display" type="text" readonly required placeholder="Selecione a data..." class="w-full bg-surface border-outline-variant rounded-xl p-3 text-body-md cursor-pointer focus:ring-2 focus:ring-primary focus:border-primary outline-none transition pr-10">
                     <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none">calendar_today</span>
                     <input id="public_data" type="hidden" required>
                     <div id="publicDatepicker" class="custom-datepicker" hidden></div>
@@ -787,7 +749,7 @@
                 
                 <div class="flex flex-col gap-1.5">
                   <label for="public_municipio" class="font-label-bold text-xs font-bold text-on-surface-variant uppercase tracking-wider">Município *</label>
-                  <select id="public_municipio" required class="w-full bg-surface border-outline-variant rounded-xl p-3 text-body-md focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all">
+                  <select id="public_municipio" required class="w-full bg-surface border-outline-variant rounded-xl p-3 text-body-md focus:ring-2 focus:ring-primary focus:border-primary outline-none transition">
                     <option value="Vitória" selected>Vitória</option>
                     <option value="Vila Velha">Vila Velha</option>
                     <option value="Serra">Serra</option>
@@ -804,7 +766,7 @@
               </div>
               <div class="flex flex-col gap-1.5">
                 <label for="public_endereco" class="font-label-bold text-xs font-bold text-on-surface-variant uppercase tracking-wider">Endereço Completo *</label>
-                <input id="public_endereco" type="text" autocomplete="street-address" required placeholder="Rua, número, bairro, apto, referência..." class="w-full bg-surface border-outline-variant rounded-xl p-3 text-body-md focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all">
+                <input id="public_endereco" type="text" autocomplete="street-address" required placeholder="Rua, número, bairro, apto, referência..." class="w-full bg-surface border-outline-variant rounded-xl p-3 text-body-md focus:ring-2 focus:ring-primary focus:border-primary outline-none transition">
               </div>
             </section>
 
@@ -824,35 +786,35 @@
 
               <!-- Payment Method Selection Cards -->
               <div class="flex flex-col gap-3">
-                <div id="paymentCard_Pagamento_na_entrega" onclick="selectPaymentMethod('Pagamento na entrega')" class="flex items-center p-4 border border-outline-variant rounded-xl cursor-pointer hover:bg-surface-container-low transition-all bg-surface">
-                  <div class="w-5 h-5 border border-outline rounded-full flex items-center justify-center p-0.5 mr-4 transition-all checked-dot-container"><div class="w-full h-full rounded-full bg-primary opacity-0 transition-opacity select-dot"></div></div>
+                <div id="paymentCard_Pagamento_na_entrega" role="button" tabindex="0" onclick="selectPaymentMethod('Pagamento na entrega')" class="flex items-center p-4 border border-outline-variant rounded-xl cursor-pointer hover:bg-surface-container-low transition bg-surface">
+                  <div class="w-5 h-5 border border-outline rounded-full flex items-center justify-center p-0.5 mr-4 transition checked-dot-container"><div class="w-full h-full rounded-full bg-primary opacity-0 transition-opacity select-dot"></div></div>
                   <div class="flex items-center gap-3">
                     <span class="material-symbols-outlined text-on-surface-variant text-2xl">local_atm</span>
                     <div>
                       <p class="font-label-bold text-sm font-bold">Pagar na Entrega</p>
-                      <p class="text-[10px] text-on-surface-variant mt-0.5">Pague em dinheiro ou cartão ao motoboy</p>
+                      <p class="text-xs text-on-surface-variant mt-0.5">Pague em dinheiro ou cartão ao motoboy</p>
                     </div>
                   </div>
                 </div>
 
-                <div id="paymentCard_Pix" onclick="selectPaymentMethod('Pix')" class="flex items-center p-4 border border-outline-variant rounded-xl cursor-pointer hover:bg-surface-container-low transition-all bg-surface">
-                  <div class="w-5 h-5 border border-outline rounded-full flex items-center justify-center p-0.5 mr-4 transition-all checked-dot-container"><div class="w-full h-full rounded-full bg-primary opacity-0 transition-opacity select-dot"></div></div>
+                <div id="paymentCard_Pix" role="button" tabindex="0" onclick="selectPaymentMethod('Pix')" class="flex items-center p-4 border border-outline-variant rounded-xl cursor-pointer hover:bg-surface-container-low transition bg-surface">
+                  <div class="w-5 h-5 border border-outline rounded-full flex items-center justify-center p-0.5 mr-4 transition checked-dot-container"><div class="w-full h-full rounded-full bg-primary opacity-0 transition-opacity select-dot"></div></div>
                   <div class="flex items-center gap-3">
                     <span class="material-symbols-outlined text-on-surface-variant text-2xl">qr_code_2</span>
                     <div>
                       <p class="font-label-bold text-sm font-bold">Pix Online (⚡ Desconto/Aprovação na Hora)</p>
-                      <p class="text-[10px] text-on-surface-variant mt-0.5">Código copia-e-cola e QR code gerados no final</p>
+                      <p class="text-xs text-on-surface-variant mt-0.5">Código copia-e-cola e QR code gerados no final</p>
                     </div>
                   </div>
                 </div>
 
-                <div id="paymentCard_Cartão" onclick="selectPaymentMethod('Cartão')" class="flex items-center p-4 border border-outline-variant rounded-xl cursor-pointer hover:bg-surface-container-low transition-all bg-surface">
-                  <div class="w-5 h-5 border border-outline rounded-full flex items-center justify-center p-0.5 mr-4 transition-all checked-dot-container"><div class="w-full h-full rounded-full bg-primary opacity-0 transition-opacity select-dot"></div></div>
+                <div id="paymentCard_Cartão" role="button" tabindex="0" onclick="selectPaymentMethod('Cartão')" class="flex items-center p-4 border border-outline-variant rounded-xl cursor-pointer hover:bg-surface-container-low transition bg-surface">
+                  <div class="w-5 h-5 border border-outline rounded-full flex items-center justify-center p-0.5 mr-4 transition checked-dot-container"><div class="w-full h-full rounded-full bg-primary opacity-0 transition-opacity select-dot"></div></div>
                   <div class="flex items-center gap-3">
                     <span class="material-symbols-outlined text-on-surface-variant text-2xl">credit_card</span>
                     <div>
                       <p class="font-label-bold text-sm font-bold">Cartão de Crédito Online</p>
-                      <p class="text-[10px] text-on-surface-variant mt-0.5">Pago de forma segura na finalização</p>
+                      <p class="text-xs text-on-surface-variant mt-0.5">Pago de forma segura na finalização</p>
                     </div>
                   </div>
                 </div>
@@ -863,16 +825,16 @@
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div class="flex flex-col gap-1.5">
                     <label for="form-checkout__identificationType" class="font-label-bold text-xs font-bold text-on-surface-variant uppercase tracking-wider">Tipo Doc. *</label>
-                    <select id="form-checkout__identificationType" class="w-full bg-surface border-outline-variant rounded-xl p-3 text-body-md focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"></select>
+                    <select id="form-checkout__identificationType" class="w-full bg-surface border-outline-variant rounded-xl p-3 text-body-md focus:ring-2 focus:ring-primary focus:border-primary outline-none transition"></select>
                   </div>
                   <div class="sm:col-span-2 flex flex-col gap-1.5">
                     <label for="form-checkout__identificationNumber" class="font-label-bold text-xs font-bold text-on-surface-variant uppercase tracking-wider">CPF / CNPJ *</label>
-                    <input id="form-checkout__identificationNumber" type="text" placeholder="Apenas números" class="w-full bg-surface border-outline-variant rounded-xl p-3 text-body-md focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all">
+                    <input id="form-checkout__identificationNumber" type="text" placeholder="Apenas números" class="w-full bg-surface border-outline-variant rounded-xl p-3 text-body-md focus:ring-2 focus:ring-primary focus:border-primary outline-none transition">
                   </div>
                 </div>
                 <div class="flex flex-col gap-1.5">
                   <label for="form-checkout__email" class="font-label-bold text-xs font-bold text-on-surface-variant uppercase tracking-wider">E-mail para Recibo *</label>
-                  <input id="form-checkout__email" type="email" placeholder="seu-email@provedor.com" class="w-full bg-surface border-outline-variant rounded-xl p-3 text-body-md focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all">
+                  <input id="form-checkout__email" type="email" placeholder="seu-email@provedor.com" class="w-full bg-surface border-outline-variant rounded-xl p-3 text-body-md focus:ring-2 focus:ring-primary focus:border-primary outline-none transition">
                 </div>
               </div>
             </section>
@@ -885,12 +847,11 @@
               </div>
               <div class="flex flex-col gap-1.5">
                 <label for="public_obs" class="font-label-bold text-xs font-bold text-on-surface-variant uppercase tracking-wider">Instruções Adicionais</label>
-                <textarea id="public_obs" rows="3" placeholder="Ex: pão fatiado, ponto do bolo, horário de preferência, etc..." class="w-full bg-surface border-outline-variant rounded-xl p-3 text-body-md resize-none focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"></textarea>
+                <textarea id="public_obs" rows="3" placeholder="Ex: pão fatiado, ponto do bolo, horário de preferência, etc..." class="w-full bg-surface border-outline-variant rounded-xl p-3 text-body-md resize-none focus:ring-2 focus:ring-primary focus:border-primary outline-none transition"></textarea>
               </div>
             </section>
 
             <!-- Hidden Abacate Checkout Container -->
-            <div id="abacateCheckout" class="abacate-checkout" hidden></div>
           </form>
         </div>
 
@@ -926,16 +887,16 @@
             <!-- Action Buttons -->
             <div class="p-5 bg-surface-container-low/50">
               <!-- Catalog Proceed Button -->
-              <button type="button" id="continueCheckoutBtn" onclick="openCheckoutIdentification()" class="w-full py-4 bg-primary text-on-primary rounded-xl font-bold flex items-center justify-center gap-3 hover:bg-primary-container transition-all active:scale-[0.98] shadow-md disabled:opacity-50 disabled:cursor-not-allowed uppercase text-sm tracking-wider" disabled>
+              <button type="button" id="continueCheckoutBtn" onclick="openCheckoutIdentification()" class="w-full py-4 bg-primary text-on-primary rounded-xl font-bold flex items-center justify-center gap-3 hover:bg-primary-container transition active:scale-[0.98] shadow-md disabled:opacity-50 disabled:cursor-not-allowed uppercase text-sm tracking-wider" disabled>
                 Continuar para Identificação
               </button>
 
               <!-- Finalize Order Form Button -->
-              <button type="button" id="submitOrderBtn" onclick="triggerCheckoutSubmit()" class="hidden w-full py-4 bg-primary text-on-primary rounded-xl font-bold flex items-center justify-center gap-3 hover:bg-primary-container transition-all active:scale-[0.98] shadow-md uppercase text-sm tracking-wider">
+              <button type="button" id="submitOrderBtn" onclick="triggerCheckoutSubmit()" class="hidden w-full py-4 bg-primary text-on-primary rounded-xl font-bold flex items-center justify-center gap-3 hover:bg-primary-container transition active:scale-[0.98] shadow-md uppercase text-sm tracking-wider">
                 <span class="material-symbols-outlined">shopping_bag</span> Finalizar Pedido
               </button>
               
-              <p class="text-[10px] text-center text-on-surface-variant/80 mt-3 uppercase tracking-wider font-semibold">Pedidos serão finalizados de forma integrada via WhatsApp ou checkout.</p>
+              <p class="text-xs text-center text-on-surface-variant/80 mt-3 uppercase tracking-wider font-semibold">Pedidos serão finalizados de forma integrada via WhatsApp ou checkout.</p>
             </div>
           </section>
 
@@ -960,50 +921,49 @@
       <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
         <div class="col-span-1 md:col-span-1">
           <div class="flex items-center gap-sm mb-4">
-            <img src="https://cdn-icons-png.flaticon.com/512/992/992747.png" alt="Logo Bemavi" class="w-8 h-8 object-contain">
-            <h2 class="font-headline-lg text-xl text-primary font-bold tracking-tight">Bemavi</h2>
+            <img src="assets/images/natal/logo-bemavi.png" alt="Bemavi Pães Artesanais" width="225" height="95" loading="lazy" class="h-12 w-auto object-contain">
           </div>
           <p class="text-on-surface-variant font-body-md text-sm leading-relaxed font-medium">
             Transformando farinha, água e sal em poesia comestível sob encomenda.
           </p>
           <div class="flex gap-sm mt-4">
-            <a class="w-9 h-9 rounded-full bg-surface-container-high flex items-center justify-center text-primary hover:bg-primary hover:text-on-primary transition-all" href="https://wa.me/5527992760190" target="_blank" rel="noopener">
+            <a class="w-9 h-9 rounded-full bg-surface-container-high flex items-center justify-center text-primary hover:bg-primary hover:text-on-primary transition" href="https://wa.me/5527992760190" target="_blank" rel="noopener">
               <span class="material-symbols-outlined text-[18px]">chat</span>
             </a>
-            <a class="w-9 h-9 rounded-full bg-surface-container-high flex items-center justify-center text-primary hover:bg-primary hover:text-on-primary transition-all" href="mailto:contato@bemavi.com.br">
+            <a class="w-9 h-9 rounded-full bg-surface-container-high flex items-center justify-center text-primary hover:bg-primary hover:text-on-primary transition" href="mailto:contato@bemavi.com.br">
               <span class="material-symbols-outlined text-[18px]">mail</span>
             </a>
           </div>
         </div>
         <div>
-          <h5 class="font-label-bold text-xs font-bold text-on-surface mb-4 uppercase tracking-wider">Produtos</h5>
+          <h2 class="font-label-bold text-xs font-bold text-on-surface mb-4 uppercase tracking-wider">Produtos</h2>
           <ul class="space-y-2 text-sm text-on-surface-variant font-medium">
-            <li><a class="text-red-800 font-bold hover:text-red-900 transition-colors" href="#" onclick="openNatalCatalog(); return false;">🎄 Especial de Natal</a></li>
-            <li><a class="hover:text-primary transition-colors" href="#" onclick="filterCategory('Pães'); scrollToCatalog(); return false;">Pães Artesanais</a></li>
-            <li><a class="hover:text-primary transition-colors" href="#" onclick="filterCategory('Bolos'); scrollToCatalog(); return false;">Bolos Especiais</a></li>
-            <li><a class="hover:text-primary transition-colors" href="#" onclick="filterCategory('Todos'); scrollToCatalog(); return false;">Ver Todos</a></li>
+            <li><button type="button" class="text-red-800 font-bold hover:text-red-900 transition-colors" onclick="openNatalCatalog()">🎄 Especial de Natal</button></li>
+            <li><button type="button" class="hover:text-primary transition-colors" onclick="filterCategory('Pães'); scrollToCatalog();">Pães Artesanais</button></li>
+            <li><button type="button" class="hover:text-primary transition-colors" onclick="filterCategory('Bolos'); scrollToCatalog();">Bolos Especiais</button></li>
+            <li><button type="button" class="hover:text-primary transition-colors" onclick="filterCategory('Todos'); scrollToCatalog();">Ver Todos</button></li>
           </ul>
         </div>
         <div>
-          <h5 class="font-label-bold text-xs font-bold text-on-surface mb-4 uppercase tracking-wider">Suporte</h5>
+          <h2 class="font-label-bold text-xs font-bold text-on-surface mb-4 uppercase tracking-wider">Suporte</h2>
           <ul class="space-y-2 text-sm text-on-surface-variant font-medium">
             <li><a class="hover:text-primary transition-colors" href="https://wa.me/5527992760190" target="_blank" rel="noopener">Fale Conosco</a></li>
-            <li><a class="hover:text-primary transition-colors" href="#" onclick="selectDeliveryMethod('Retirada'); return false;">Locais de Retirada</a></li>
-            <li><a class="hover:text-primary transition-colors" href="#" onclick="selectDeliveryMethod('Entrega'); return false;">Regiões de Entrega</a></li>
+            <li><button type="button" class="hover:text-primary transition-colors text-left" onclick="openNatalRulesModal()">Retirada: Novo Horizonte, Serra/ES</button></li>
+            <li><button type="button" class="hover:text-primary transition-colors text-left" onclick="openNatalRulesModal()">Entregas: Vitória e região</button></li>
           </ul>
         </div>
         <div>
-          <h5 class="font-label-bold text-xs font-bold text-on-surface mb-4 uppercase tracking-wider">Contato</h5>
+          <h2 class="font-label-bold text-xs font-bold text-on-surface mb-4 uppercase tracking-wider">Contato</h2>
           <p class="text-on-surface-variant font-body-md text-sm leading-relaxed font-medium">
             Dúvidas ou pedidos especiais? Entre em contato pelo WhatsApp e fale com nosso padeiro.
           </p>
         </div>
       </div>
-      <div class="flex flex-col md:flex-row justify-between items-center pt-6 border-t border-outline-variant/30 text-[11px] text-on-surface-variant font-bold uppercase tracking-wider">
+      <div class="flex flex-col md:flex-row justify-between items-center pt-6 border-t border-outline-variant/30 text-xs text-on-surface-variant font-bold uppercase tracking-wider">
         <p>© 2026 Bemavi Pão Artesanal. Todos os direitos reservados.</p>
         <div class="flex gap-md mt-4 md:mt-0">
-          <a class="hover:text-primary" href="#">Termos</a>
-          <a class="hover:text-primary" href="#">Privacidade</a>
+          <a class="hover:text-primary" href="privacidade.html#termos">Termos</a>
+          <a class="hover:text-primary" href="privacidade.html">Privacidade</a>
         </div>
       </div>
     </div>
@@ -1013,7 +973,7 @@
   <div id="paymentModal" class="payment-modal fixed inset-0 z-50 flex items-center justify-center" hidden>
     <div class="payment-modal-overlay absolute inset-0 bg-on-background/60 backdrop-blur-sm" onclick="closePaymentModal()"></div>
     <div class="payment-modal-content relative bg-surface-container-lowest border border-outline-variant rounded-2xl shadow-2xl p-6 md:p-8 max-w-lg w-full mx-4 z-10" role="dialog" aria-modal="true" aria-labelledby="paymentModalTitle">
-      <button onclick="closePaymentModal()" class="absolute top-4 right-4 text-on-surface-variant hover:text-primary transition-all p-1 rounded-full hover:bg-surface">
+      <button onclick="closePaymentModal()" class="absolute top-4 right-4 text-on-surface-variant hover:text-primary transition p-1 rounded-full hover:bg-surface">
         <span class="material-symbols-outlined text-[24px]">close</span>
       </button>
       
@@ -1023,10 +983,10 @@
       <div id="paymentModalBody" class="bg-surface border border-outline-variant rounded-xl p-4 md:p-6 mb-6"></div>
       
       <div class="flex flex-col sm:flex-row gap-3">
-        <button type="button" id="copyPixModalBtn" class="copy-pix py-3 px-6 bg-primary text-on-primary rounded-xl font-bold hover:bg-primary-container transition-all active:scale-[0.98] text-sm text-center flex-1" onclick="copyModalPixCode()" hidden>
+        <button type="button" id="copyPixModalBtn" class="copy-pix py-3 px-6 bg-primary text-on-primary rounded-xl font-bold hover:bg-primary-container transition active:scale-[0.98] text-sm text-center flex-1" onclick="copyModalPixCode()" hidden>
           Copiar Código Pix
         </button>
-        <button type="button" class="modal-secondary-btn py-3 px-6 border border-outline-variant text-on-surface-variant rounded-xl font-bold hover:bg-surface-container transition-all active:scale-[0.98] text-sm text-center flex-1" onclick="closePaymentModal()">
+        <button type="button" class="modal-secondary-btn py-3 px-6 border border-outline-variant text-on-surface-variant rounded-xl font-bold hover:bg-surface-container transition active:scale-[0.98] text-sm text-center flex-1" onclick="closePaymentModal()">
           Voltar ao Catálogo
         </button>
       </div>
@@ -1042,12 +1002,12 @@
           <span class="text-xl">🎄</span>
           <h3 class="font-headline-md text-base font-bold text-on-surface">Bastidores & Sobremesas de Natal Bemavi</h3>
         </div>
-        <button type="button" onclick="closeNatalVideoModal()" class="flex items-center gap-1 px-3 py-1.5 rounded-full bg-surface-container-high hover:bg-surface text-on-surface text-xs font-bold transition-all border border-outline-variant cursor-pointer">
+        <button type="button" onclick="closeNatalVideoModal()" class="flex items-center gap-1 px-3 py-1.5 rounded-full bg-surface-container-high hover:bg-surface text-on-surface text-xs font-bold transition border border-outline-variant cursor-pointer">
           <span class="material-symbols-outlined text-[18px]">close</span> Fechar
         </button>
       </div>
       <div class="aspect-video bg-black flex items-center justify-center">
-        <video id="natalVideoPlayer" controls preload="none" poster="assets/images/natal/capa-natal.jpg" class="w-full h-full object-contain">
+        <video id="natalVideoPlayer" controls preload="none" poster="assets/images/natal/capa-natal-480.webp" class="w-full h-full object-contain">
           <source src="assets/images/natal/natal-video.mp4" type="video/mp4">
           Seu navegador não suporta reprodução de vídeo.
         </video>
@@ -1074,14 +1034,14 @@
             Regras & Políticas de Natal
           </h3>
         </div>
-        <button type="button" onclick="closeNatalRulesModal()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/15 hover:bg-white/25 text-white text-xs font-bold transition-all active:scale-95 border border-white/20 shadow-sm cursor-pointer" aria-label="Fechar">
+        <button type="button" onclick="closeNatalRulesModal()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/15 hover:bg-white/25 text-white text-xs font-bold transition active:scale-95 border border-white/20 shadow-sm cursor-pointer" aria-label="Fechar">
           <span class="material-symbols-outlined text-[18px]">close</span>
           <span>Fechar</span>
         </button>
       </div>
 
       <!-- Modal Body com Background Natalino IA e Cards de Texto + Ícones -->
-      <div class="relative overflow-y-auto custom-scrollbar flex-1 p-4 sm:p-6 space-y-3.5" style="background-image: linear-gradient(to bottom, rgba(254, 250, 246, 0.88), rgba(254, 248, 242, 0.94)), url('assets/images/natal/bg-regras-natal.jpg'); background-size: cover; background-position: center;">
+      <div class="relative overflow-y-auto custom-scrollbar flex-1 p-4 sm:p-6 space-y-3.5" style="background-image: linear-gradient(to bottom, rgba(254, 250, 246, 0.88), rgba(254, 248, 242, 0.94)), url('assets/images/natal/bg-regras-natal.webp'); background-size: cover; background-position: center;">
         
         <!-- Bemavi Official Brand Header -->
         <div class="text-center pb-2 pt-1 flex flex-col items-center justify-center">
@@ -1114,7 +1074,7 @@
             <div>
               A encomenda só será confirmada após o pagamento do sinal de <strong class="text-red-900 font-extrabold">50% do valor</strong>; o restante pedimos para acertar <strong>24h antes da entrega ou retirada</strong>.
             </div>
-            <div class="bg-red-100/90 border border-red-300/70 rounded-xl px-3 py-2 flex items-center gap-2 text-[10px] sm:text-[11px] text-red-950 font-bold shadow-2xs">
+            <div class="bg-red-100/90 border border-red-300/70 rounded-xl px-3 py-2 flex items-center gap-2 text-xs sm:text-xs text-red-950 font-bold shadow-2xs">
               <span class="material-symbols-outlined text-red-700 text-[18px] shrink-0">error</span>
               <span>CASO O PEDIDO SEJA CANCELADO, O VALOR NÃO SERÁ REEMBOLSADO.</span>
             </div>
@@ -1130,7 +1090,7 @@
             <div>
               Aceitamos <strong>dinheiro</strong>, <strong>cartão</strong> (débito e crédito) e <strong>Pix</strong>.
             </div>
-            <div class="bg-red-100/90 border border-red-300/70 rounded-xl px-3 py-2 flex items-start gap-2 text-[10px] sm:text-[11px] text-red-950 font-bold shadow-2xs leading-snug">
+            <div class="bg-red-100/90 border border-red-300/70 rounded-xl px-3 py-2 flex items-start gap-2 text-xs sm:text-xs text-red-950 font-bold shadow-2xs leading-snug">
               <span class="material-symbols-outlined text-red-700 text-[18px] shrink-0">info</span>
               <span>CONSULTE A CHAVE PIX APÓS A CONFIRMAÇÃO DO ORÇAMENTO. PAGAMENTOS NO CARTÃO TÊM TAXA DA MÁQUINA (CONSULTE SIMULAÇÃO).</span>
             </div>
@@ -1172,10 +1132,10 @@
 
       <!-- Modal Action Footer com Botão Compreendi em Destaque -->
       <div class="p-4 bg-surface-container border-t border-outline-variant flex flex-col sm:flex-row justify-between items-center gap-3">
-        <a href="https://wa.me/5527992760190" target="_blank" rel="noopener" class="w-full sm:w-auto px-4 py-3 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm transition-all active:scale-95 order-2 sm:order-1">
+        <a href="https://wa.me/5527992760190" target="_blank" rel="noopener" class="w-full sm:w-auto px-4 py-3 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm transition active:scale-95 order-2 sm:order-1">
           <span class="material-symbols-outlined text-[18px]">chat</span> Dúvidas? WhatsApp
         </a>
-        <button type="button" onclick="closeNatalRulesModal()" class="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-red-900 via-red-800 to-rose-900 hover:brightness-110 text-amber-100 font-extrabold text-sm rounded-xl shadow-lg border border-amber-400/40 transition-all active:scale-95 flex items-center justify-center gap-2 order-1 sm:order-2 cursor-pointer">
+        <button type="button" onclick="closeNatalRulesModal()" class="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-red-900 via-red-800 to-rose-900 hover:brightness-110 text-amber-100 font-extrabold text-sm rounded-xl shadow-lg border border-amber-400/40 transition active:scale-95 flex items-center justify-center gap-2 order-1 sm:order-2 cursor-pointer">
           <span class="material-symbols-outlined text-[20px] text-amber-300">check_circle</span>
           <span>Compreendi</span>
         </button>
@@ -1195,12 +1155,12 @@
         <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent"></div>
         
         <!-- Botão Fechar -->
-        <button type="button" onclick="closeProductOptionsModal()" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/50 hover:bg-black/75 text-white flex items-center justify-center transition-all cursor-pointer backdrop-blur-xs shadow-md" aria-label="Fechar">
+        <button type="button" onclick="closeProductOptionsModal()" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/50 hover:bg-black/75 text-white flex items-center justify-center transition cursor-pointer backdrop-blur-xs shadow-md" aria-label="Fechar">
           <span class="material-symbols-outlined text-[18px]">close</span>
         </button>
 
         <!-- Badge Categoria -->
-        <span id="productOptionsModalBadge" class="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-red-900/90 text-amber-200 text-[10px] font-extrabold uppercase tracking-wider backdrop-blur-xs flex items-center gap-1 shadow-md border border-amber-400/30">
+        <span id="productOptionsModalBadge" class="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-red-900/90 text-amber-200 text-xs font-extrabold uppercase tracking-wider backdrop-blur-xs flex items-center gap-1 shadow-md border border-amber-400/30">
           <span>🎄</span> Especial de Natal
         </span>
 
@@ -1219,16 +1179,16 @@
       <!-- Rodapé Fixo com Contador e Botão de Adicionar -->
       <div class="p-3.5 sm:p-4 bg-surface-container border-t border-outline-variant/40 flex items-center gap-3 shrink-0">
         <div class="flex items-center bg-surface-container-highest rounded-xl p-1 border border-outline-variant/40 shadow-xs">
-          <button type="button" class="w-8 h-8 flex items-center justify-center text-on-surface hover:bg-surface rounded-lg transition-all cursor-pointer active:scale-90" onclick="changeModalOptionQty(-1)" aria-label="Diminuir quantidade">
+          <button type="button" class="w-8 h-8 flex items-center justify-center text-on-surface hover:bg-surface rounded-lg transition cursor-pointer active:scale-90" onclick="changeModalOptionQty(-1)" aria-label="Diminuir quantidade">
             <span class="material-symbols-outlined text-[18px]">remove</span>
           </button>
           <span id="productOptionsModalQty" class="w-8 text-center font-bold text-sm text-on-surface select-none">1</span>
-          <button type="button" class="w-8 h-8 flex items-center justify-center text-on-surface hover:bg-surface rounded-lg transition-all cursor-pointer active:scale-90" onclick="changeModalOptionQty(1)" aria-label="Aumentar quantidade">
+          <button type="button" class="w-8 h-8 flex items-center justify-center text-on-surface hover:bg-surface rounded-lg transition cursor-pointer active:scale-90" onclick="changeModalOptionQty(1)" aria-label="Aumentar quantidade">
             <span class="material-symbols-outlined text-[18px]">add</span>
           </button>
         </div>
 
-        <button type="button" id="productOptionsModalSubmitBtn" onclick="submitProductOptionsModal()" class="flex-1 py-3 px-4 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-red-900 to-red-800 hover:from-red-800 hover:to-red-700 shadow-md flex items-center justify-between transition-all active:scale-[0.98] cursor-pointer">
+        <button type="button" id="productOptionsModalSubmitBtn" onclick="submitProductOptionsModal()" class="flex-1 py-3 px-4 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-red-900 to-red-800 hover:from-red-800 hover:to-red-700 shadow-md flex items-center justify-between transition active:scale-[0.98] cursor-pointer">
           <span class="flex items-center gap-1.5">
             <span class="material-symbols-outlined text-[18px]">add_shopping_cart</span>
             <span>Adicionar ao pedido</span>
@@ -1241,10 +1201,12 @@
   </div>
 
   <!-- Toast Notification -->
-  <div id="publicToast" class="public-toast fixed bottom-6 left-1/2 -translate-x-1/2 bg-on-background text-background font-semibold py-3 px-6 rounded-xl shadow-lg border border-outline-variant/20 transition-all opacity-0 pointer-events-none z-50 text-sm max-w-xs text-center" role="status" aria-live="polite"></div>
+  <div id="publicToast" class="public-toast fixed bottom-6 left-1/2 -translate-x-1/2 bg-on-background text-background font-semibold py-3 px-6 rounded-xl shadow-lg border border-outline-variant/20 transition opacity-0 pointer-events-none z-50 text-sm max-w-xs text-center" role="status" aria-live="polite"></div>
 
   <!-- Scripts -->
-  <script src="https://sdk.mercadopago.com/js/v2"></script>
+  <!-- O SDK do Mercado Pago é carregado sob demanda no checkout (catalogo-publico.js) -->
   <script src="./assets/js/catalogo-publico.js"></script>
+  <!-- Vercel Web Analytics (sem cookies). Ative em Vercel > Project > Analytics. -->
+  <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>

@@ -1,4 +1,5 @@
 import pool, { withTransaction } from './_db';
+import { createAdminToken, isAdminAuthConfigured, requireAdmin, verifyAdminPassword } from './_auth';
 
 const SECRET_KEYS = [
   'MERCADOPAGO_ACCESS_TOKEN',
@@ -48,6 +49,20 @@ export async function getSystemConfigValue(chave: string) {
 }
 
 export default async function handler(req: any, res: any) {
+  // Login do painel: POST /api/configuracoes { action: 'login', senha }
+  if (req.method === 'POST' && req.body?.action === 'login') {
+    if (!isAdminAuthConfigured()) {
+      return res.status(503).json({ error: 'Login indisponível: configure ADMIN_PASSWORD na Vercel.' });
+    }
+    if (!verifyAdminPassword(req.body?.senha)) {
+      await new Promise((resolve) => setTimeout(resolve, 600));
+      return res.status(401).json({ error: 'Senha incorreta.' });
+    }
+    return res.status(200).json(createAdminToken());
+  }
+
+  if (!requireAdmin(req, res)) return;
+
   await ensureConfigTables();
 
   if (req.method === 'GET') {

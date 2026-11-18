@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { requireAdmin } from './_auth';
 
 /**
  * Utilitário Criptográfico do Cloudinary
@@ -40,6 +41,7 @@ export const config = {
  * usando credenciais privadas no backend com assinatura SHA-1.
  */
 export default async function handler(req: any, res: any) {
+  if (!requireAdmin(req, res)) return;
   if (req.method !== 'POST') {
     res.setHeader('Allow', ['POST']);
     return res.status(405).json({ error: `Método ${req.method} não suportado.` });

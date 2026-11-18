@@ -1,10 +1,12 @@
 import pool, { withTransaction } from './_db';
+import { requireAdmin } from './_auth';
 
 /**
  * Handler Serverless para o endpoint /api/consignacoes
  * Gerencia a consignação de pães para parceiros de forma atômica e resiliente.
  */
 export default async function handler(req: any, res: any) {
+  if (!requireAdmin(req, res)) return;
   const { method } = req;
 
   // ============================================================================

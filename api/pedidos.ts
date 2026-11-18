@@ -1,6 +1,7 @@
 import pool, { withTransaction } from './_db';
 import { calcularValorLiquido } from './_financeiro_utils';
 import { podeExcluirPedido } from './_pedidos_utils';
+import { requireAdmin } from './_auth';
 
 /**
  * Handler Serverless unificado /api/pedidos
@@ -13,6 +14,10 @@ import { podeExcluirPedido } from './_pedidos_utils';
  */
 export default async function handler(req: any, res: any) {
   const { method } = req;
+  const isPublicOrderLookup = method === 'GET' && Boolean(req.query?.id);
+  // Consulta pública de um pedido pelo UUID (só quem fez o pedido conhece o id) é usada pelo catálogo para acompanhar o Pix;
+  // todo o restante (listagem, criação manual, edição, exclusão) exige login.
+  if (!isPublicOrderLookup && !requireAdmin(req, res)) return;
 
   // ============================================================================
   // MÉTODO GET: Listagem Completa de Pedidos (Calendário de Produção & Entrega)

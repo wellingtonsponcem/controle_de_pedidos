@@ -5,6 +5,25 @@ const ONLINE_PIX_OPTION = 'Pix';
 const ONLINE_CARD_OPTION = 'Cartão';
 
 let mpInstance = null;
+let mpSdkPromise = null;
+
+// O SDK do Mercado Pago só é baixado quando o cliente entra no checkout,
+// deixando a home mais leve e sem script de terceiro desnecessário.
+function loadMercadoPagoSdk() {
+  if (window.MercadoPago) return Promise.resolve(true);
+  if (!mpSdkPromise) {
+    mpSdkPromise = new Promise((resolve) => {
+      const script = document.createElement('script');
+      script.src = 'https://sdk.mercadopago.com/js/v2';
+      script.async = true;
+      script.onload = () => resolve(true);
+      script.onerror = () => { mpSdkPromise = null; resolve(false); };
+      document.head.appendChild(script);
+    });
+  }
+  return mpSdkPromise;
+}
+
 function getMercadoPagoInstance() {
   if (!mpInstance && window.MercadoPago) {
     mpInstance = new window.MercadoPago(MERCADOPAGO_PUBLIC_KEY, { locale: 'pt-BR' });
@@ -18,7 +37,6 @@ let pixPollingInterval = null;
 const state = {
   produtos: [],
   carrinho: [],
-  abacateCheckout: null,
   taxasEntrega: {},
   checkoutStep: 'cart',
   searchQuery: '',
@@ -300,22 +318,13 @@ function renderCatalog() {
 
   // Ordenação preferencial no Natal: Chocotones -> Travessas -> Taças -> Pudim
   if (state.categoriaAtiva === 'Natal' && state.subcategoriaNatal === 'Todos' && !state.searchQuery) {
-    filtered.sort((a, b) => {
-      const getPriority = (item) => {
-        const n = item.nome.toLowerCase();
-        if (n.includes('chocotone')) return 1;
-        if (n.includes('travessa')) return 2;
-        if (n.includes('taça')) return 3;
-        if (n.includes('pudim')) return 4;
-        return 5;
-      };
-      return getPriority(a) - getPriority(b);
-    });
+    filtered.sort((a, b) => getNatalPriority(a) - getNatalPriority(b));
   }
 
-  // Na temporada festiva, os produtos de Natal aparecem primeiro em "Todos"
+  // Na temporada festiva, os produtos de Natal aparecem primeiro em "Todos",
+  // começando pelo carro-chefe: Chocotones -> Travessas -> Taças -> Pudim
   if (state.categoriaAtiva === 'Todos' && state.natalSeasonActive && !state.searchQuery) {
-    filtered.sort((a, b) => Number(Boolean(b.isNatal)) - Number(Boolean(a.isNatal)));
+    filtered.sort((a, b) => getNatalPriority(a) - getNatalPriority(b));
   }
 
   if (count) {
@@ -340,28 +349,28 @@ function renderCatalog() {
     const imageSrc = getProductImage(item);
 
     return `
-    <article class="group bg-surface-container-lowest border ${isNatal ? 'border-amber-400/40 hover:border-amber-500' : 'border-outline-variant'} rounded-2xl overflow-hidden card-hover transition-all duration-300 flex flex-col justify-between shadow-sm cursor-pointer" ${isGroup ? `onclick="openProductOptionsModal('${item.groupId}')"` : ''}>
+    <article class="group bg-surface-container-lowest border ${isNatal ? 'border-amber-400/40 hover:border-amber-500' : 'border-outline-variant'} rounded-2xl overflow-hidden card-hover transition duration-300 flex flex-col justify-between shadow-sm cursor-pointer" ${isGroup ? `onclick="openProductOptionsModal('${item.groupId}')"` : ''}>
       <div>
         <div class="relative aspect-[4/3] overflow-hidden bg-surface-container-low">
           <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="${imageSrc}" alt="${escapeHtml(item.nome)}" loading="lazy">
           ${isNatal ? `
-            <span class="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-full bg-red-900/90 text-amber-200 text-[10px] font-extrabold uppercase tracking-wider backdrop-blur-xs flex items-center gap-1 shadow-md border border-amber-400/30">
+            <span class="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-full bg-red-900/90 text-amber-200 text-xs font-extrabold uppercase tracking-wider backdrop-blur-xs flex items-center gap-1 shadow-md border border-amber-400/30">
               <span>🎄</span> Especial de Natal
             </span>
           ` : ''}
           ${isGroup ? `
-            <span class="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-full bg-black/65 text-amber-200 text-[10px] font-bold backdrop-blur-xs flex items-center gap-1 shadow-sm border border-white/20">
+            <span class="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-full bg-black/65 text-amber-200 text-xs font-bold backdrop-blur-xs flex items-center gap-1 shadow-sm border border-white/20">
               <span class="material-symbols-outlined text-[13px]">layers</span> ${item.variants.length} opções
             </span>
           ` : ''}
         </div>
         <div class="p-5 flex-grow flex flex-col">
-          <span class="font-label-bold text-[10px] ${isNatal ? 'text-red-900 font-extrabold' : 'text-primary'} uppercase tracking-widest mb-1.5 block">${escapeHtml(item.versao || 'Artesanal')}</span>
-          <h4 class="font-headline-md text-lg text-on-surface font-bold mb-1 leading-tight">${escapeHtml(item.nome)}</h4>
+          <span class="font-label-bold text-xs ${isNatal ? 'text-red-900 font-extrabold' : 'text-primary'} uppercase tracking-widest mb-1.5 block">${escapeHtml(item.versao || 'Artesanal')}</span>
+          <h3 class="font-headline-md text-lg text-on-surface font-bold mb-1 leading-tight">${escapeHtml(item.nome)}</h3>
           <p class="font-body-md text-xs text-on-surface-variant line-clamp-3 leading-relaxed mb-2">${escapeHtml(item.sabor || 'Pão artesanal Bemavi')}</p>
           <p class="font-body-md text-xs text-on-surface-variant font-semibold">${escapeHtml(item.modelo || '')}</p>
           ${hasGiftBox ? `
-            <div class="mt-2 text-[11px] text-amber-800 font-bold flex items-center gap-1">
+            <div class="mt-2 text-xs text-amber-800 font-bold flex items-center gap-1">
               <span>🎁</span> Acompanha sacola e caixa
             </div>
           ` : ''}
@@ -370,16 +379,16 @@ function renderCatalog() {
       <div class="px-5 pb-5 pt-2 flex items-center justify-between mt-auto" onclick="event.stopPropagation()">
         ${isGroup ? `
           <div class="flex flex-col">
-            <span class="text-[10px] font-extrabold text-amber-800 uppercase tracking-wider leading-none mb-1">A partir de</span>
+            <span class="text-xs font-extrabold text-amber-800 uppercase tracking-wider leading-none mb-1">A partir de</span>
             <span class="font-price-display text-lg text-on-background font-extrabold">${money.format(item.preco_min)}</span>
           </div>
           ${quantidade > 0 ? `
-            <button type="button" class="px-3.5 py-2.5 ${isNatal ? 'bg-gradient-to-br from-red-900 to-red-800 text-amber-200 border border-amber-400/40 hover:from-red-800 hover:to-red-700' : 'bg-primary text-white hover:bg-primary-container'} rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm active:scale-95 transition-all cursor-pointer" onclick="openProductOptionsModal('${item.groupId}')" title="Ver opções e sabores">
+            <button type="button" class="px-3.5 py-2.5 ${isNatal ? 'bg-gradient-to-br from-red-900 to-red-800 text-amber-200 border border-amber-400/40 hover:from-red-800 hover:to-red-700' : 'bg-primary text-white hover:bg-primary-container'} rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm active:scale-95 transition cursor-pointer" onclick="openProductOptionsModal('${item.groupId}')" title="Ver opções e sabores">
               <span class="material-symbols-outlined text-[16px]">shopping_bag</span>
               <span>${quantidade} no pedido</span>
             </button>
           ` : `
-            <button type="button" class="px-3.5 py-2.5 ${isNatal ? 'bg-gradient-to-br from-red-900 to-red-800 text-amber-100 hover:from-red-800 hover:to-red-700 border border-amber-400/30' : 'bg-primary text-white hover:bg-primary-container'} rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm active:scale-95 transition-all cursor-pointer" onclick="openProductOptionsModal('${item.groupId}')" title="Escolher opções">
+            <button type="button" class="px-3.5 py-2.5 ${isNatal ? 'bg-gradient-to-br from-red-900 to-red-800 text-amber-100 hover:from-red-800 hover:to-red-700 border border-amber-400/30' : 'bg-primary text-white hover:bg-primary-container'} rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm active:scale-95 transition cursor-pointer" onclick="openProductOptionsModal('${item.groupId}')" title="Escolher opções">
               <span class="material-symbols-outlined text-[16px]">tune</span>
               <span>Escolher</span>
             </button>
@@ -388,12 +397,12 @@ function renderCatalog() {
           <span class="font-price-display text-lg text-on-background font-extrabold">${money.format(Number(item.preco_base) || 0)}</span>
           ${quantidade > 0 ? `
             <div class="flex items-center bg-surface-container rounded-xl p-1 border border-outline-variant/30 shadow-sm">
-              <button type="button" class="material-symbols-outlined text-sm text-primary hover:bg-primary/10 rounded-full p-1 transition-all" onclick="changeCartQty('${item.id}', -1)">remove</button>
+              <button type="button" class="material-symbols-outlined text-sm text-primary hover:bg-primary/10 rounded-full p-1 transition" onclick="changeCartQty('${item.id}', -1)">remove</button>
               <span class="font-label-bold text-sm px-3 text-on-surface font-bold">${quantidade}</span>
-              <button type="button" class="material-symbols-outlined text-sm text-primary hover:bg-primary/10 rounded-full p-1 transition-all" onclick="changeCartQty('${item.id}', 1)">add</button>
+              <button type="button" class="material-symbols-outlined text-sm text-primary hover:bg-primary/10 rounded-full p-1 transition" onclick="changeCartQty('${item.id}', 1)">add</button>
             </div>
           ` : `
-            <button type="button" class="w-10 h-10 ${isNatal ? 'bg-gradient-to-br from-red-800 to-red-700 hover:from-red-700 hover:to-red-600' : 'bg-primary hover:bg-primary-container'} text-white rounded-xl flex items-center justify-center transition-all active:scale-90 shadow-sm" onclick="changeCartQty('${item.id}', 1)" title="Adicionar ao carrinho">
+            <button type="button" class="w-10 h-10 ${isNatal ? 'bg-gradient-to-br from-red-800 to-red-700 hover:from-red-700 hover:to-red-600' : 'bg-primary hover:bg-primary-container'} text-white rounded-xl flex items-center justify-center transition active:scale-90 shadow-sm" onclick="changeCartQty('${item.id}', 1)" title="Adicionar ao carrinho">
               <span class="material-symbols-outlined text-[20px]">add</span>
             </button>
           `}
@@ -402,6 +411,16 @@ function renderCatalog() {
     </article>
     `;
   }).join('');
+}
+
+function getNatalPriority(item) {
+  if (!item.isNatal) return 99;
+  const n = `${item.nome || ''}`.toLowerCase();
+  if (n.includes('chocotone')) return 1;
+  if (n.includes('travessa')) return 2;
+  if (n.includes('taça')) return 3;
+  if (n.includes('pudim')) return 4;
+  return 5;
 }
 
 function getProductImage(prod) {
@@ -578,13 +597,13 @@ function renderCart() {
       <div class="flex-grow flex flex-col justify-between">
         <div>
           <p class="font-label-bold text-sm font-bold text-on-surface leading-tight">${escapeHtml(item.nome)}</p>
-          <p class="text-[10px] text-on-surface-variant mt-0.5">${escapeHtml(item.modelo || '')}</p>
+          <p class="text-xs text-on-surface-variant mt-0.5">${escapeHtml(item.modelo || '')}</p>
         </div>
         <div class="flex justify-between items-center mt-2">
           <div class="flex items-center bg-surface-container rounded-lg p-0.5 border border-outline-variant/20 shadow-inner">
-            <button type="button" class="material-symbols-outlined text-[16px] text-primary hover:bg-primary/10 rounded-full p-1 active:scale-90 transition-all" onclick="changeCartQty('${item.id}', -1)">remove</button>
+            <button type="button" class="material-symbols-outlined text-[16px] text-primary hover:bg-primary/10 rounded-full p-1 active:scale-90 transition" onclick="changeCartQty('${item.id}', -1)">remove</button>
             <span class="font-label-bold text-xs px-2.5">${item.quantidade}</span>
-            <button type="button" class="material-symbols-outlined text-[16px] text-primary hover:bg-primary/10 rounded-full p-1 active:scale-90 transition-all" onclick="changeCartQty('${item.id}', 1)">add</button>
+            <button type="button" class="material-symbols-outlined text-[16px] text-primary hover:bg-primary/10 rounded-full p-1 active:scale-90 transition" onclick="changeCartQty('${item.id}', 1)">add</button>
           </div>
           <span class="font-price-display text-sm font-extrabold text-primary">${money.format(item.preco * item.quantidade)}</span>
         </div>
@@ -793,6 +812,7 @@ function openPaymentModal({ isCard, isPix, isPro, amount, qrCode, pixCode, url, 
 
     // Inicializar o Card Payment Brick do Mercado Pago para checkout em modal transparente
     setTimeout(async () => {
+      await loadMercadoPagoSdk();
       const container = document.getElementById('cardPaymentBrick_container');
       if (container && window.MercadoPago && checkoutId) {
         try {
@@ -889,7 +909,8 @@ function openPaymentModal({ isCard, isPix, isPro, amount, qrCode, pixCode, url, 
     copyButton.hidden = true;
 
     // Renderizar o Wallet Brick do Mercado Pago para checkout em modal transparente
-    setTimeout(() => {
+    setTimeout(async () => {
+      await loadMercadoPagoSdk();
       const container = document.getElementById('mp-wallet-brick-container');
       if (container && window.MercadoPago && checkoutId) {
         try {
@@ -1224,6 +1245,7 @@ async function carregarTiposDocumento() {
   if (docTypeElement.options.length > 0) return;
 
   try {
+    await loadMercadoPagoSdk();
     const mp = getMercadoPagoInstance();
     if (!mp) {
       console.warn('SDK do Mercado Pago não disponível.');
@@ -1405,6 +1427,7 @@ window.navigateTo = function(step) {
       return;
     }
     state.checkoutStep = 'identification';
+    loadMercadoPagoSdk();
     if (viewCatalog) viewCatalog.style.display = 'none';
     if (viewCheckout) viewCheckout.classList.remove('hidden');
     if (headerSearch) headerSearch.classList.add('hidden');
@@ -1449,23 +1472,23 @@ function updateDeliveryVisualCards(method) {
 
   if (method === 'Entrega') {
     if (deliveryCard) {
-      deliveryCard.className = "relative flex flex-col items-center justify-center p-5 border-2 border-primary-container bg-primary-container/5 rounded-xl cursor-pointer hover:bg-primary-container/10 transition-all group";
+      deliveryCard.className = "relative flex flex-col items-center justify-center p-5 border-2 border-primary-container bg-primary-container/5 rounded-xl cursor-pointer hover:bg-primary-container/10 transition group";
       const icon = deliveryCard.querySelector('.material-symbols-outlined');
       if (icon) icon.className = "material-symbols-outlined text-4xl text-primary mb-2";
     }
     if (pickupCard) {
-      pickupCard.className = "relative flex flex-col items-center justify-center p-5 border border-outline-variant rounded-xl cursor-pointer hover:border-primary transition-all group";
+      pickupCard.className = "relative flex flex-col items-center justify-center p-5 border border-outline-variant rounded-xl cursor-pointer hover:border-primary transition group";
       const icon = pickupCard.querySelector('.material-symbols-outlined');
       if (icon) icon.className = "material-symbols-outlined text-4xl text-on-surface-variant group-hover:text-primary mb-2";
     }
   } else {
     if (deliveryCard) {
-      deliveryCard.className = `relative flex flex-col items-center justify-center p-5 border border-outline-variant rounded-xl cursor-pointer hover:border-primary transition-all group`;
+      deliveryCard.className = `relative flex flex-col items-center justify-center p-5 border border-outline-variant rounded-xl cursor-pointer hover:border-primary transition group`;
       const icon = deliveryCard.querySelector('.material-symbols-outlined');
       if (icon) icon.className = "material-symbols-outlined text-4xl text-on-surface-variant group-hover:text-primary mb-2";
     }
     if (pickupCard) {
-      pickupCard.className = "relative flex flex-col items-center justify-center p-5 border-2 border-primary-container bg-primary-container/5 rounded-xl cursor-pointer hover:bg-primary-container/10 transition-all group";
+      pickupCard.className = "relative flex flex-col items-center justify-center p-5 border-2 border-primary-container bg-primary-container/5 rounded-xl cursor-pointer hover:bg-primary-container/10 transition group";
       const icon = pickupCard.querySelector('.material-symbols-outlined');
       if (icon) icon.className = "material-symbols-outlined text-4xl text-primary mb-2";
     }
@@ -1500,12 +1523,12 @@ function updatePaymentVisualCards(method) {
     const dot = card.querySelector('.select-dot');
 
     if (cardInfo.value === method) {
-      card.className = "flex items-center p-4 border-2 border-primary bg-primary/5 rounded-xl cursor-pointer hover:bg-surface-container-low transition-all bg-surface";
-      if (dotContainer) dotContainer.className = "w-5 h-5 border-2 border-primary rounded-full flex items-center justify-center p-0.5 mr-4 transition-all checked-dot-container bg-white";
+      card.className = "flex items-center text-left p-4 border-2 border-primary bg-primary/5 rounded-xl cursor-pointer hover:bg-surface-container-low transition bg-surface";
+      if (dotContainer) dotContainer.className = "w-5 h-5 border-2 border-primary rounded-full flex items-center justify-center p-0.5 mr-4 transition checked-dot-container bg-white";
       if (dot) dot.classList.remove('opacity-0');
     } else {
-      card.className = "flex items-center p-4 border border-outline-variant rounded-xl cursor-pointer hover:bg-surface-container-low transition-all bg-surface";
-      if (dotContainer) dotContainer.className = "w-5 h-5 border border-outline rounded-full flex items-center justify-center p-0.5 mr-4 transition-all checked-dot-container";
+      card.className = "flex items-center text-left p-4 border border-outline-variant rounded-xl cursor-pointer hover:bg-surface-container-low transition bg-surface";
+      if (dotContainer) dotContainer.className = "w-5 h-5 border border-outline rounded-full flex items-center justify-center p-0.5 mr-4 transition checked-dot-container";
       if (dot) dot.classList.add('opacity-0');
     }
   });
@@ -1521,12 +1544,12 @@ window.filterCategory = function(category) {
     if (!btn) return;
     if (cat === category) {
       if (cat === 'Natal') {
-        btn.className = "cat-btn flex items-center gap-xs px-5 py-2.5 bg-gradient-to-r from-red-800 to-rose-700 text-white font-bold rounded-full shadow-md transition-all whitespace-nowrap border border-amber-300/40";
+        btn.className = "cat-btn flex items-center gap-xs px-5 py-2.5 bg-gradient-to-r from-red-800 to-rose-700 text-white font-bold rounded-full shadow-md transition whitespace-nowrap border border-amber-300/40";
       } else {
-        btn.className = "cat-btn flex items-center gap-xs px-5 py-2.5 bg-primary text-on-primary font-semibold rounded-full shadow-sm transition-all whitespace-nowrap";
+        btn.className = "cat-btn flex items-center gap-xs px-5 py-2.5 bg-primary text-on-primary font-semibold rounded-full shadow-sm transition whitespace-nowrap";
       }
     } else {
-      btn.className = "cat-btn flex items-center gap-xs px-5 py-2.5 bg-surface hover:bg-surface-container-high text-on-surface-variant font-semibold rounded-full transition-all whitespace-nowrap border border-outline-variant";
+      btn.className = "cat-btn flex items-center gap-xs px-5 py-2.5 bg-surface hover:bg-surface-container-high text-on-surface-variant font-semibold rounded-full transition whitespace-nowrap border border-outline-variant";
     }
   });
 
@@ -1573,9 +1596,9 @@ window.filterNatalSubcategory = function(subcat) {
     const btn = document.getElementById(`natalSub_${s}`);
     if (!btn) return;
     if (s === subcat) {
-      btn.className = "natal-sub-btn px-4 py-2 rounded-full bg-red-900 text-white font-bold text-xs shadow-sm transition-all whitespace-nowrap";
+      btn.className = "natal-sub-btn px-4 py-2 rounded-full bg-red-900 text-white font-bold text-xs shadow-sm transition whitespace-nowrap";
     } else {
-      btn.className = "natal-sub-btn px-4 py-2 rounded-full bg-surface-container hover:bg-surface-container-high text-on-surface-variant font-semibold text-xs border border-outline-variant transition-all whitespace-nowrap";
+      btn.className = "natal-sub-btn px-4 py-2 rounded-full bg-surface-container hover:bg-surface-container-high text-on-surface-variant font-semibold text-xs border border-outline-variant transition whitespace-nowrap";
     }
   });
   renderCatalog();
@@ -1754,19 +1777,19 @@ function renderProductOptionsModal() {
             <span class="w-2 h-2 rounded-full bg-red-800"></span> 1. Escolha a Categoria do Recheio:
           </span>
           <div class="grid grid-cols-2 gap-2.5">
-            <button type="button" onclick="selectModalCategory('Tradicional')" class="p-3 rounded-2xl border text-left transition-all cursor-pointer ${isTradSelected ? 'border-red-900 bg-red-900/10 text-red-950 ring-2 ring-red-900/30 shadow-xs' : 'border-outline-variant bg-surface-container-low hover:bg-surface-container text-on-surface'}">
+            <button type="button" onclick="selectModalCategory('Tradicional')" class="p-3 rounded-2xl border text-left transition cursor-pointer ${isTradSelected ? 'border-red-900 bg-red-900/10 text-red-950 ring-2 ring-red-900/30 shadow-xs' : 'border-outline-variant bg-surface-container-low hover:bg-surface-container text-on-surface'}">
               <div class="flex items-center justify-between mb-1">
                 <span class="font-extrabold text-sm">Tradicionais</span>
                 <span class="text-xs font-black text-red-900 bg-red-100 px-2 py-0.5 rounded-full">R$ 80,00</span>
               </div>
-              <p class="text-[11px] text-on-surface-variant leading-tight">Recheios clássicos fartos</p>
+              <p class="text-xs text-on-surface-variant leading-tight">Recheios clássicos fartos</p>
             </button>
-            <button type="button" onclick="selectModalCategory('Premium')" class="p-3 rounded-2xl border text-left transition-all cursor-pointer ${isPremSelected ? 'border-red-900 bg-red-900/10 text-red-950 ring-2 ring-red-900/30 shadow-xs' : 'border-outline-variant bg-surface-container-low hover:bg-surface-container text-on-surface'}">
+            <button type="button" onclick="selectModalCategory('Premium')" class="p-3 rounded-2xl border text-left transition cursor-pointer ${isPremSelected ? 'border-red-900 bg-red-900/10 text-red-950 ring-2 ring-red-900/30 shadow-xs' : 'border-outline-variant bg-surface-container-low hover:bg-surface-container text-on-surface'}">
               <div class="flex items-center justify-between mb-1">
                 <span class="font-extrabold text-sm">Premium</span>
                 <span class="text-xs font-black text-red-900 bg-red-100 px-2 py-0.5 rounded-full">R$ 100,00</span>
               </div>
-              <p class="text-[11px] text-on-surface-variant leading-tight">Nutella, Kinder, Ferrero, Nozes</p>
+              <p class="text-xs text-on-surface-variant leading-tight">Nutella, Kinder, Ferrero, Nozes</p>
             </button>
           </div>
         </div>
@@ -1776,14 +1799,14 @@ function renderProductOptionsModal() {
             <span class="flex items-center gap-1.5">
               <span class="w-2 h-2 rounded-full bg-red-800"></span> 2. Escolha o Sabor do Recheio:
             </span>
-            <span class="text-[10px] text-amber-900 font-extrabold bg-amber-100 px-2.5 py-0.5 rounded-full border border-amber-300/60">Obrigatório</span>
+            <span class="text-xs text-amber-900 font-extrabold bg-amber-100 px-2.5 py-0.5 rounded-full border border-amber-300/60">Obrigatório</span>
           </span>
           <div class="space-y-2">
             ${variantsInCategory.map(v => {
               const isSelected = v.id === currentModalSelectedVariantId;
               const flavorName = v.nome.split(' - ')[1] || v.nome;
               return `
-                <label class="flex items-center justify-between p-3 sm:p-3.5 rounded-2xl border ${isSelected ? 'border-red-900 bg-red-50/90 ring-1 ring-red-900/40 shadow-xs' : 'border-outline-variant hover:border-outline bg-surface-container-lowest'} cursor-pointer transition-all">
+                <label class="flex items-center justify-between p-3 sm:p-3.5 rounded-2xl border ${isSelected ? 'border-red-900 bg-red-50/90 ring-1 ring-red-900/40 shadow-xs' : 'border-outline-variant hover:border-outline bg-surface-container-lowest'} cursor-pointer transition">
                   <div class="flex items-start gap-3 flex-1 pr-2">
                     <input type="radio" name="modalVariant" value="${v.id}" ${isSelected ? 'checked' : ''} onchange="selectModalVariant('${v.id}')" class="mt-1 text-red-900 focus:ring-red-800 cursor-pointer">
                     <div>
@@ -1814,7 +1837,7 @@ function renderProductOptionsModal() {
             <span class="flex items-center gap-1.5">
               <span class="w-2 h-2 rounded-full bg-red-800"></span> Escolha o Tamanho da Travessa:
             </span>
-            <span class="text-[10px] text-amber-900 font-extrabold bg-amber-100 px-2.5 py-0.5 rounded-full border border-amber-300/60">Obrigatório</span>
+            <span class="text-xs text-amber-900 font-extrabold bg-amber-100 px-2.5 py-0.5 rounded-full border border-amber-300/60">Obrigatório</span>
           </span>
           <div class="space-y-2">
             ${group.variants.map(v => {
@@ -1823,7 +1846,7 @@ function renderProductOptionsModal() {
               const sizeTitle = isP ? 'Travessa P (Serve ~4 pessoas)' : 'Travessa G (Serve ~10 pessoas)';
               const sizeDesc = isP ? 'Ideal para pequenas reuniões ou degustação familiar.' : 'Perfeito para a ceia de Natal com toda a família.';
               return `
-                <label class="flex items-center justify-between p-3 sm:p-3.5 rounded-2xl border ${isSelected ? 'border-red-900 bg-red-50/90 ring-1 ring-red-900/40 shadow-xs' : 'border-outline-variant hover:border-outline bg-surface-container-lowest'} cursor-pointer transition-all">
+                <label class="flex items-center justify-between p-3 sm:p-3.5 rounded-2xl border ${isSelected ? 'border-red-900 bg-red-50/90 ring-1 ring-red-900/40 shadow-xs' : 'border-outline-variant hover:border-outline bg-surface-container-lowest'} cursor-pointer transition">
                   <div class="flex items-start gap-3 flex-1 pr-2">
                     <input type="radio" name="modalVariant" value="${v.id}" ${isSelected ? 'checked' : ''} onchange="selectModalVariant('${v.id}')" class="mt-1 text-red-900 focus:ring-red-800 cursor-pointer">
                     <div>
@@ -1847,13 +1870,13 @@ function renderProductOptionsModal() {
             <span class="flex items-center gap-1.5">
               <span class="w-2 h-2 rounded-full bg-red-800"></span> Escolha uma opção:
             </span>
-            <span class="text-[10px] text-amber-900 font-extrabold bg-amber-100 px-2.5 py-0.5 rounded-full border border-amber-300/60">Obrigatório</span>
+            <span class="text-xs text-amber-900 font-extrabold bg-amber-100 px-2.5 py-0.5 rounded-full border border-amber-300/60">Obrigatório</span>
           </span>
           <div class="space-y-2">
             ${group.variants.map(v => {
               const isSelected = v.id === currentModalSelectedVariantId;
               return `
-                <label class="flex items-center justify-between p-3 sm:p-3.5 rounded-2xl border ${isSelected ? 'border-red-900 bg-red-50/90 ring-1 ring-red-900/40 shadow-xs' : 'border-outline-variant hover:border-outline bg-surface-container-lowest'} cursor-pointer transition-all">
+                <label class="flex items-center justify-between p-3 sm:p-3.5 rounded-2xl border ${isSelected ? 'border-red-900 bg-red-50/90 ring-1 ring-red-900/40 shadow-xs' : 'border-outline-variant hover:border-outline bg-surface-container-lowest'} cursor-pointer transition">
                   <div class="flex items-start gap-3 flex-1 pr-2">
                     <input type="radio" name="modalVariant" value="${v.id}" ${isSelected ? 'checked' : ''} onchange="selectModalVariant('${v.id}')" class="mt-1 text-red-900 focus:ring-red-800 cursor-pointer">
                     <div>
@@ -2008,6 +2031,16 @@ window.openNatalCatalog = function(subcategory = 'Todos') {
 };
 
 document.addEventListener('DOMContentLoaded', setupNatalSeason);
+
+// Acessibilidade: elementos clicáveis que não são <button> respondem a Enter/Espaço
+document.addEventListener('keydown', (event) => {
+  const target = event.target;
+  if (!(target instanceof HTMLElement) || target.getAttribute('role') !== 'button') return;
+  if (event.key === 'Enter' || event.key === ' ') {
+    event.preventDefault();
+    target.click();
+  }
+});
 
 window.scrollToCatalog = function() {
   const section = document.getElementById('catalog-section');

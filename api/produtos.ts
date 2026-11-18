@@ -1,4 +1,5 @@
 import pool from './_db';
+import { requireAdmin } from './_auth';
 
 export const config = {
   api: {
@@ -27,22 +28,57 @@ async function ensureProductImageColumn(): Promise<void> {
   }
 }
 
+async function serveProductImage(id: string, res: any) {
+  try {
+    const result = await pool.query('SELECT imagem_url FROM produtos WHERE id = $1', [id]);
+    const url: string | null = result.rows[0]?.imagem_url || null;
+    if (!url) return res.status(404).json({ error: 'Imagem nao encontrada.' });
+
+    const match = /^data:(image\/[a-z0-9.+-]+);base64,(.+)$/i.exec(url);
+    if (!match) {
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+      return res.redirect(302, url);
+    }
+
+    const buffer = Buffer.from(match[2], 'base64');
+    res.setHeader('Content-Type', match[1]);
+    res.setHeader('Content-Length', String(buffer.length));
+    // A URL publicada carrega ?v=<hash>, então o arquivo pode ficar em cache por 1 ano
+    res.setHeader('Cache-Control', 'public, max-age=31536000, s-maxage=31536000, immutable');
+    return res.status(200).send(buffer);
+  } catch (error: any) {
+    console.error('Falha ao servir imagem de produto:', error);
+    return res.status(503).json({ error: 'Imagem indisponivel.' });
+  }
+}
+
 /**
  * Handler Serverless para o endpoint /api/produtos.
  * Mantem compatibilidade com bancos que ainda nao receberam a coluna imagem_url.
  */
 export default async function handler(req: any, res: any) {
   const { method } = req;
+  // Leitura do catálogo é pública (inclusive para outros domínios); escrita só pelo painel autenticado
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (method === 'OPTIONS') {
     return res.status(204).end();
   }
 
+  // GET /api/produtos?imagem=<id>: entrega a foto do produto como arquivo, com cache longo.
+  // Fotos antigas foram salvas como data URI (base64) no banco; servi-las aqui evita
+  // que a lista de produtos pese centenas de KB.
+  if (method === 'GET' && req.query.imagem) {
+    return serveProductImage(String(req.query.imagem), res);
+  }
+
+  if (method !== 'GET' && !requireAdmin(req, res)) return;
+
   if (method === 'GET') {
     const fetchAll = req.query.all === 'true';
+    if (fetchAll && !requireAdmin(req, res)) return;
     await ensureProductImageColumn();
 
     const queryWithImage = fetchAll
@@ -52,7 +88,10 @@ export default async function handler(req: any, res: any) {
         ORDER BY ativo DESC, versao ASC, nome ASC, preco_base ASC
       `
       : `
-        SELECT id, nome, versao, sabor, modelo, preco_base, imagem_url
+        SELECT id, nome, versao, sabor, modelo, preco_base,
+               CASE WHEN imagem_url LIKE 'data:%'
+                    THEN '/api/produtos?imagem=' || id || '&v=' || left(md5(imagem_url), 10)
+                    ELSE imagem_url END AS imagem_url
         FROM produtos
         WHERE ativo = true
         ORDER BY versao ASC, nome ASC, preco_base ASC
@@ -80,7 +119,9 @@ export default async function handler(req: any, res: any) {
         result = await pool.query(queryWithoutImage);
       }
 
-      res.setHeader('Cache-Control', 'public, max-age=10, s-maxage=60');
+      res.setHeader('Cache-Control', fetchAll
+        ? 'private, no-store'
+        : 'public, max-age=60, s-maxage=300, stale-while-revalidate=86400');
       res.setHeader('Content-Type', 'application/json; charset=utf-8');
       return res.status(200).json(normalizeProductRows(result.rows));
     } catch (error: any) {

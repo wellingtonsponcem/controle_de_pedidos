@@ -1,4 +1,5 @@
 import pool from './_db';
+import { requireAdmin } from './_auth';
 
 /**
  * Handler Serverless para o endpoint /api/financeiro
@@ -9,6 +10,7 @@ import pool from './_db';
  *         ou receitas manuais avulsas.
  */
 export default async function handler(req: any, res: any) {
+  if (!requireAdmin(req, res)) return;
   const { method } = req;
 
   // ============================================================================

@@ -1,16 +1,14 @@
-const CACHE_NAME = 'bemavi-cache-v3';
+const CACHE_NAME = 'bemavi-cache-v4';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './admin.html',
-  './catalogo.html',
   './manifest.json',
-  './assets/css/catalogo-publico.css',
+  './assets/css/catalogo.css',
   './assets/js/catalogo-publico.js',
   './assets/css/styles.css',
   './assets/js/app.js',
-  'https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;1,400&display=swap',
-  'https://cdn-icons-png.flaticon.com/512/992/992747.png'
+  './assets/images/icons/icon-192.png'
 ];
 
 // Instalar o Service Worker e cachear os arquivos estáticos estruturais
